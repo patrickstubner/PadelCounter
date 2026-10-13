@@ -36,8 +36,16 @@ function EventList({ rows, testId }: { rows: readonly HistoryRow[]; testId: stri
         <li key={`${row.at}-${index}`} className="history-row">
           <time dateTime={new Date(row.at).toISOString()}>{formatEventTime(row.at)}</time>
           <span className="history-label">{row.label}</span>
-          {row.game ? <span className="history-game">{row.game}</span> : <span className="history-game" />}
-          {row.sets ? <span className="history-sets">Sets {row.sets}</span> : null}
+          <span className="history-score" data-testid="history-score">
+            {row.score.map((set, setIndex) => (
+              <span key={setIndex}>
+                {setIndex > 0 ? ' ' : null}
+                <span className={set.aChanged ? 'history-changed' : undefined}>{set.a}</span>
+                :
+                <span className={set.bChanged ? 'history-changed' : undefined}>{set.b}</span>
+              </span>
+            ))}
+          </span>
         </li>
       ))}
     </ol>

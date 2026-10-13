@@ -46,4 +46,18 @@ describe('split flap direction', () => {
     expect(rule).toContain('96cqh');
     expect(css).toContain('font-variant-numeric: tabular-nums');
   });
+
+  it('keeps landscape set digits inside the cell, including 0, 6, and 10', () => {
+    const rule = css.slice(css.indexOf('.num,\n.flap {'), css.indexOf('.set.is-won'));
+    expect(rule).toContain('letter-spacing: 0');
+    expect(rule).not.toContain('letter-spacing: -0.055em');
+    expect(rule).toContain('100cqw / 1.35');
+    expect(rule).toContain('92cqh');
+    const flap = css.slice(css.indexOf('.set .flap {'), css.indexOf('.set.is-won'));
+    expect(flap).toContain('overflow: visible');
+    const plus = css.slice(css.indexOf('.step-plus,'), css.indexOf('.step:disabled'));
+    expect(plus).toContain('background: transparent');
+    expect(plus).toContain('box-shadow: inset 0 0 0 3px var(--accent)');
+    expect(plus).not.toContain('background: var(--accent)');
+  });
 });

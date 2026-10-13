@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentHistory } from './history';
+import { currentHistory, formatHistoryScore } from './history';
 import { appendEvent, createLog, replay, undoLog } from './log';
 
 const ID = '00000000-0000-4000-8000-0000000000aa';
@@ -11,10 +11,11 @@ describe('match history rows', () => {
     log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1_000 });
     log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 2_000 });
     const rows = currentHistory(log);
-    expect(rows.map((row) => row.game)).toEqual(['1:0', '1:1']);
+    expect(rows.map((row) => formatHistoryScore(row.score))).toEqual(['1:0', '1:1']);
+    expect(rows[0]?.score[0]).toMatchObject({ a: 1, b: 0, aChanged: true, bChanged: false });
+    expect(rows[1]?.score[0]).toMatchObject({ a: 1, b: 1, aChanged: false, bChanged: true });
     expect(rows.map((row) => row.label)).toEqual(['Team A won the game', 'Team B won the game']);
     expect(rows[0]?.at).toBeLessThan(rows[1]?.at ?? 0);
-    expect(rows.every((row) => row.sets === null)).toBe(true);
   });
 
   it('adds the set score when a set is won or the active set changes', () => {
@@ -24,13 +25,14 @@ describe('match history rows', () => {
     }
     log = appendEvent(log, { type: 'set/select', index: 0, at: T0 + 8_000 });
     const rows = currentHistory(log);
-    expect(rows[0]?.game).toBe('1:0');
-    expect(rows[0]?.sets).toBeNull();
-    expect(rows[5]?.game).toBe('6:0');
-    expect(rows[5]?.sets).toBe('6:0');
+    expect(formatHistoryScore(rows[0]?.score ?? [])).toBe('1:0');
+    expect(rows[0]?.score[0]?.aChanged).toBe(true);
+    expect(formatHistoryScore(rows[5]?.score ?? [])).toBe('6:0');
+    expect(rows[5]?.score[0]).toMatchObject({ a: 6, b: 0, aChanged: true, bChanged: false });
     expect(rows[6]?.label).toBe('Set 1');
-    expect(rows[6]?.sets).toBe('6:0');
-    expect(rows[6]?.game).toBeNull();
+    expect(formatHistoryScore(rows[6]?.score ?? [])).toBe('6:0');
+    expect(rows[6]?.score[0]?.aChanged).toBe(false);
+    expect(rows[6]?.score[0]?.bChanged).toBe(false);
   });
 
   it('undoes a B-start rotation back through A1 to B1', () => {
@@ -85,5 +87,33 @@ describe('match history rows', () => {
     log = undoLog(log);
     expect(replay(log).serveAsk).toBe('b');
     expect(replay(log).serve).toBeNull();
+  });
+
+  it('shows every set and highlights only the number that changed', () => {
+    const reached = (finish: 'a' | 'b') => {
+      let log = createLog(T0, ID);
+      let at = T0;
+      const point = (team: 'a' | 'b') => {
+        at += 1;
+        log = appendEvent(log, { type: 'game/increment', team, at });
+      };
+      for (let i = 0; i < 3; i += 1) {
+        point('a');
+        point('b');
+      }
+      for (let i = 0; i < 3; i += 1) point('a');
+      for (let i = 0; i < 5; i += 1) point('a');
+      point(finish);
+      return currentHistory(log).at(-1);
+    };
+
+    const toOne = reached('b');
+    const toSix = reached('a');
+    expect(formatHistoryScore(toOne?.score ?? [])).toBe('6:3 5:1');
+    expect(toOne?.score[0]).toMatchObject({ aChanged: false, bChanged: false });
+    expect(toOne?.score[1]).toMatchObject({ a: 5, b: 1, aChanged: false, bChanged: true });
+    expect(formatHistoryScore(toSix?.score ?? [])).toBe('6:3 6:0');
+    expect(toSix?.score[1]).toMatchObject({ a: 6, b: 0, aChanged: true, bChanged: false });
+    expect(toSix?.label).toBe('Team A won the game');
   });
 });
