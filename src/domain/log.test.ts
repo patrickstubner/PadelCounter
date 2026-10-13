@@ -53,6 +53,28 @@ describe('match log', () => {
     expect(replay(log).teams.a.name).toBe('N499');
   });
 
+  it('stores a set change in the log and undoes the correction', () => {
+    let log = createLog(T0, ID);
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    log = appendEvent(log, { type: 'set/select', index: 1, at: T0 + 2 });
+    expect(log.events.at(-1)).toMatchObject({ type: 'set/select', index: 1 });
+    expect(describeEvent(log.events.at(-1)!)).toBe('Satz 2');
+    expect(replay(log).activeSet).toBe(1);
+    expect(replay(log).sets[0]).toEqual({ a: 1, b: 0 });
+
+    log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 3 });
+    expect(replay(log).sets[1]).toEqual({ a: 0, b: 1 });
+
+    log = undoLog(log);
+    expect(replay(log).sets[1]).toEqual({ a: 0, b: 0 });
+    expect(replay(log).activeSet).toBe(1);
+
+    log = undoLog(log);
+    expect(replay(log).activeSet).toBe(0);
+    expect(replay(log).sets[0]).toEqual({ a: 1, b: 0 });
+    expect(appendEvent(log, { type: 'set/select', index: 0, at: T0 + 4 })).toBe(log);
+  });
+
   it('describes events without using the raw rename text as markup', () => {
     expect(describeEvent({ type: 'game/increment', team: 'a', at: T0 })).toBe('Game für A');
     expect(describeEvent({ type: 'game/decrement', team: 'b', at: T0 })).toBe('Game B zurück');

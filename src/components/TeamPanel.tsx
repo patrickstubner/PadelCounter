@@ -62,6 +62,7 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
             return (
               <SetScore
                 key={index}
+                team={team}
                 index={index}
                 gamesLabel={displayGames(state, index, team)}
                 active={state.activeSet === index}

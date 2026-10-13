@@ -145,7 +145,7 @@ export function App() {
         <ConfirmDialog
           titleId="end-match-title"
           title="Spiel beenden?"
-          body="Der Endstand bleibt stehen. Plus, Minus, Aufschlag und Namen sind gesperrt, bis das Spiel fortgesetzt wird."
+          body="Der Endstand bleibt stehen. Plus, Minus, Sätze, Aufschlag und Namen sind gesperrt, bis das Spiel fortgesetzt wird."
           confirmLabel="Beenden"
           confirmTestId="confirm-end"
           onCancel={() => setConfirming(null)}
