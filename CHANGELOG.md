@@ -8,6 +8,7 @@
 - Der Verlauf zeigt die lokale Uhrzeit, an anderen Tagen auch das Datum. «Spiel beenden» sperrt den Endstand nach einer Rückfrage. «Fortsetzen» und «Rückgängig» nehmen das Spiel wieder auf.
 - Installations-Icons sind die freigegebenen Dateien (192, 512, 1024, maskable 192 und 512, Apple-Touch 180, Favicon 16, 32 und ICO). Theme-Farbe `#0a1a3f`.
 - Die Satzübersicht unter dem Teamnamen zeigt keine Satznummern mehr. Der erste Satz steht links. Gespielte und der aktuelle Satz sind groß, in Quer- und Hochformat. Antippen wechselt den Satz (`Satz N`) und liegt als Ereignis im Verlauf.
+- Unten rechts steht dezent die App-Version aus `package.json` (`v1.1.0`). Sie liegt über der Fußzeile und verkleinert die Zählflächen nicht.
 
 ## 1.0.0 – 2026-10-13
 

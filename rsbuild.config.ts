@@ -5,6 +5,8 @@ import { pluginReact } from '@rsbuild/plugin-react';
 import { generateSW } from 'workbox-build';
 import { PAGE_BASE } from './src/base';
 
+const appVersion = (JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }).version;
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -67,6 +69,9 @@ export default defineConfig({
   source: {
     entry: {
       index: './src/index.tsx',
+    },
+    define: {
+      'import.meta.env.APP_VERSION': JSON.stringify(appVersion),
     },
   },
   html: {

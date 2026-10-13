@@ -394,9 +394,23 @@ button:disabled { cursor: not-allowed; }
 }
 
 .foot {
+  position: relative;
   border-top: 1px solid var(--line);
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.app-version {
+  position: absolute;
+  right: max(0.45rem, env(safe-area-inset-right));
+  bottom: max(0.12rem, env(safe-area-inset-bottom));
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #a3a3a3;
+  pointer-events: none;
 }
 
 .rules,
@@ -519,5 +533,6 @@ button:disabled { cursor: not-allowed; }
   .undo-btn,
   .ball.is-on { background: ButtonFace; color: ButtonText; }
   .num,
-  .team-name { color: CanvasText; }
+  .team-name,
+  .app-version { color: CanvasText; }
 }

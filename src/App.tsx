@@ -123,6 +123,7 @@ export function App() {
           )
         ) : null}
         <p className="rules">{RULES_SUMMARY}</p>
+        <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
       </footer>
       <p className="sr-only" aria-live="polite">
         {live}
