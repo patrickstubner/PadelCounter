@@ -209,7 +209,7 @@ export function App() {
         <ConfirmDialog
           titleId="new-match-title"
           title="New match?"
-          body="The score is reset. The team names stay."
+          body="The score is reset. Team names go back to Team A and Team B."
           confirmLabel="Reset"
           confirmTestId="confirm-reset"
           onCancel={() => setConfirming(null)}

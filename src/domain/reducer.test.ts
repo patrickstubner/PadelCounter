@@ -101,7 +101,7 @@ describe('matchReducer', () => {
     expect(stuck).toBe(undone);
   });
 
-  it('keeps names on reset, caps renames, and strips control characters', () => {
+  it('caps renames, strips control characters, and resets names on a new match', () => {
     let state = matchReducer(start(), {
       type: 'team/rename',
       team: 'a',
@@ -127,8 +127,8 @@ describe('matchReducer', () => {
       { a: 0, b: 0 },
       { a: 0, b: 0 },
     ]);
-    expect(reset.teams.a.name).toBe('SonneTeam');
-    expect(reset.teams.b.name).toBe('12345678901234567890');
+    expect(reset.teams.a.name).toBe('Team A');
+    expect(reset.teams.b.name).toBe('Team B');
     expect(reset.serve).toBeNull();
   });
 

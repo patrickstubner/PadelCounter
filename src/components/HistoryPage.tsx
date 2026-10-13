@@ -40,9 +40,9 @@ function EventList({ rows, testId }: { rows: readonly HistoryRow[]; testId: stri
             {row.score.map((set, setIndex) => (
               <span key={setIndex}>
                 {setIndex > 0 ? ' ' : null}
-                <span className={set.aChanged ? 'history-changed' : undefined}>{set.a}</span>
+                {set.aChanged ? <mark className="history-changed">{set.a}</mark> : <span>{set.a}</span>}
                 :
-                <span className={set.bChanged ? 'history-changed' : undefined}>{set.b}</span>
+                {set.bChanged ? <mark className="history-changed">{set.b}</mark> : <span>{set.b}</span>}
               </span>
             ))}
           </span>

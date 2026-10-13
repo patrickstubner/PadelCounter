@@ -146,10 +146,7 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
     }
     case 'match/reset': {
       if (!isUuid(event.matchId)) return state;
-      return createMatch(event.at, event.matchId.toLowerCase(), {
-        a: state.teams.a.name,
-        b: state.teams.b.name,
-      });
+      return createMatch(event.at, event.matchId.toLowerCase());
     }
     case 'match/end':
       return stamp(state, event.at, {

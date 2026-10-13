@@ -82,6 +82,11 @@ describe('match archive', () => {
     expect(listMatches(undone.log, undone.archive)[0]?.status).toBe('Team A wins');
   });
 
+  it('lists past matches newest first', () => {
+    const listed = listMatches(createLog(T0 + 100, THIRD), [archived(ID, T0), archived(NEXT, T0 + 50)]);
+    expect(listed.filter((match) => !match.live).map((match) => match.id)).toEqual([NEXT, ID]);
+  });
+
   it('stores an abandoned match as ended early and skips a blank court', () => {
     const left = sessionReducer(session(played(ID, 2, T0)), {
       type: 'record',

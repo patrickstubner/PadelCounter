@@ -45,7 +45,7 @@ describe('history page', () => {
     expect(html).not.toContain('data-testid="serve-label"');
   });
 
-  it('shows the current match oldest-first and the played matches left to right', () => {
+  it('shows the current match newest-first and the played matches newest-first', () => {
     let log = createLog(T0, ID, { a: 'Lobos', b: 'Team B' });
     log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1_000 });
     log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 2_000 });
@@ -70,8 +70,8 @@ describe('history page', () => {
         mode="list"
         live={{ nameA: 'Team A', nameB: 'Team B', gameA: 0, gameB: 0, setsLabel: '0:0', detail: 'Set 1' }}
         rows={[
-          { at: T0 + 1_000, label: 'Lobos won the game', score: [{ a: 1, b: 0, aChanged: true, bChanged: false }] },
           { at: T0 + 2_000, label: 'Team B won the game', score: [{ a: 1, b: 1, aChanged: false, bChanged: true }] },
+          { at: T0 + 1_000, label: 'Lobos won the game', score: [{ a: 1, b: 0, aChanged: true, bChanged: false }] },
         ]}
         played={past ? [past] : []}
         selected={null}
@@ -83,9 +83,9 @@ describe('history page', () => {
     expect(page).toContain('>Match</button>');
     expect(page).toContain('data-testid="history-current"');
     expect(page).toContain('>0:0<');
-    expect(page.indexOf('Lobos won the game')).toBeLessThan(page.indexOf('Team B won the game'));
-    expect(page).toContain('class="history-changed">1</span>:<span>0</span>');
-    expect(page).toContain('<span>1</span>:<span class="history-changed">1</span>');
+    expect(page.indexOf('Team B won the game')).toBeLessThan(page.indexOf('Lobos won the game'));
+    expect(page).toContain('<mark class="history-changed">1</mark>:<span>0</span>');
+    expect(page).toContain('<span>1</span>:<mark class="history-changed">1</mark>');
     expect(page).toContain('Played matches');
     expect(page).toContain('ended early');
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../app.css'), 'utf8');
@@ -123,7 +123,7 @@ describe('history page', () => {
     expect(detail).toContain('data-testid="match-detail"');
     expect(detail).toContain('>Back</button>');
     expect(detail).toContain('Lobos won the game');
-    expect(detail).toContain('class="history-changed">1</span>');
+    expect(detail).toContain('<mark class="history-changed">1</mark>');
     expect(detail).toContain('>0<');
     expect(detail).not.toContain('Resume');
     expect(detail.indexOf('data-testid="history-back"')).toBeLessThan(detail.indexOf('Lobos won the game'));

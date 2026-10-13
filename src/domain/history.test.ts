@@ -6,16 +6,16 @@ const ID = '00000000-0000-4000-8000-0000000000aa';
 const T0 = new Date(2026, 9, 13, 14, 0, 0).getTime();
 
 describe('match history rows', () => {
-  it('lists games oldest first with the score after each point', () => {
+  it('lists games newest first with the score after each point', () => {
     let log = createLog(T0, ID, { a: 'Team A', b: 'Team B' });
     log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1_000 });
     log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 2_000 });
     const rows = currentHistory(log);
-    expect(rows.map((row) => formatHistoryScore(row.score))).toEqual(['1:0', '1:1']);
-    expect(rows[0]?.score[0]).toMatchObject({ a: 1, b: 0, aChanged: true, bChanged: false });
-    expect(rows[1]?.score[0]).toMatchObject({ a: 1, b: 1, aChanged: false, bChanged: true });
-    expect(rows.map((row) => row.label)).toEqual(['Team A won the game', 'Team B won the game']);
-    expect(rows[0]?.at).toBeLessThan(rows[1]?.at ?? 0);
+    expect(rows.map((row) => formatHistoryScore(row.score))).toEqual(['1:1', '1:0']);
+    expect(rows[0]?.score[0]).toMatchObject({ a: 1, b: 1, aChanged: false, bChanged: true });
+    expect(rows[1]?.score[0]).toMatchObject({ a: 1, b: 0, aChanged: true, bChanged: false });
+    expect(rows.map((row) => row.label)).toEqual(['Team B won the game', 'Team A won the game']);
+    expect(rows[0]?.at).toBeGreaterThan(rows[1]?.at ?? 0);
   });
 
   it('adds the set score when a set is won or the active set changes', () => {
@@ -25,14 +25,14 @@ describe('match history rows', () => {
     }
     log = appendEvent(log, { type: 'set/select', index: 0, at: T0 + 8_000 });
     const rows = currentHistory(log);
-    expect(formatHistoryScore(rows[0]?.score ?? [])).toBe('1:0');
-    expect(rows[0]?.score[0]?.aChanged).toBe(true);
-    expect(formatHistoryScore(rows[5]?.score ?? [])).toBe('6:0');
-    expect(rows[5]?.score[0]).toMatchObject({ a: 6, b: 0, aChanged: true, bChanged: false });
-    expect(rows[6]?.label).toBe('Set 1');
-    expect(formatHistoryScore(rows[6]?.score ?? [])).toBe('6:0');
-    expect(rows[6]?.score[0]?.aChanged).toBe(false);
-    expect(rows[6]?.score[0]?.bChanged).toBe(false);
+    expect(rows[0]?.label).toBe('Set 1');
+    expect(formatHistoryScore(rows[0]?.score ?? [])).toBe('6:0');
+    expect(rows[0]?.score[0]?.aChanged).toBe(false);
+    expect(rows[0]?.score[0]?.bChanged).toBe(false);
+    expect(formatHistoryScore(rows[1]?.score ?? [])).toBe('6:0');
+    expect(rows[1]?.score[0]).toMatchObject({ a: 6, b: 0, aChanged: true, bChanged: false });
+    expect(formatHistoryScore(rows.at(-1)?.score ?? [])).toBe('1:0');
+    expect(rows.at(-1)?.score[0]?.aChanged).toBe(true);
   });
 
   it('undoes a B-start rotation back through A1 to B1', () => {
@@ -104,7 +104,7 @@ describe('match history rows', () => {
       for (let i = 0; i < 3; i += 1) point('a');
       for (let i = 0; i < 5; i += 1) point('a');
       point(finish);
-      return currentHistory(log).at(-1);
+      return currentHistory(log)[0];
     };
 
     const toOne = reached('b');

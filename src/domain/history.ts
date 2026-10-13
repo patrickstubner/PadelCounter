@@ -61,7 +61,7 @@ function rowLabel(event: MatchEvent, state: MatchState): string {
   return describeEvent(event);
 }
 
-/** Oldest event first. Each row shows the full set score after the event. */
+/** Newest event first. Each row shows the full set score after the event. */
 export function historyRows(start: MatchState, events: readonly MatchEvent[]): HistoryRow[] {
   const rows: HistoryRow[] = [];
   let state = start;
@@ -75,6 +75,7 @@ export function historyRows(start: MatchState, events: readonly MatchEvent[]): H
       score: markedSets(before, after),
     });
   }
+  rows.reverse();
   return rows;
 }
 
