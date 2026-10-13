@@ -409,9 +409,8 @@ button:disabled { cursor: not-allowed; }
 
 .serve-prompt {
   margin: 0;
-  max-width: 9rem;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.2;
   color: #ffffff;
