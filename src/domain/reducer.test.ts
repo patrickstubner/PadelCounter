@@ -169,7 +169,7 @@ describe('matchReducer', () => {
     }
   });
 
-  it('applies a serve chosen after a scored game to the next game only', () => {
+  it('derives the opening order when serve is set at 1:0 and steps back with undo', () => {
     let state = play(start(), 'a', 1);
     expect(state.sets[0]).toEqual({ a: 1, b: 0 });
     expect(state.serve).toBeNull();
@@ -178,7 +178,37 @@ describe('matchReducer', () => {
     expect(state.sets[0]).toEqual({ a: 1, b: 0 });
     state = play(state, 'b', 1);
     expect(state.sets[0]).toEqual({ a: 1, b: 1 });
-    expect(state.serve).toEqual({ team: 'b', player: 1 });
+    expect(state.serve).toEqual({ team: 'b', player: 2 });
+    state = matchReducer(state, { type: 'game/decrement', team: 'b', at: state.updatedAt + 1 });
+    expect(state.sets[0]).toEqual({ a: 1, b: 0 });
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+
+    let fromB = play(start(), 'b', 1);
+    fromB = matchReducer(fromB, { type: 'serve/set', team: 'b', player: 1, at: fromB.updatedAt + 1 });
+    fromB = play(fromB, 'a', 1);
+    expect(fromB.serve).toEqual({ team: 'a', player: 2 });
+    fromB = matchReducer(fromB, { type: 'game/decrement', team: 'a', at: fromB.updatedAt + 1 });
+    expect(fromB.serve).toEqual({ team: 'b', player: 1 });
+  });
+
+  it('rotates B1 A1 B2 A2 when B serves first, and undo restores each server', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'b', player: 1, at: T0 + 1 });
+    const order = [
+      { team: 'a', player: 1 },
+      { team: 'b', player: 2 },
+      { team: 'a', player: 2 },
+      { team: 'b', player: 1 },
+    ] as const;
+    const seen = [{ ...state }];
+    for (const expected of order) {
+      state = play(state, 'b', 1);
+      expect(state.serve).toEqual(expected);
+      seen.push(state);
+    }
+    for (let index = seen.length - 2; index >= 0; index -= 1) {
+      state = matchReducer(state, { type: 'game/decrement', team: 'b', at: state.updatedAt + 1 });
+      expect(state.serve).toEqual(seen[index]?.serve);
+    }
   });
 
   it('lets a manual serve override replace the rotation and steps back on decrement', () => {

@@ -10,8 +10,12 @@ import {
   celebrationStamp,
   celebrationWinner,
   matchWinner,
+  gamesPlayed,
+  inferServeStart,
+  openingServer,
   rotateServe,
   serveChoice,
+  serveCycle,
   serveLabel,
   setWinner,
   tiebreakHint,
@@ -206,18 +210,40 @@ describe('display', () => {
 
 describe('serve rotation', () => {
   it('cycles teams and partners, and can be cleared from the same team', () => {
-    expect(rotateServe({ team: 'a', player: 1 }, 1)).toEqual({ team: 'b', player: 1 });
-    expect(rotateServe({ team: 'b', player: 1 }, 1)).toEqual({ team: 'a', player: 2 });
-    expect(rotateServe({ team: 'a', player: 2 }, 1)).toEqual({ team: 'b', player: 2 });
-    expect(rotateServe({ team: 'b', player: 2 }, 1)).toEqual({ team: 'a', player: 1 });
-    expect(rotateServe({ team: 'a', player: 1 }, -1)).toEqual({ team: 'b', player: 2 });
-    expect(rotateServe(null, 1)).toBeNull();
+    expect(serveCycle('a').map((server) => `${server.team}${server.player}`)).toEqual(['a1', 'b1', 'a2', 'b2']);
+    expect(serveCycle('b').map((server) => `${server.team}${server.player}`)).toEqual(['b1', 'a1', 'b2', 'a2']);
+    expect(rotateServe({ team: 'a', player: 1 }, 0, 1)).toEqual({ team: 'b', player: 1 });
+    expect(rotateServe({ team: 'b', player: 1 }, 0, 1)).toEqual({ team: 'a', player: 1 });
+    expect(rotateServe({ team: 'a', player: 1 }, 1, 1)).toEqual({ team: 'b', player: 2 });
+    expect(rotateServe({ team: 'b', player: 1 }, 1, 1)).toEqual({ team: 'a', player: 2 });
+    expect(rotateServe({ team: 'a', player: 1 }, 0, -1)).toEqual({ team: 'b', player: 2 });
+    expect(rotateServe(null, 0, 1)).toBeNull();
     expect(serveChoice(null, 'b')).toEqual({ team: 'b', player: 1 });
     expect(serveChoice({ team: 'a', player: 1 }, 'a')).toEqual({ team: 'a', player: 2 });
     expect(serveChoice({ team: 'a', player: 2 }, 'a')).toBeNull();
     expect(serveChoice({ team: 'a', player: 2 }, 'b')).toEqual({ team: 'b', player: 1 });
-    expect(serveLabel(null)).toBe('«Serve open»');
-    expect(serveLabel({ team: 'a', player: 1 })).toBe('«Serve A1»');
+    expect(serveLabel(null)).toBe('Serve open');
+    expect(serveLabel({ team: 'a', player: 1 })).toBe('Serve A1');
+  });
+
+  it('follows the team that served first, including a serve set at 1:0', () => {
+    const fromA = serveCycle('a');
+    for (let step = 0; step < 4; step += 1) {
+      expect(rotateServe(fromA[step]!, step, 1)).toEqual(fromA[(step + 1) % 4]);
+      expect(inferServeStart(step, fromA[step]!)).toBe('a');
+    }
+    const fromB = serveCycle('b');
+    for (let step = 0; step < 4; step += 1) {
+      expect(rotateServe(fromB[step]!, step, 1)).toEqual(fromB[(step + 1) % 4]);
+      expect(inferServeStart(step, fromB[step]!)).toBe('b');
+    }
+    expect(rotateServe({ team: 'b', player: 1 }, 1, 1)).toEqual({ team: 'a', player: 2 });
+    expect(rotateServe({ team: 'b', player: 1 }, 1, 1)).not.toEqual({ team: 'a', player: 1 });
+    expect(openingServer(1, { team: 'a', player: 1 })).toEqual({ team: 'b', player: 1 });
+    expect(rotateServe({ team: 'a', player: 1 }, 1, 1)).toEqual({ team: 'b', player: 2 });
+    expect(openingServer(1, { team: 'b', player: 1 })).toEqual({ team: 'a', player: 1 });
+    expect(gamesPlayed([{ a: 1, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }])).toBe(1);
+    expect(gamesPlayed([{ a: 6, b: 4 }, { a: 1, b: 0 }, { a: 0, b: 0 }])).toBe(11);
   });
 
   it('marks only a 6:6 active set as a tiebreak', () => {

@@ -45,7 +45,7 @@ const workboxPlugin: RsbuildPlugin = {
         swDest,
         globDirectory: dist,
         globPatterns: ['**/*.{html,js,css,webmanifest,png,svg,ico,txt}'],
-        globIgnores: ['**/sw.js', '**/*.map'],
+        globIgnores: ['**/sw.js', '**/*.map', '**/icon-1024.png'],
         modifyURLPrefix: { '': prefix },
         inlineWorkboxRuntime: true,
         mode: 'production',

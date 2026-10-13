@@ -55,6 +55,11 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
             onClick={() => onServe(team)}
           >
             <BallIcon />
+            {serving && state.serve ? (
+              <span className="serve-player" data-testid={`serve-player-${team}`}>
+                {state.serve.player}
+              </span>
+            ) : null}
           </button>
         </div>
         <div className={`current-set${activeWinner === team ? ' is-won' : ''}`} data-testid={`current-${team}`} aria-hidden="true">

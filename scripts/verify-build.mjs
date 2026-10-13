@@ -64,7 +64,6 @@ for (const name of manifestNames) {
 const precached = [
   'icons/icon-192.png',
   'icons/icon-512.png',
-  'icons/icon-1024.png',
   'icons/icon-maskable-192.png',
   'icons/icon-maskable-512.png',
   'icons/apple-touch-icon-180.png',
@@ -78,6 +77,8 @@ const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
 for (const file of precached) {
   if (!sw.includes(`${pageBase}${file}`)) fail(`precache missing ${file}`);
 }
+if (sw.includes('icon-1024.png')) fail('icon-1024.png must not be precached');
+if (!statSync(join(dist, 'icons/icon-1024.png')).isFile()) fail('icon-1024.png missing from dist');
 if (sw.includes('importScripts(')) fail('service worker loads an external script');
 
 for (const file of walk(dist)) {
