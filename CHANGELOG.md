@@ -2,6 +2,9 @@
 
 ## 1.2.2 – 2026-10-13
 
+- Kopfzeile oben, gleich in Hoch- und Querformat: links «Padel Counter», in der Mitte Set 1, Set 2 oder Set 3, rechts das Menü. Die Satzbezeichnung zwischen den Teams entfällt.
+- Im Hochformat und auf schmalem Querformat liegen Undo, History, End match und New match im Menü oben rechts. Die Zeilen sind mindestens 56px hoch. Ab 900px Breite im Querformat bleiben die Knöpfe sichtbar. Escape schliesst das Menü.
+- Die gewonnenen Fläche geht in die Ziffern: der laufende Satz im Hochformat und alle drei Sätze im Querformat.
 - Der Aufschlag im Regeltext: «Serve is optional and rotates between teams and partners.»
 - Nach einem Tiebreak bleibt das Team gegenüber dem Tiebreak-Aufschlag vorausgewählt. Die Frage ist nur noch, welcher Spieler aufschlägt («Choose the player»). Das andere Team lässt sich in dieser Frage nicht wählen.
 - Ein angetippter Satz behält den Aufschlag.
