@@ -1,7 +1,5 @@
 import { Component, type ReactNode } from 'react';
 import { STORAGE_KEY } from './domain/persistence';
-import { readLang } from './i18n/locale';
-import { messages } from './i18n/messages';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -20,10 +18,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     if (!this.state.failed) return this.props.children;
-    const text = messages[readLang()];
     return (
       <div className="fatal" role="alert">
-        <p>{text.fatalTitle}</p>
+        <p>Padel Counter could not show the score.</p>
         <button
           type="button"
           onClick={() => {
@@ -35,9 +32,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             window.location.reload();
           }}
         >
-          {text.fatalReload}
+          Reload
         </button>
-        <p className="fatal-note">{text.fatalNote}</p>
+        <p className="fatal-note">The score saved on this device will be deleted.</p>
       </div>
     );
   }

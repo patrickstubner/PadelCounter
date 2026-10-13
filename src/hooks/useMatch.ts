@@ -4,11 +4,9 @@ import { createLog, logReducer, replay } from '../domain/log';
 import { loadLog, saveLog } from '../domain/persistence';
 import { serveChoice } from '../domain/rules';
 import type { MatchEvent, SetIndex, TeamId } from '../domain/types';
-import { readLang } from '../i18n/locale';
-import { defaultTeamNames } from '../i18n/messages';
 
 function initialLog() {
-  return loadLog(localStorage) ?? createLog(Date.now(), createMatchId(), defaultTeamNames(readLang()));
+  return loadLog(localStorage) ?? createLog(Date.now(), createMatchId());
 }
 
 export function useMatch() {
@@ -31,8 +29,6 @@ export function useMatch() {
     increment: (team: TeamId) => record({ type: 'game/increment', team, at: at() }),
     decrement: (team: TeamId) => record({ type: 'game/decrement', team, at: at() }),
     rename: (team: TeamId, name: string) => record({ type: 'team/rename', team, name, at: at() }),
-    retitleDefaults: (names: { readonly a: string; readonly b: string }) =>
-      dispatch({ type: 'retitle', names, at: at() }),
     selectSet: (index: SetIndex) => record({ type: 'set/select', index, at: at() }),
     newMatch: () => record({ type: 'match/reset', matchId: createMatchId(), at: at() }),
     endMatch: () => record({ type: 'match/end', at: at() }),

@@ -11,13 +11,13 @@ Der GitHub-Pages-Pfad ist `/PadelCounter/`, passend zum Repository-Namen.
 Oben Team A, unten Team B. Es werden nur Games gezählt, keine Punkte innerhalb eines Games.
 
 - **Querformat:** die drei Sätze stehen groß nebeneinander, links Satz 1, in der Mitte Satz 2, rechts Satz 3. Es gibt keine Satznummern an den Zahlen.
-- **Hochformat:** der laufende Satz bleibt groß. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, direkt gegenüber an der Mitte, ohne Satznummern. In der Mitte steht groß «Satz 1», «Satz 2» oder «Satz 3».
-- Plus und Minus sind die großen Flächen links und rechts. Jede Satzzahl hat eine Tippfläche (`Satz 1` bis `Satz 3`) und macht diesen Satz aktiv, damit sich der Stand korrigieren lässt. Der Wechsel steht im Verlauf und lässt sich rückgängig machen.
+- **Hochformat:** der laufende Satz bleibt groß. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, direkt gegenüber an der Mitte, ohne Satznummern. In der Mitte steht groß «Set 1», «Set 2» oder «Set 3».
+- Plus und Minus sind die großen Flächen links und rechts. Jede Satzzahl hat eine Tippfläche (`Set 1` bis `Set 3`) und macht diesen Satz aktiv, damit sich der Stand korrigieren lässt. Der Wechsel steht im Verlauf und lässt sich rückgängig machen.
 - Ein Satz ist gewonnen bei 6 Games mit zwei Vorsprung, bei 7:5, oder nach einem Tiebreak bei 6:6 als 7:6. Das Match ist Best of 3. Die Regeln begrenzen nur unsinnige Stände (zum Beispiel 8:6 oder 7:0); Minus und ein gezieltes Plus bleiben immer möglich.
-- Teamnamen antippen, ändern (höchstens 20 Zeichen) und auf diesem Gerät behalten. „Neues Spiel“ setzt den Stand nach einer Rückfrage zurück und lässt die Namen stehen. Oben neben dem Titel schaltet DE, EN, ES oder PT die Sprache um. Ohne gespeicherte Wahl gilt die Browsersprache, sonst Deutsch.
+- Teamnamen antippen, ändern (höchstens 20 Zeichen) und auf diesem Gerät behalten. „New match“ setzt den Stand nach einer Rückfrage zurück und lässt die Namen stehen. Die Oberfläche ist Englisch.
 - Aufschlag ist optional. Der Ball neben dem Teamnamen setzt Team A oder B: bei 0:0 im Satz für das erste Game, nach einem bereits gezählten Game für das nächste. Danach wechselt der Aufschlag jedes Game, innerhalb eines Teams zwischen Spieler 1 und 2 (A1, B1, A2, B2). Nochmal antippen überschreibt das, ein dritter Tipp auf dasselbe Team lässt den Aufschlag wieder offen. Bei 6:6 steht dezent, wer den Tiebreak beginnt.
-- «Rückgängig» nimmt die letzte Änderung zurück, auch mehrfach: Games, Satzwechsel, Aufschlag, Namen, «Neues Spiel» und «Spiel beenden». «Verlauf» zeigt die letzten Einträge mit Uhrzeit, an einem anderen Tag auch mit Datum.
-- «Spiel beenden» lässt den Endstand stehen und sperrt Plus, Minus, Aufschlag und Namen. «Fortsetzen» spielt am selben Stand weiter.
+- «Undo» nimmt die letzte Änderung zurück, auch mehrfach: Games, Satzwechsel, Aufschlag, Namen, «New match» und «End match». «History» zeigt die letzten Einträge mit Uhrzeit, an einem anderen Tag auch mit Datum im englischen Format.
+- «End match» lässt den Endstand stehen und sperrt Plus, Minus, Aufschlag und Namen. «Resume» spielt am selben Stand weiter.
 
 Der Bildschirm bleibt nach Möglichkeit an (Screen Wake Lock). Fehlt die API oder lehnt das System ab, zählt die App trotzdem weiter.
 

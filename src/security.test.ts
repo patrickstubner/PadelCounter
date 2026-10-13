@@ -54,6 +54,7 @@ describe('shipped source stays local and text-only', () => {
     const readme = readFileSync(join(repoRoot, 'README.md'), 'utf8');
     expect(html).toContain('<%= assetPrefix %>/');
     expect(html).not.toContain(`${PAGE_BASE}/`);
+    expect(html).toContain('<html lang="en">');
     expect(html).toContain('Content-Security-Policy');
     expect(html).not.toContain('unsafe-inline');
     expect(html).not.toContain('unsafe-eval');
@@ -68,6 +69,8 @@ describe('shipped source stays local and text-only', () => {
 
   it('ships the install icons named by the manifest', () => {
     const manifest = JSON.parse(readFileSync(join(repoRoot, 'public/manifest.webmanifest'), 'utf8')) as {
+      lang: string;
+      description: string;
       name: string;
       short_name: string;
       display: string;
@@ -75,6 +78,8 @@ describe('shipped source stays local and text-only', () => {
       background_color: string;
       icons: { src: string; sizes: string; purpose: string; type: string }[];
     };
+    expect(manifest.lang).toBe('en');
+    expect(manifest.description).toBe('Game counter for padel. Offline and only on this device.');
     expect(manifest.name).toBe('Padel Counter');
     expect(manifest.short_name).toBe('Padel Counter');
     expect(manifest.display).toBe('standalone');

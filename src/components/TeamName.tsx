@@ -4,11 +4,10 @@ import { MAX_TEAM_NAME_UTF16_UNITS, clampTeamNameDraft } from '../domain/names';
 interface TeamNameProps {
   name: string;
   locked: boolean;
-  label: string;
   onCommit: (name: string) => void;
 }
 
-export function TeamName({ name, locked, label, onCommit }: TeamNameProps) {
+export function TeamName({ name, locked, onCommit }: TeamNameProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const cancel = useRef(false);
@@ -42,7 +41,7 @@ export function TeamName({ name, locked, label, onCommit }: TeamNameProps) {
       autoCorrect="off"
       autoComplete="off"
       spellCheck={false}
-      aria-label={label}
+      aria-label="Team name"
       onChange={(event) => {
         setDraft(clampTeamNameDraft(event.target.value));
       }}

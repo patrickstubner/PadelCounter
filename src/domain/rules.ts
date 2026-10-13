@@ -1,7 +1,7 @@
 import type { MatchState, PlayerSlot, Server, SetIndex, SetScore, TeamId } from './types';
 
 export const RULES_SUMMARY =
-  'Satz gewonnen bei 6 Games mit 2 Vorsprung, 7:5, Tiebreak bei 6:6 → 7:6. Match: Best of 3. Aufschlag optional (A1, B1, A2, B2). Satz antippen zum Korrigieren.';
+  'Set won at 6 games with a lead of 2, at 7–5, or 7–6 after 6–6. Match: best of 3. Serve is optional (A1, B1, A2, B2). Tap a set to correct it.';
 
 /** Teams alternate every game; partners alternate within a team. */
 export const SERVE_ORDER: readonly Server[] = [
@@ -84,8 +84,8 @@ export function serveChoice(current: Server | null, team: TeamId): Server | null
 }
 
 export function serveLabel(serve: Server | null): string {
-  if (!serve) return '«Aufschlag offen»';
-  return `«Aufschlag ${serve.team.toUpperCase()}${serve.player}»`;
+  if (!serve) return '«Serve open»';
+  return `«Serve ${serve.team.toUpperCase()}${serve.player}»`;
 }
 
 /** The unscored game of the active set is a tiebreak when the set is 6:6. */
@@ -98,7 +98,7 @@ export function tiebreakHint(state: MatchState): string | null {
   if (!isTiebreak(state)) return null;
   if (!state.serve) return 'Tiebreak';
   const who = `${state.serve.team.toUpperCase()}${state.serve.player}`;
-  return `Tiebreak · ${who} beginnt, danach je 2`;
+  return `Tiebreak · ${who} starts, then two each`;
 }
 
 export function serverMark(team: TeamId, player: PlayerSlot): string {

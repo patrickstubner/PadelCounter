@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendEvent, createLog, describeEvent, formatEventTime, replay, retitleTeams, undoLog } from './log';
+import { appendEvent, createLog, describeEvent, formatEventTime, replay, undoLog } from './log';
 import type { MatchEvent } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000c';
@@ -58,7 +58,7 @@ describe('match log', () => {
     log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
     log = appendEvent(log, { type: 'set/select', index: 1, at: T0 + 2 });
     expect(log.events.at(-1)).toMatchObject({ type: 'set/select', index: 1 });
-    expect(describeEvent(log.events.at(-1)!)).toBe('Satz 2');
+    expect(describeEvent(log.events.at(-1)!)).toBe('Set 2');
     expect(replay(log).activeSet).toBe(1);
     expect(replay(log).sets[0]).toEqual({ a: 1, b: 0 });
 
@@ -76,17 +76,17 @@ describe('match log', () => {
   });
 
   it('describes events without using the raw rename text as markup', () => {
-    expect(describeEvent({ type: 'game/increment', team: 'a', at: T0 })).toBe('Game für A');
-    expect(describeEvent({ type: 'game/decrement', team: 'b', at: T0 })).toBe('Game B zurück');
-    expect(describeEvent({ type: 'set/select', index: 2, at: T0 })).toBe('Satz 3');
-    expect(describeEvent({ type: 'match/reset', matchId: ID, at: T0 })).toBe('Neues Spiel');
-    expect(describeEvent({ type: 'serve/set', team: 'a', player: 1, at: T0 })).toBe('Aufschlag A1');
-    expect(describeEvent({ type: 'serve/set', team: null, player: null, at: T0 })).toBe('Aufschlag offen');
-    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Spiel beendet');
-    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Fortsetzen');
+    expect(describeEvent({ type: 'game/increment', team: 'a', at: T0 })).toBe('Game for A');
+    expect(describeEvent({ type: 'game/decrement', team: 'b', at: T0 })).toBe('Game B back');
+    expect(describeEvent({ type: 'set/select', index: 2, at: T0 })).toBe('Set 3');
+    expect(describeEvent({ type: 'match/reset', matchId: ID, at: T0 })).toBe('New match');
+    expect(describeEvent({ type: 'serve/set', team: 'a', player: 1, at: T0 })).toBe('Serve A1');
+    expect(describeEvent({ type: 'serve/set', team: null, player: null, at: T0 })).toBe('Serve open');
+    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Match ended');
+    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Resume');
     expect(describeEvent({ type: 'team/rename', team: 'a', name: '<b>Hi</b>', at: T0 })).toBe('Name A · <b>Hi</b>');
-    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Spiel beendet');
-    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Fortsetzen');
+    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Match ended');
+    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Resume');
   });
 
   it('undo and resume both reopen an ended match, and timestamps show the local clock', () => {
@@ -104,26 +104,11 @@ describe('match log', () => {
     expect(replay(log).ended).toBe(false);
     log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 4 });
     expect(replay(log).sets[0]).toEqual({ a: 1, b: 1 });
-    expect(describeEvent(log.events[1]!)).toBe('Spiel beendet');
-    expect(describeEvent(log.events[2]!)).toBe('Fortsetzen');
+    expect(describeEvent(log.events[1]!)).toBe('Match ended');
+    expect(describeEvent(log.events[2]!)).toBe('Resume');
 
     const now = new Date(2026, 9, 13, 18, 0, 0).getTime();
     expect(formatEventTime(new Date(2026, 9, 13, 14, 5, 9).getTime(), now)).toBe('14:05:09');
-    expect(formatEventTime(new Date(2026, 9, 12, 9, 1, 2).getTime(), now)).toBe('12.10.2026 09:01:02');
-  });
-
-  it('retitles both default names together', () => {
-    const fresh = retitleTeams(createLog(T0, ID, { a: 'Team A', b: 'Team B' }), { a: 'Equipo A', b: 'Equipo B' }, T0 + 1);
-    expect(fresh.events).toHaveLength(0);
-    expect(replay(fresh).teams.a.name).toBe('Equipo A');
-    expect(replay(fresh).teams.b.name).toBe('Equipo B');
-
-    let renamed = appendEvent(createLog(T0, ID), { type: 'team/rename', team: 'a', name: 'Nord', at: T0 + 1 });
-    renamed = appendEvent(renamed, { type: 'team/rename', team: 'a', name: 'Team A', at: T0 + 2 });
-    const next = retitleTeams(renamed, { a: 'Time A', b: 'Time B' }, T0 + 3);
-    expect(replay(next).teams.a.name).toBe('Time A');
-    expect(replay(next).teams.b.name).toBe('Time B');
-    expect(next.events).toHaveLength(4);
-    expect(retitleTeams(next, { a: 'Time A', b: 'Time B' }, T0 + 4)).toBe(next);
+    expect(formatEventTime(new Date(2026, 9, 12, 9, 1, 2).getTime(), now)).toBe('10/12/2026 09:01:02');
   });
 });

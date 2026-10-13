@@ -10,7 +10,7 @@
 - Querformat wie in 1.0, ohne die Satznummern an den Satzzahlen: links Satz 1, Mitte Satz 2, rechts Satz 3. Antippen wechselt den Satz und liegt im Verlauf.
 - Hochformat: der laufende Satz bleibt groß. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, einander gegenüber und ohne Satznummern. «Satz N» in der Mitte ist dort groß.
 - Unten rechts steht dezent die App-Version aus `package.json` (`v1.1.0`). Sie liegt über der Fußzeile und verkleinert die Zählflächen nicht.
-- Sprache Deutsch, Englisch, Spanisch oder Portugiesisch (pt-BR). Der Umschalter DE/EN/ES/PT sitzt oben neben dem Titel und verkleinert die Zählflächen nicht. Ohne gespeicherte Wahl gilt die Browsersprache, sonst Deutsch. Die Wahl bleibt auf dem Gerät. Standardnamen sind Team A/B, Equipo A/B und Time A/B.
+- Die Oberfläche ist Englisch: Texte, Beschriftungen, Dialoge, Verlauf (Zeitformat `MM/DD/YYYY`) und die Manifest-Beschreibung. Standardnamen sind Team A und Team B. `html lang` ist `en`. Es gibt keinen Sprachumschalter.
 
 ## 1.0.0 – 2026-10-13
 

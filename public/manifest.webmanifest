@@ -1,7 +1,7 @@
 {
   "name": "Padel Counter",
   "short_name": "Padel Counter",
-  "description": "Games-Zähler für Padel. Offline und nur auf diesem Gerät.",
+  "description": "Game counter for padel. Offline and only on this device.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -9,7 +9,7 @@
   "orientation": "any",
   "background_color": "#0a1a3f",
   "theme_color": "#0a1a3f",
-  "lang": "de",
+  "lang": "en",
   "dir": "ltr",
   "categories": ["sports"],
   "icons": [

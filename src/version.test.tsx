@@ -37,6 +37,12 @@ describe('app version', () => {
     const html = renderToStaticMarkup(<App />);
     expect(html).toContain(`class="app-version"`);
     expect(html).toContain(`>v${version}<`);
+    expect(html).toContain('>Undo<');
+    expect(html).toContain('Team A');
+    expect(html).toContain('Team B');
+    expect(html).toContain('aria-label="Set 1"');
+    expect(html).not.toContain('lang-toggle');
+    expect(html).not.toContain('Rückgängig');
     expect(import.meta.env.APP_VERSION).toBe(version);
 
     const rsbuild = readFileSync(join(root, 'rsbuild.config.ts'), 'utf8');

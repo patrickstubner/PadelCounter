@@ -9,7 +9,7 @@
 | Fläche | Was sie kann | Was sie nicht kann |
 | --- | --- | --- |
 | Statische Dateien auf GitHub Pages | HTML, CSS, JS, Manifest, Icons, Service Worker unter `/PadelCounter/` | Keine serverseitige Ausführung, keine geheimen Header, die wir selbst setzen könnten |
-| `localStorage` (`padel-counter.v1`, `padel-counter.lang`) | Spielstand, Teamnamen, bis zu 500 Ereignisse und die Sprachwahl nur in diesem Browser | Kein Zugriff von anderen Origins; Inhalt ist kein Geheimnis |
+| `localStorage` (`padel-counter.v1`) | Spielstand, Teamnamen und bis zu 500 Ereignisse nur in diesem Browser | Kein Zugriff von anderen Origins; Inhalt ist kein Geheimnis |
 | Service Worker | Precache derselben Origin, Navigation-Fallback auf `index.html` | Kein `importScripts` von einem CDN, kein Runtime-Caching fremder Hosts |
 | Screen Wake Lock | Bildschirm wach halten, wenn der Browser es erlaubt | Kein Mikrofon, keine Kamera, kein Standort |
 | Teamnamen | Freitext, höchstens 20 Zeichen, nur als React-Text | Kein HTML, keine URLs, die die App lädt |
@@ -35,7 +35,7 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | F-13 | Service Worker | Info | Umgesetzt | Workbox-Runtime ist inline (`inlineWorkboxRuntime: true`). Der Willkommenskommentar mit `goo.gl`-Links wird entfernt. `verify-build` verbietet bekannte CDNs in `dist/`. |
 | F-14 | Supply Chain der App | Info | Gering | Produktionsabhängigkeiten sind nur `react` und `react-dom`. Vitest (und damit Vite) dient ausschließlich als Testläufer und ist nicht der Bundler. |
 | F-15 | Texte mit URLs im Bundle | Info | Akzeptiert | Der React-Produktionsbuild enthält `https://react.dev/errors/…` nur als Text in Minified-Error-Meldungen. Die App ruft die Adresse nicht auf; `connect-src 'self'` würde einen Abruf blockieren. `xmlns="http://www.w3.org/2000/svg"` ist ein XML-Namensraum, kein Request. Der Workbox-Hinweis `bit.ly` wird beim Build aus `sw.js` entfernt. |
-| F-16 | Aufschlag | Info | Behoben | `serve` ist `null` oder `{ team: a\|b, player: 1\|2 }`. Freitext gibt es dort nicht. Ein halbes Paar (Team ohne Spieler) wird weder angewendet noch geladen. Die Anzeige «Aufschlag A1» setzt React als Text. |
+| F-16 | Aufschlag | Info | Behoben | `serve` ist `null` oder `{ team: a\|b, player: 1\|2 }`. Freitext gibt es dort nicht. Ein halbes Paar (Team ohne Spieler) wird weder angewendet noch geladen. Die Anzeige «Serve A1» setzt React als Text. |
 | F-17 | Ereignisprotokoll und Rückgängig | Info | Behoben | Es werden nur bekannte Ereignistypen mit geprüften Feldern gespeichert. «Rückgängig» entfernt das letzte gespeicherte Ereignis und spielt die Liste neu ab; es gibt keinen Index und keinen Typ aus der Oberfläche, der Code ausführt. Die Verlaufsliste rendert feste Sätze und den bereits geprüften Teamnamen als Text. Die Liste ist auf 500 Ereignisse und 96000 Zeichen begrenzt. |
 | P1-01 | Namensfilter | Info | Behoben | `sanitizeTeamName` und `isValidStoredName` nutzen dieselbe Klasse `/[\p{Cc}\p{Cf}\u2028\u2029]/gu`. Tests prüfen C0, C1, Formatzeichen und U+2028/U+2029, und dass `lastIndex` die zweite Prüfung nicht überspringt. |
 | P1-02 | Kürzung | Info | Behoben | Nach dem Schnitt auf 20 Codepoints wird getrimmt und ein halbes Surrogate entfernt, danach noch einmal getrimmt. Ein fast-check-Lauf (200 Zeichenketten, auch einzelne Surrogates) erwartet, dass das Ergebnis die Ladeprüfung besteht. |

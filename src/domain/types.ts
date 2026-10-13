@@ -35,7 +35,7 @@ export interface MatchState {
   readonly sets: readonly [SetScore, SetScore, SetScore];
   readonly activeSet: SetIndex;
   readonly serve: Server | null;
-  /** True after «Spiel beenden» until resume, undo, or a new match. */
+  /** True after End match until resume, undo, or a new match. */
   readonly ended: boolean;
 }
 

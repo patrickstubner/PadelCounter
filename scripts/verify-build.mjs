@@ -72,9 +72,6 @@ const precached = [
   'favicon-16.png',
   'favicon-32.png',
   'manifest.webmanifest',
-  'manifest.en.webmanifest',
-  'manifest.es.webmanifest',
-  'manifest.pt.webmanifest',
 ];
 const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
 for (const file of precached) {

@@ -28,7 +28,7 @@ function button(html: string, set: number): string {
 }
 
 describe('set row under the team name', () => {
-  it('orders the sets from the left and names each tap target Satz N', () => {
+  it('orders the sets from the left and names each tap target Set N', () => {
     const html = markup(replay(createLog(T0, ID)));
     const first = html.indexOf('data-testid="set-a-1"');
     const second = html.indexOf('data-testid="set-a-2"');
@@ -37,9 +37,9 @@ describe('set row under the team name', () => {
     expect(first).toBeLessThan(second);
     expect(second).toBeLessThan(third);
     expect(html).not.toContain('set-label');
-    expect(button(html, 1)).toContain('aria-label="Satz 1"');
-    expect(button(html, 2)).toContain('aria-label="Satz 2"');
-    expect(button(html, 3)).toContain('aria-label="Satz 3"');
+    expect(button(html, 1)).toContain('aria-label="Set 1"');
+    expect(button(html, 2)).toContain('aria-label="Set 2"');
+    expect(button(html, 3)).toContain('aria-label="Set 3"');
     expect(button(html, 1)).toContain('is-active');
     expect(button(html, 1)).toContain('aria-pressed="true"');
     expect(button(html, 2)).toContain('is-upcoming');

@@ -1,5 +1,3 @@
-import { useI18n } from '../i18n/I18n';
-import { fill } from '../i18n/messages';
 import { SplitFlap } from './SplitFlap';
 
 interface SetScoreProps {
@@ -14,7 +12,6 @@ interface SetScoreProps {
 }
 
 export function SetScore({ team, index, gamesLabel, active, won, upcoming, locked, onSelect }: SetScoreProps) {
-  const { t } = useI18n();
   const classes = [
     'set',
     active ? 'is-active' : '',
@@ -32,7 +29,7 @@ export function SetScore({ team, index, gamesLabel, active, won, upcoming, locke
       data-testid={`set-${team}-${index + 1}`}
       aria-pressed={active}
       disabled={locked}
-      aria-label={fill(t.setLabel, { n: index + 1 })}
+      aria-label={`Set ${index + 1}`}
       onClick={onSelect}
     >
       <SplitFlap value={gamesLabel} />

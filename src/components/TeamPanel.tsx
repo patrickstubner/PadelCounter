@@ -1,6 +1,4 @@
-import { canDecrement, canIncrement, displayGames, isUpcomingSet, serveChoice, setWinner, serverMark } from '../domain/rules';
-import { useI18n } from '../i18n/I18n';
-import { fill } from '../i18n/messages';
+import { canDecrement, canIncrement, displayGames, isUpcomingSet, serveChoice, setWinner } from '../domain/rules';
 import type { MatchState, SetIndex, TeamId } from '../domain/types';
 import { BallIcon, MinusIcon, PlusIcon } from './icons';
 import { SetScore } from './SetScore';
@@ -20,7 +18,6 @@ interface TeamPanelProps {
 const SETS: readonly SetIndex[] = [0, 1, 2];
 
 export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onSelectSet, onServe }: TeamPanelProps) {
-  const { t } = useI18n();
   const name = state.teams[team].name;
   const active = state.sets[state.activeSet];
   const locked = state.ended;
@@ -30,8 +27,8 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
   const serving = state.serve?.team === team;
   const nextServe = serveChoice(state.serve, team);
   const serveLabel = nextServe
-    ? fill(t.serveSet, { mark: serverMark(nextServe.team, nextServe.player), name })
-    : fill(t.serveClear, { name });
+    ? `Serve ${nextServe.team.toUpperCase()}${nextServe.player} for ${name}`
+    : `Leave the serve open, ${name}`;
 
   return (
     <section className={`team team-${team}`} aria-label={name}>
@@ -40,14 +37,14 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
         className="step step-minus"
         data-testid={`decrement-${team}`}
         disabled={minusDisabled}
-        aria-label={fill(t.decrement, { name })}
+        aria-label={`${name}: remove one game`}
         onClick={() => onDecrement(team)}
       >
         <MinusIcon />
       </button>
       <div className="team-body">
         <div className="team-head">
-          <TeamName name={name} locked={locked} label={t.teamName} onCommit={(next) => onRename(team, next)} />
+          <TeamName name={name} locked={locked} onCommit={(next) => onRename(team, next)} />
           <button
             type="button"
             className={serving ? 'ball is-on' : 'ball'}
@@ -88,7 +85,7 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
         className="step step-plus"
         data-testid={`increment-${team}`}
         disabled={plusDisabled}
-        aria-label={fill(t.increment, { name })}
+        aria-label={`${name}: add one game`}
         onClick={() => onIncrement(team)}
       >
         <PlusIcon />

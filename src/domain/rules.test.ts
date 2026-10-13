@@ -108,12 +108,12 @@ describe('display', () => {
   });
 
   it('mentions the padel rules', () => {
-    expect(RULES_SUMMARY).toContain('6 Games');
-    expect(RULES_SUMMARY).toContain('2 Vorsprung');
-    expect(RULES_SUMMARY).toContain('7:5');
-    expect(RULES_SUMMARY).toContain('6:6');
-    expect(RULES_SUMMARY).toContain('7:6');
-    expect(RULES_SUMMARY).toContain('Best of 3');
+    expect(RULES_SUMMARY).toContain('6 games');
+    expect(RULES_SUMMARY).toContain('lead of 2');
+    expect(RULES_SUMMARY).toContain('7–5');
+    expect(RULES_SUMMARY).toContain('6–6');
+    expect(RULES_SUMMARY).toContain('7–6');
+    expect(RULES_SUMMARY).toContain('best of 3');
     expect(RULES_SUMMARY).toContain('A1, B1, A2, B2');
   });
 });
@@ -130,8 +130,8 @@ describe('serve rotation', () => {
     expect(serveChoice({ team: 'a', player: 1 }, 'a')).toEqual({ team: 'a', player: 2 });
     expect(serveChoice({ team: 'a', player: 2 }, 'a')).toBeNull();
     expect(serveChoice({ team: 'a', player: 2 }, 'b')).toEqual({ team: 'b', player: 1 });
-    expect(serveLabel(null)).toBe('«Aufschlag offen»');
-    expect(serveLabel({ team: 'a', player: 1 })).toBe('«Aufschlag A1»');
+    expect(serveLabel(null)).toBe('«Serve open»');
+    expect(serveLabel({ team: 'a', player: 1 })).toBe('«Serve A1»');
   });
 
   it('marks only a 6:6 active set as a tiebreak', () => {
@@ -148,7 +148,7 @@ describe('serve rotation', () => {
       serve: { team: 'b' as const, player: 2 as const },
     };
     expect(isTiebreak(tied)).toBe(true);
-    expect(tiebreakHint(tied)).toBe('Tiebreak · B2 beginnt, danach je 2');
+    expect(tiebreakHint(tied)).toBe('Tiebreak · B2 starts, then two each');
     expect(tiebreakHint({ ...tied, serve: null })).toBe('Tiebreak');
   });
 });

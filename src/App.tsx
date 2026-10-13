@@ -1,24 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ConfirmDialog } from './components/ConfirmDialog';
-import { LanguageSwitch } from './components/LanguageSwitch';
 import { TeamPanel } from './components/TeamPanel';
 import { describeEvent, formatEventTime } from './domain/log';
-import { isTiebreak, matchWinner, serverMark } from './domain/rules';
+import { RULES_SUMMARY, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
-import { I18nProvider, useI18n } from './i18n/I18n';
-import { defaultNamesForLanguageSwitch, fill, localizedTeamName } from './i18n/messages';
 import { useWakeLock } from './useWakeLock';
 
 export function App() {
-  return (
-    <I18nProvider>
-      <MatchApp />
-    </I18nProvider>
-  );
-}
-
-function MatchApp() {
-  const { lang, t } = useI18n();
   const match = useMatch();
   useWakeLock();
   const [confirming, setConfirming] = useState<'reset' | 'end' | null>(null);
@@ -26,43 +14,20 @@ function MatchApp() {
   const { state } = match;
   const winner = matchWinner(state.sets);
   const active = state.sets[state.activeSet];
+  const tiebreak = tiebreakHint(state);
   const recent = match.events.slice(-8).reverse();
-  const nameA = state.teams.a.name;
-  const nameB = state.teams.b.name;
-  const retitleRef = useRef(match.retitleDefaults);
-  retitleRef.current = match.retitleDefaults;
-  useEffect(() => {
-    const next = defaultNamesForLanguageSwitch(nameA, nameB, lang);
-    if (!next) return;
-    retitleRef.current(next);
-  }, [lang, nameA, nameB]);
-  const commitName = (team: 'a' | 'b', name: string) => {
-    match.rename(team, localizedTeamName(lang, team, name));
-  };
-
-  const serve = state.serve
-    ? fill(t.serveNamed, { mark: serverMark(state.serve.team, state.serve.player) })
-    : t.serveOpen;
-  const tiebreak = !isTiebreak(state)
-    ? null
-    : state.serve
-      ? fill(t.tiebreakWho, { who: serverMark(state.serve.team, state.serve.player) })
-      : t.tiebreak;
-  const scoreLine = `${nameA} ${active.a}, ${nameB} ${active.b}`;
-  const setLabel = fill(t.setLabel, { n: state.activeSet + 1 });
+  const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
+  const serve = serveLabel(state.serve);
   const live = state.ended
-    ? fill(t.liveEnded, { score: scoreLine })
+    ? `Match ended. Final score. ${scoreLine}.`
     : winner
-      ? fill(t.liveWin, { name: state.teams[winner].name, serve })
-      : `${setLabel}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
+      ? `Win for ${state.teams[winner].name}. ${serve}.`
+      : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
 
   return (
     <div className="app">
       <header className="top">
-        <div className="brand-wrap">
-          <h1 className="brand">Padel Counter</h1>
-          <LanguageSwitch />
-        </div>
+        <h1 className="brand">Padel Counter</h1>
         <div className="top-actions">
           <button
             type="button"
@@ -71,7 +36,7 @@ function MatchApp() {
             disabled={!match.canUndo}
             onClick={match.undo}
           >
-            {t.undo}
+            Undo
           </button>
           <button
             type="button"
@@ -80,19 +45,19 @@ function MatchApp() {
             aria-expanded={historyOpen}
             onClick={() => setHistoryOpen((open) => !open)}
           >
-            {t.history}
+            History
           </button>
           {state.ended ? (
             <button type="button" className="text-btn undo-btn" data-testid="resume-match" onClick={match.resumeMatch}>
-              {t.resume}
+              Resume
             </button>
           ) : (
             <button type="button" className="text-btn" data-testid="end-match" onClick={() => setConfirming('end')}>
-              {t.endMatch}
+              End match
             </button>
           )}
           <button type="button" className="text-btn" data-testid="new-match" onClick={() => setConfirming('reset')}>
-            {t.newMatch}
+            New match
           </button>
         </div>
       </header>
@@ -102,25 +67,23 @@ function MatchApp() {
           state={state}
           onIncrement={match.increment}
           onDecrement={match.decrement}
-          onRename={commitName}
+          onRename={match.rename}
           onSelectSet={match.selectSet}
           onServe={match.chooseServe}
         />
         <div className="mid">
           {state.ended ? (
             <span className="chip chip-ended" data-testid="match-status">
-              {t.ended}
+              Ended
             </span>
           ) : winner ? (
-            <span className={`chip chip-${winner}`}>{fill(t.win, { name: state.teams[winner].name })}</span>
+            <span className={`chip chip-${winner}`}>Win · {state.teams[winner].name}</span>
           ) : (
-            <span className="chip chip-set" data-testid="active-set">
-              {setLabel}
-            </span>
+            <span className="chip chip-set" data-testid="active-set">{`Set ${state.activeSet + 1}`}</span>
           )}
           {state.ended ? (
             <p className="end-note" data-testid="final-score">
-              {t.finalScore}
+              Final score
             </p>
           ) : null}
           <p className="serve-line" data-testid="serve-label">
@@ -137,30 +100,30 @@ function MatchApp() {
           state={state}
           onIncrement={match.increment}
           onDecrement={match.decrement}
-          onRename={commitName}
+          onRename={match.rename}
           onSelectSet={match.selectSet}
           onServe={match.chooseServe}
         />
       </main>
       <footer className="foot">
-        {match.saveFailed ? <p className="save-note">{t.saveFailed}</p> : null}
+        {match.saveFailed ? <p className="save-note">Saving on this device failed.</p> : null}
         {historyOpen ? (
           recent.length > 0 ? (
             <ol className="history" data-testid="history-list">
               {recent.map((event, index) => (
                 <li key={`${event.at}-${event.type}-${index}`}>
-                  <time dateTime={new Date(event.at).toISOString()}>{formatEventTime(event.at, Date.now(), lang)}</time>{' '}
-                  {describeEvent(event, lang)}
+                  <time dateTime={new Date(event.at).toISOString()}>{formatEventTime(event.at)}</time>{' '}
+                  {describeEvent(event)}
                 </li>
               ))}
             </ol>
           ) : (
             <p className="history-empty" data-testid="history-list">
-              {t.historyEmpty}
+              No changes yet.
             </p>
           )
         ) : null}
-        <p className="rules">{t.rules}</p>
+        <p className="rules">{RULES_SUMMARY}</p>
         <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
       </footer>
       <p className="sr-only" aria-live="polite">
@@ -169,10 +132,9 @@ function MatchApp() {
       {confirming === 'reset' ? (
         <ConfirmDialog
           titleId="new-match-title"
-          title={t.resetTitle}
-          body={t.resetBody}
-          confirmLabel={t.resetConfirm}
-          cancelLabel={t.cancel}
+          title="New match?"
+          body="The score is reset. The team names stay."
+          confirmLabel="Reset"
           confirmTestId="confirm-reset"
           onCancel={() => setConfirming(null)}
           onConfirm={() => {
@@ -184,10 +146,9 @@ function MatchApp() {
       {confirming === 'end' ? (
         <ConfirmDialog
           titleId="end-match-title"
-          title={t.endTitle}
-          body={t.endBody}
-          confirmLabel={t.endConfirm}
-          cancelLabel={t.cancel}
+          title="End match?"
+          body="The final score stays. Plus, minus, sets, serve and names stay locked until the match resumes."
+          confirmLabel="End"
           confirmTestId="confirm-end"
           onCancel={() => setConfirming(null)}
           onConfirm={() => {
