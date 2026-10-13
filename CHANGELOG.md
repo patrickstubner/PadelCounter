@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.4 – 2026-10-13
+
+- Plus-Knöpfe haben dieselbe Umrandung wie Minus und behalten das Pluszeichen. Der Blick bleibt auf den Ziffern.
+- Querformat: Satzziffern, auch 0, 6 und zweistellige Stände, werden rechts nicht mehr abgeschnitten.
+- Jeder Verlaufseintrag zeigt den ganzen neuen Satzstand, zum Beispiel «6:3 5:1». Hervorgehoben ist nur die Zahl, die sich geändert hat. Uhrzeit und Text bleiben.
+- Saved histories are recomputed with the current serve logic. Older matches may therefore show a different server; game scores are unchanged.
+
 ## 1.2.3 – 2026-10-13
 
 - Gewinnt ein Team das nächste Game, während nach einem Tiebreak nur das Team vorausgewählt ist, wechselt die Vorauswahl auf das andere Team. Das gilt für beide Sieger gleich. Der Spieler bleibt offen («Choose the player»).

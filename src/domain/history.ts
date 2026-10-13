@@ -1,16 +1,46 @@
 import { currentMatchEvents } from './archive';
 import { describeEvent, type MatchLog } from './log';
 import { createMatch, matchReducer } from './reducer';
-import { setWinner } from './rules';
 import type { MatchEvent, MatchState, SetScore } from './types';
+
+export interface HistorySetMark {
+  readonly a: number;
+  readonly b: number;
+  readonly aChanged: boolean;
+  readonly bChanged: boolean;
+}
 
 export interface HistoryRow {
   readonly at: number;
   readonly label: string;
-  /** Game score after the event, such as `1:0`. */
-  readonly game: string | null;
-  /** Set scores when the set or its winner changed, such as `6:4`. */
-  readonly sets: string | null;
+  /** Complete set score after the event. Only the number that changed is marked. */
+  readonly score: readonly HistorySetMark[];
+}
+
+/** `6:3 5:1`, omitting sets that are still 0:0 on both sides of the event. */
+export function formatHistoryScore(score: readonly HistorySetMark[]): string {
+  return score.map((set) => `${set.a}:${set.b}`).join(' ');
+}
+
+function markedSets(before: MatchState, after: MatchState): HistorySetMark[] {
+  let last = 0;
+  for (let index = 0; index < after.sets.length; index += 1) {
+    const prev = before.sets[index] ?? { a: 0, b: 0 };
+    const next = after.sets[index] ?? { a: 0, b: 0 };
+    if (prev.a !== 0 || prev.b !== 0 || next.a !== 0 || next.b !== 0) last = index;
+  }
+  const marks: HistorySetMark[] = [];
+  for (let index = 0; index <= last; index += 1) {
+    const prev = before.sets[index] ?? { a: 0, b: 0 };
+    const next = after.sets[index] ?? { a: 0, b: 0 };
+    marks.push({
+      a: next.a,
+      b: next.b,
+      aChanged: next.a !== prev.a,
+      bChanged: next.b !== prev.b,
+    });
+  }
+  return marks;
 }
 
 export function colonSetScore(sets: readonly [SetScore, SetScore, SetScore]): string {
@@ -25,20 +55,13 @@ export function colonSetScore(sets: readonly [SetScore, SetScore, SetScore]): st
     .join(', ');
 }
 
-function setPhase(state: MatchState): string {
-  return state.sets
-    .map((set) => setWinner(set.a, set.b) ?? '-')
-    .join('')
-    .concat(String(state.activeSet));
-}
-
 function rowLabel(event: MatchEvent, state: MatchState): string {
   if (event.type === 'game/increment') return `${state.teams[event.team].name} won the game`;
   if (event.type === 'game/decrement') return `${state.teams[event.team].name} game removed`;
   return describeEvent(event);
 }
 
-/** Oldest event first. Game rows carry the score after the point; a set change also carries the sets. */
+/** Oldest event first. Each row shows the full set score after the event. */
 export function historyRows(start: MatchState, events: readonly MatchEvent[]): HistoryRow[] {
   const rows: HistoryRow[] = [];
   let state = start;
@@ -46,14 +69,10 @@ export function historyRows(start: MatchState, events: readonly MatchEvent[]): H
     const before = state;
     const after = matchReducer(before, event);
     state = after;
-    const isGame = event.type === 'game/increment' || event.type === 'game/decrement';
-    const played = after.sets[before.activeSet];
-    const setChanged = event.type === 'set/select' || setPhase(before) !== setPhase(after);
     rows.push({
       at: event.at,
       label: rowLabel(event, after),
-      game: isGame ? `${played.a}:${played.b}` : null,
-      sets: setChanged ? colonSetScore(after.sets) : null,
+      score: markedSets(before, after),
     });
   }
   return rows;
