@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig, type RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
@@ -12,21 +12,24 @@ function escapeRegExp(value: string): string {
 }
 
 function applyPageBase(dist: string): void {
-  const manifestPath = join(dist, 'manifest.webmanifest');
-  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
-    id: string;
-    start_url: string;
-    scope: string;
-    icons: { src: string }[];
-  };
   const root = `${PAGE_BASE}/`;
-  manifest.id = root;
-  manifest.start_url = root;
-  manifest.scope = root;
-  for (const icon of manifest.icons) {
-    icon.src = `${root}${icon.src.replace(/^\.?\//, '')}`;
+  for (const name of readdirSync(dist)) {
+    if (!name.endsWith('.webmanifest')) continue;
+    const manifestPath = join(dist, name);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      id: string;
+      start_url: string;
+      scope: string;
+      icons: { src: string }[];
+    };
+    manifest.id = root;
+    manifest.start_url = root;
+    manifest.scope = root;
+    for (const icon of manifest.icons) {
+      icon.src = `${root}${icon.src.replace(/^\.?\//, '')}`;
+    }
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
-  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
 const workboxPlugin: RsbuildPlugin = {

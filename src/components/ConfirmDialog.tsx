@@ -4,13 +4,23 @@ interface ConfirmDialogProps {
   title: string;
   body: string;
   confirmLabel: string;
+  cancelLabel: string;
   confirmTestId: string;
   titleId: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function ConfirmDialog({ title, body, confirmLabel, confirmTestId, titleId, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  title,
+  body,
+  confirmLabel,
+  cancelLabel,
+  confirmTestId,
+  titleId,
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -40,7 +50,7 @@ export function ConfirmDialog({ title, body, confirmLabel, confirmTestId, titleI
       <p>{body}</p>
       <div className="dialog-actions">
         <button type="button" className="btn btn-ghost" autoFocus onClick={onCancel}>
-          Abbrechen
+          {cancelLabel}
         </button>
         <button type="button" className="btn btn-solid" data-testid={confirmTestId} onClick={onConfirm}>
           {confirmLabel}

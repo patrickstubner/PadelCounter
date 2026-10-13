@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
@@ -45,16 +45,20 @@ if (/<script(?![^>]*\bsrc=)[^>]*>/.test(html)) fail('inline script in index.html
 if (/<style[\s>]/i.test(html)) fail('inline style in index.html');
 if (!html.includes(pageBase)) fail('base path missing from index.html');
 
-const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf8'));
-if (manifest.start_url !== pageBase || manifest.scope !== pageBase || manifest.id !== pageBase) {
-  fail(`unexpected manifest scope: ${manifest.start_url}`);
-}
-if (!manifest.icons.every((icon) => typeof icon.src === 'string' && icon.src.startsWith(pageBase))) {
-  fail('manifest icons are not under PAGE_BASE');
-}
-for (const icon of manifest.icons) {
-  const relative = icon.src.slice(pageBase.length);
-  if (!statSync(join(dist, relative)).isFile()) fail(`manifest icon missing from dist: ${relative}`);
+const manifestNames = readdirSync(dist).filter((name) => name.endsWith('.webmanifest'));
+if (!manifestNames.includes('manifest.webmanifest')) fail('default manifest missing');
+for (const name of manifestNames) {
+  const manifest = JSON.parse(readFileSync(join(dist, name), 'utf8'));
+  if (manifest.start_url !== pageBase || manifest.scope !== pageBase || manifest.id !== pageBase) {
+    fail(`unexpected manifest scope in ${name}: ${manifest.start_url}`);
+  }
+  if (!manifest.icons.every((icon) => typeof icon.src === 'string' && icon.src.startsWith(pageBase))) {
+    fail(`manifest icons are not under PAGE_BASE in ${name}`);
+  }
+  for (const icon of manifest.icons) {
+    const relative = icon.src.slice(pageBase.length);
+    if (!statSync(join(dist, relative)).isFile()) fail(`manifest icon missing from dist: ${relative}`);
+  }
 }
 
 const precached = [
@@ -67,6 +71,10 @@ const precached = [
   'favicon.ico',
   'favicon-16.png',
   'favicon-32.png',
+  'manifest.webmanifest',
+  'manifest.en.webmanifest',
+  'manifest.es.webmanifest',
+  'manifest.pt.webmanifest',
 ];
 const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
 for (const file of precached) {

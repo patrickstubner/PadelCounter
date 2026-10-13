@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendEvent, createLog, describeEvent, formatEventTime, replay, undoLog } from './log';
+import { appendEvent, createLog, describeEvent, formatEventTime, replay, retitleTeams, undoLog } from './log';
 import type { MatchEvent } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000c';
@@ -110,5 +110,20 @@ describe('match log', () => {
     const now = new Date(2026, 9, 13, 18, 0, 0).getTime();
     expect(formatEventTime(new Date(2026, 9, 13, 14, 5, 9).getTime(), now)).toBe('14:05:09');
     expect(formatEventTime(new Date(2026, 9, 12, 9, 1, 2).getTime(), now)).toBe('12.10.2026 09:01:02');
+  });
+
+  it('retitles both default names together', () => {
+    const fresh = retitleTeams(createLog(T0, ID, { a: 'Team A', b: 'Team B' }), { a: 'Equipo A', b: 'Equipo B' }, T0 + 1);
+    expect(fresh.events).toHaveLength(0);
+    expect(replay(fresh).teams.a.name).toBe('Equipo A');
+    expect(replay(fresh).teams.b.name).toBe('Equipo B');
+
+    let renamed = appendEvent(createLog(T0, ID), { type: 'team/rename', team: 'a', name: 'Nord', at: T0 + 1 });
+    renamed = appendEvent(renamed, { type: 'team/rename', team: 'a', name: 'Team A', at: T0 + 2 });
+    const next = retitleTeams(renamed, { a: 'Time A', b: 'Time B' }, T0 + 3);
+    expect(replay(next).teams.a.name).toBe('Time A');
+    expect(replay(next).teams.b.name).toBe('Time B');
+    expect(next.events).toHaveLength(4);
+    expect(retitleTeams(next, { a: 'Time A', b: 'Time B' }, T0 + 4)).toBe(next);
   });
 });

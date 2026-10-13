@@ -1,3 +1,5 @@
+import { type Lang, INTL_LOCALE } from '../i18n/locale';
+import { fill, messages } from '../i18n/messages';
 import { sanitizeTeamName } from './names';
 import { createMatch, matchReducer } from './reducer';
 import { serverMark } from './rules';
@@ -46,50 +48,86 @@ export function undoLog(log: MatchLog): MatchLog {
   return { schemaVersion: SCHEMA_VERSION, base: log.base, events: log.events.slice(0, -1) };
 }
 
-export type LogAction = { readonly type: 'undo' } | { readonly type: 'record'; readonly event: MatchEvent };
+/** Default names with no rename in the log stay in the base. Later renames are events, both at once. */
+export function retitleTeams(
+  log: MatchLog,
+  names: { readonly a: string; readonly b: string },
+  at: number,
+): MatchLog {
+  const a = sanitizeTeamName(names.a, 'a');
+  const b = sanitizeTeamName(names.b, 'b');
+  const state = replay(log);
+  if (state.teams.a.name === a && state.teams.b.name === b) return log;
+  if (!log.events.some((event) => event.type === 'team/rename')) {
+    return {
+      ...log,
+      base: {
+        ...log.base,
+        teams: { a: { name: a }, b: { name: b } },
+      },
+    };
+  }
+  return (['a', 'b'] as const).reduce<MatchLog>(
+    (current, team) => appendEvent(current, { type: 'team/rename', team, name: team === 'a' ? a : b, at }),
+    log,
+  );
+}
+
+export type LogAction =
+  | { readonly type: 'undo' }
+  | { readonly type: 'record'; readonly event: MatchEvent }
+  | { readonly type: 'retitle'; readonly names: { readonly a: string; readonly b: string }; readonly at: number };
 
 export function logReducer(log: MatchLog, action: LogAction): MatchLog {
   if (action.type === 'undo') return undoLog(log);
+  if (action.type === 'retitle') return retitleTeams(log, action.names, action.at);
   return appendEvent(log, action.event);
 }
 
-export function describeEvent(event: MatchEvent): string {
+export function describeEvent(event: MatchEvent, lang: Lang = 'de'): string {
+  const text = messages[lang];
   switch (event.type) {
     case 'game/increment':
-      return event.team === 'a' ? 'Game für A' : 'Game für B';
+      return fill(text.gameFor, { team: event.team.toUpperCase() });
     case 'game/decrement':
-      return event.team === 'a' ? 'Game A zurück' : 'Game B zurück';
+      return fill(text.gameBack, { team: event.team.toUpperCase() });
     case 'set/select':
-      return `Satz ${event.index + 1}`;
+      return fill(text.eventSet, { n: event.index + 1 });
     case 'team/rename':
-      return `Name ${event.team.toUpperCase()} · ${sanitizeTeamName(event.name, event.team)}`;
+      return fill(text.eventName, {
+        team: event.team.toUpperCase(),
+        name: sanitizeTeamName(event.name, event.team),
+      });
     case 'match/reset':
-      return 'Neues Spiel';
+      return text.eventNew;
     case 'match/end':
-      return 'Spiel beendet';
+      return text.eventEnd;
     case 'match/resume':
-      return 'Fortsetzen';
+      return text.eventResume;
     case 'serve/set':
-      if (event.team === null || event.player === null) return 'Aufschlag offen';
-      return `Aufschlag ${serverMark(event.team, event.player)}`;
+      if (event.team === null || event.player === null) return text.eventServeOpen;
+      return fill(text.eventServe, { mark: serverMark(event.team, event.player) });
     default:
-      return 'Änderung';
+      return text.eventChange;
   }
 }
 
-function pad(value: number): string {
-  return String(value).padStart(2, '0');
-}
-
-/** Local clock `HH:MM:SS`. A different calendar day is prefixed as `DD.MM.YYYY`. */
-export function formatEventTime(at: number, now = Date.now()): string {
+/** Local clock. A different calendar day is prefixed in the locale's date order. */
+export function formatEventTime(at: number, now = Date.now(), lang: Lang = 'de'): string {
   const date = new Date(at);
-  const clock = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   const today = new Date(now);
   const sameDay =
     date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
-  if (sameDay) return clock;
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${clock}`;
+  const tag = INTL_LOCALE[lang];
+  const time = new Intl.DateTimeFormat(tag, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).format(date);
+  if (sameDay) return time;
+  const day = new Intl.DateTimeFormat(tag, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+  return `${day} ${time}`;
 }

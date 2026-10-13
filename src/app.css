@@ -76,12 +76,72 @@ button:disabled { cursor: not-allowed; }
   gap: 0.35rem;
 }
 
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
 .brand {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.lang {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lang-btn,
+.lang-option {
+  min-width: 2.15rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  border: 1px solid #6f6f6f;
+  background: transparent;
+  color: #c8c8c8;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.lang-btn {
+  height: 0.95rem;
+  min-height: 0;
+  position: relative;
+}
+
+.lang-btn::after {
+  content: '';
+  position: absolute;
+  inset: -0.7rem -0.25rem;
+}
+
+.lang-option { min-height: 1.7rem; }
+
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  z-index: 5;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  background: #000000;
+  border: 2px solid #ffffff;
+  border-radius: 0.7rem;
+}
+
+.lang-option.is-current {
+  color: #000000;
+  background: #ffffff;
+  border-color: #ffffff;
 }
 
 .text-btn,
