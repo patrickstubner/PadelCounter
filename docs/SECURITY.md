@@ -51,7 +51,8 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | P4-04 | Tiebreak und Korrektur | Info | Behoben | Ein Tiebreak ist ein Game in der Aufschlagfolge; Punkte werden nicht rotiert. Nach diesem Game und nach `set/select` wird ein gesetzter Aufschlag geleert und «Choose the server» erscheint. `game/decrement` geht einen Schritt in derselben Folge zurück. Ein Spiel ohne gesetzten Aufschlag fragt nicht. |
 | P5-01 | Regeltext Aufschlag | Info | Behoben | Der Satz zum Aufschlag lautet «Serve is optional and rotates between teams and partners.» |
 | P5-02 | Tiebreak-Spieler | Info | Behoben | Nach dem Tiebreak-Game ist das Team gegenüber dem Starter vorausgewählt (`serveAsk`). Die Oberfläche fragt «Choose the player». Ein Aufschlag für das andere Team wird ignoriert. Ohne gesetzten Aufschlag bleibt die Frage aus. |
-| P5-03 | Satz antippen | Info | Behoben | `set/select` ändert den Aufschlag nicht. | |
+| P5-03 | Satz antippen | Info | Behoben | `set/select` ändert den Aufschlag nicht. |
+| P6-01 | Tiebreak-Vorauswahl | Info | Behoben | Solange nach dem Tiebreak nur das Team vorausgewählt ist, wechselt `serveAsk` beim nächsten gewonnenen Game auf das andere Team. Welches Team das Game gewinnt, ändert den Schritt nicht. Der Spieler bleibt offen. | |
 
 Keine Befunde mit Schwere Hoch oder Kritisch.
 

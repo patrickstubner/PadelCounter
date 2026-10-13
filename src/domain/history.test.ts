@@ -68,4 +68,22 @@ describe('match history rows', () => {
     expect(replay(log).serveAsk).toBeNull();
     expect(replay(log).servePrompt).toBe(false);
   });
+
+  it('restores the pending team when the game after a tiebreak is undone', () => {
+    let log = createLog(T0, ID);
+    log = appendEvent(log, { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    for (let i = 0; i < 6; i += 1) {
+      log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 10 + i * 2 });
+      log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 11 + i * 2 });
+    }
+    log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 100 });
+    expect(replay(log).serveAsk).toBe('b');
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 101 });
+    expect(replay(log).sets[1]).toEqual({ a: 1, b: 0 });
+    expect(replay(log).serve).toBeNull();
+    expect(replay(log).serveAsk).toBe('a');
+    log = undoLog(log);
+    expect(replay(log).serveAsk).toBe('b');
+    expect(replay(log).serve).toBeNull();
+  });
 });

@@ -135,6 +135,7 @@ export function displayGames(state: MatchState, index: SetIndex, team: TeamId): 
  * Tiebreak points are not counted. A 6–6 set is one game in this rotation: the server
  * shown at 6–6 serves that whole game, and the server does not change every two points.
  * Scoring that game keeps the opposite team and asks which partner serves next.
+ * Until a partner is chosen, each game won moves that team preselection to the other side.
  *
  * Minus walks this same cycle backwards. That restores the server of the game just
  * removed. It does not ask for a new server. Choosing another set leaves the server
