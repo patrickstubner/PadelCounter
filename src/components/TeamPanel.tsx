@@ -2,6 +2,7 @@ import { canDecrement, canIncrement, displayGames, isUpcomingSet, serveChoice, s
 import type { MatchState, SetIndex, TeamId } from '../domain/types';
 import { BallIcon, MinusIcon, PlusIcon } from './icons';
 import { SetScore } from './SetScore';
+import { SplitFlap } from './SplitFlap';
 import { TeamName } from './TeamName';
 
 interface TeamPanelProps {
@@ -22,6 +23,7 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
   const locked = state.ended;
   const plusDisabled = locked || !canIncrement(active, team);
   const minusDisabled = locked || !canDecrement(active, team);
+  const activeWinner = setWinner(active.a, active.b);
   const serving = state.serve?.team === team;
   const nextServe = serveChoice(state.serve, team);
   const serveLabel = nextServe
@@ -54,6 +56,9 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
           >
             <BallIcon />
           </button>
+        </div>
+        <div className={`current-set${activeWinner === team ? ' is-won' : ''}`} data-testid={`current-${team}`} aria-hidden="true">
+          <SplitFlap value={displayGames(state, state.activeSet, team)} />
         </div>
         <div className="sets">
           {SETS.map((index) => {

@@ -17,7 +17,6 @@ export function SetScore({ team, index, gamesLabel, active, won, upcoming, locke
     active ? 'is-active' : '',
     won ? 'is-won' : '',
     upcoming ? 'is-upcoming' : '',
-    !upcoming ? 'is-large' : '',
     !active && !upcoming ? 'is-played' : '',
   ]
     .filter(Boolean)

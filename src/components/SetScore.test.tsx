@@ -41,11 +41,10 @@ describe('set row under the team name', () => {
     expect(button(html, 2)).toContain('aria-label="Satz 2"');
     expect(button(html, 3)).toContain('aria-label="Satz 3"');
     expect(button(html, 1)).toContain('is-active');
-    expect(button(html, 1)).toContain('is-large');
     expect(button(html, 1)).toContain('aria-pressed="true"');
     expect(button(html, 2)).toContain('is-upcoming');
-    expect(button(html, 2)).not.toContain('is-large');
     expect(button(html, 3)).toContain('is-upcoming');
+    expect(html).toContain('data-testid="current-a"');
   });
 
   it('keeps played sets large and marks the selected set', () => {
@@ -53,11 +52,9 @@ describe('set row under the team name', () => {
     for (let i = 0; i < 6; i += 1) log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 + i });
     const html = markup(replay(log));
     expect(button(html, 1)).toContain('is-played');
-    expect(button(html, 1)).toContain('is-large');
     expect(button(html, 1)).toContain('is-won');
     expect(button(html, 1)).toContain('aria-pressed="false"');
     expect(button(html, 2)).toContain('is-active');
-    expect(button(html, 2)).toContain('is-large');
     expect(button(html, 2)).toContain('aria-pressed="true"');
     expect(html).toContain('>6<');
     expect(html).toContain('>0<');
