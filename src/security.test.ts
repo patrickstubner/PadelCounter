@@ -33,6 +33,8 @@ describe('shipped source stays local and text-only', () => {
     'storage.googleapis.com',
     'cdn.jsdelivr.net',
     'unpkg.com',
+    '«',
+    '»',
   ];
 
   it('does not reference HTML injection or external hosts', () => {
@@ -115,7 +117,10 @@ describe('shipped source stays local and text-only', () => {
     expect(html).toContain('favicon-32.png');
     expect(html).toContain('favicon.ico');
     expect(html).toContain('apple-mobile-web-app-capable');
+    expect(html).toContain('apple-mobile-web-app-status-bar-style" content="black-translucent"');
     expect(html).toContain('apple-mobile-web-app-title" content="Padel Counter"');
+    const buildConfig = readFileSync(join(repoRoot, 'rsbuild.config.ts'), 'utf8');
+    expect(buildConfig).toContain("'**/icon-1024.png'");
     expect(html).toContain('content="#0a1a3f"');
   });
 

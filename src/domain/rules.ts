@@ -3,13 +3,48 @@ import type { MatchState, PlayerSlot, Server, SetIndex, SetScore, TeamId } from 
 export const RULES_SUMMARY =
   'Set won at 6 games with a lead of 2, at 7–5, or 7–6 after 6–6. Match: best of 3. Serve is optional (A1, B1, A2, B2). Tap a set to correct it.';
 
-/** Teams alternate every game; partners alternate within a team. */
-export const SERVE_ORDER: readonly Server[] = [
-  { team: 'a', player: 1 },
-  { team: 'b', player: 1 },
-  { team: 'a', player: 2 },
-  { team: 'b', player: 2 },
-];
+function otherTeam(team: TeamId): TeamId {
+  return team === 'a' ? 'b' : 'a';
+}
+
+/**
+ * Order once a team has served the first game.
+ * A starts: A1, B1, A2, B2. B starts: B1, A1, B2, A2.
+ */
+export function serveCycle(start: TeamId): readonly [Server, Server, Server, Server] {
+  const other = otherTeam(start);
+  return [
+    { team: start, player: 1 },
+    { team: other, player: 1 },
+    { team: start, player: 2 },
+    { team: other, player: 2 },
+  ];
+}
+
+/** Games already scored. The server on the court is the server of this index. */
+export function gamesPlayed(sets: readonly SetScore[]): number {
+  return sets.reduce((sum, set) => sum + set.a + set.b, 0);
+}
+
+/**
+ * Team that served game 0, if `server` is exactly who should serve game `gamesPlayed`
+ * in one of the two cycles. Null when the chosen player does not sit on that slot.
+ */
+export function inferServeStart(gamesPlayedCount: number, server: Server): TeamId | null {
+  const slot = ((gamesPlayedCount % 4) + 4) % 4;
+  for (const start of ['a', 'b'] as const) {
+    const expected = serveCycle(start)[slot];
+    if (expected && expected.team === server.team && expected.player === server.player) return start;
+  }
+  return null;
+}
+
+/** Who served the first game, walking the matching cycle back from the current server. */
+export function openingServer(gamesPlayedCount: number, server: Server): Server | null {
+  const start = inferServeStart(gamesPlayedCount, server);
+  if (!start) return null;
+  return serveCycle(start)[0];
+}
 
 export function isPlausibleSetScore(a: number, b: number): boolean {
   if (!Number.isInteger(a) || !Number.isInteger(b)) return false;
@@ -91,12 +126,19 @@ export function displayGames(state: MatchState, index: SetIndex, team: TeamId): 
   return String(state.sets[index][team]);
 }
 
-export function rotateServe(serve: Server | null, direction: 1 | -1): Server | null {
+/**
+ * Next or previous server.
+ * The cycle is the one that puts `serve` on game `gamesPlayed` (the score before this step).
+ * A manual choice that does not sit on that slot still stays in the cycle of the team
+ * that would have started, and steps from the chosen player.
+ */
+export function rotateServe(serve: Server | null, gamesPlayedCount: number, direction: 1 | -1): Server | null {
   if (!serve) return null;
-  const index = SERVE_ORDER.findIndex((item) => item.team === serve.team && item.player === serve.player);
-  if (index < 0) return null;
-  const next = (index + direction + SERVE_ORDER.length) % SERVE_ORDER.length;
-  return SERVE_ORDER[next] ?? null;
+  const start = inferServeStart(gamesPlayedCount, serve) ?? (gamesPlayedCount % 2 === 0 ? serve.team : otherTeam(serve.team));
+  const cycle = serveCycle(start);
+  const found = cycle.findIndex((item) => item.team === serve.team && item.player === serve.player);
+  const index = found >= 0 ? found : ((gamesPlayedCount % 4) + 4) % 4;
+  return cycle[(index + direction + 4) % 4] ?? null;
 }
 
 /**
@@ -110,8 +152,8 @@ export function serveChoice(current: Server | null, team: TeamId): Server | null
 }
 
 export function serveLabel(serve: Server | null): string {
-  if (!serve) return '«Serve open»';
-  return `«Serve ${serve.team.toUpperCase()}${serve.player}»`;
+  if (!serve) return 'Serve open';
+  return `Serve ${serve.team.toUpperCase()}${serve.player}`;
 }
 
 /** The unscored game of the active set is a tiebreak when the set is 6:6. */

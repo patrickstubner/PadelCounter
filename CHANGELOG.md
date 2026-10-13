@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 – 2026-10-13
+
+- Hochformat: die grosse Satzzahl nutzt mehr von der freien Fläche und bleibt vollständig sichtbar, auch zweistellig.
+- Der Aufschlag steht als 1 oder 2 direkt am Ball. Die kleine Zeile in der Mitte entfällt. Beginnt Team A, ist die Folge A1, B1, A2, B2. Beginnt Team B, ist sie B1, A1, B2, A2. Ein später gesetzter Aufschlag (zum Beispiel bei 1:0) bestimmt dieselbe Folge rückwärts.
+- History ist eine eigene Seite, kein Overlay. «Match» führt zum laufenden Spiel zurück, der Browser-Zurück-Button ebenfalls. Oben steht der kompakte Spielstand. Darunter die Ereignisse des laufenden Matches, ältestes zuerst, von links nach rechts: Uhrzeit, wer das Game gewonnen hat, Stand danach (1:0, dann 1:1). Wechselt der Satz, steht auch der Satzstand dabei. Weitere Matches lassen sich ansehen, nicht fortsetzen.
+- `icon-1024.png` bleibt im Manifest, liegt aber nicht im Service-Worker-Precache. Die iOS-Statusleiste ist `black-translucent`. Englische Texte ohne deutsche Guillemets.
+
 ## 1.1.0 – 2026-10-13
 
 - Aufschlag optional: Ball bei Team A oder B, der Start darf offen bleiben. Bei 0:0 gilt die Angabe für das erste Game, nach einem Game für das nächste. Danach Rotation A1, B1, A2, B2, jederzeit manuell überschreibbar. Bei 6:6 ein dezenter Tiebreak-Hinweis (erster Aufschlag, danach je 2 Punkte).

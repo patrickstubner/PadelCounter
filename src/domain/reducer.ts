@@ -1,6 +1,6 @@
 import { createMatchId, isUuid } from './id';
 import { sanitizeTeamName } from './names';
-import { isPlausibleSetScore, matchWinner, rotateServe, setWinner } from './rules';
+import { gamesPlayed, isPlausibleSetScore, matchWinner, rotateServe, setWinner } from './rules';
 import { SCHEMA_VERSION, isPlayerSlot, isSetIndex, isTeamId, isTimestamp, type MatchEvent, type MatchState, type Server, type SetIndex, type SetScore, type TeamId } from './types';
 
 export function createMatch(
@@ -85,7 +85,7 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
     sets,
     activeSet,
     teams: state.teams,
-    serve: rotateServe(state.serve, delta),
+    serve: rotateServe(state.serve, gamesPlayed(state.sets), delta),
   });
 }
 

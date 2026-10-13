@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { detailHistoryState, matchesHistoryState, screenFromHistory, type ArchiveScreen } from './archiveNav';
 import { ConfirmDialog } from './components/ConfirmDialog';
-import { MatchArchive } from './components/MatchArchive';
+import { HistoryPage } from './components/HistoryPage';
 import { TeamPanel } from './components/TeamPanel';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
-import { describeEvent, formatEventTime } from './domain/log';
+import { colonSetScore, currentHistory } from './domain/history';
 import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
 import { useWakeLock } from './useWakeLock';
@@ -28,7 +28,6 @@ export function App() {
   const match = useMatch();
   useWakeLock();
   const [confirming, setConfirming] = useState<'reset' | 'end' | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [screen, setScreen] = useState<ArchiveScreen>(() =>
     typeof history === 'undefined' ? { view: 'court' } : screenFromHistory(history.state),
   );
@@ -79,7 +78,6 @@ export function App() {
   const showVictory = victoryKey !== null && dismissed !== victoryKey;
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
-  const recent = match.events.slice(-8).reverse();
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
   const serve = serveLabel(state.serve);
   const showFinal = state.ended || winner !== null;
@@ -91,6 +89,32 @@ export function App() {
       : showFinal
         ? `Match ended. Final score. ${finalSets}.`
         : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
+  const historyRows = currentHistory(match.log);
+  const played = matches.filter((item) => !item.live);
+
+  if (screen.view !== 'court') {
+    return (
+      <div className="app">
+        <HistoryPage
+          mode={screen.view === 'detail' ? 'detail' : 'list'}
+          live={{
+            nameA: state.teams.a.name,
+            nameB: state.teams.b.name,
+            gameA: active.a,
+            gameB: active.b,
+            setsLabel: colonSetScore(state.sets),
+            detail: showFinal ? 'Final' : `Set ${state.activeSet + 1}`,
+          }}
+          rows={historyRows}
+          played={played}
+          selected={selected}
+          onOpen={openDetail}
+          onBack={closeArchive}
+        />
+        <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -110,13 +134,7 @@ export function App() {
           >
             Undo
           </button>
-          <button
-            type="button"
-            className="text-btn"
-            data-testid="history-toggle"
-            aria-expanded={historyOpen}
-            onClick={() => setHistoryOpen((open) => !open)}
-          >
+          <button type="button" className="text-btn" data-testid="history-open" onClick={openMatches}>
             History
           </button>
           {state.ended ? (
@@ -133,16 +151,7 @@ export function App() {
           </button>
         </div>
       </header>
-      {screen.view !== 'court' ? (
-        <MatchArchive
-          screen={screen.view}
-          matches={matches}
-          selected={selected}
-          onOpen={openDetail}
-          onBack={closeArchive}
-        />
-      ) : null}
-      {showVictory && celebrated ? (
+      {showVictory && screen.view === 'court' && celebrated ? (
         <Victory
           name={state.teams[celebrated].name}
           team={celebrated}
@@ -174,11 +183,7 @@ export function App() {
             <p className="end-note" data-testid="final-score">
               Final score
             </p>
-          ) : (
-            <p className="serve-line" data-testid="serve-label">
-              {serve}
-            </p>
-          )}
+          ) : null}
           {tiebreak ? (
             <p className="tb" data-testid="tiebreak-hint">
               {tiebreak}
@@ -197,22 +202,6 @@ export function App() {
       </main>
       <footer className="foot">
         {match.saveFailed ? <p className="save-note">Saving on this device failed.</p> : null}
-        {historyOpen ? (
-          recent.length > 0 ? (
-            <ol className="history" data-testid="history-list">
-              {recent.map((event, index) => (
-                <li key={`${event.at}-${event.type}-${index}`}>
-                  <time dateTime={new Date(event.at).toISOString()}>{formatEventTime(event.at)}</time>{' '}
-                  {describeEvent(event)}
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="history-empty" data-testid="history-list">
-              No changes yet.
-            </p>
-          )
-        ) : null}
         <p className="rules">{RULES_SUMMARY}</p>
         <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
       </footer>
