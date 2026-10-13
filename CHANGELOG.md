@@ -11,6 +11,7 @@
 - Hochformat: der laufende Satz bleibt groß. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, einander gegenüber und ohne Satznummern. «Satz N» in der Mitte ist dort groß.
 - Unten rechts steht dezent die App-Version aus `package.json` (`v1.1.0`). Sie liegt über der Fußzeile und verkleinert die Zählflächen nicht.
 - Die Oberfläche ist Englisch: Texte, Beschriftungen, Dialoge, Verlauf (Zeitformat `MM/DD/YYYY`) und die Manifest-Beschreibung. Standardnamen sind Team A und Team B. `html lang` ist `en`. Es gibt keinen Sprachumschalter.
+- Siegerfeier über dem Zählfeld, wenn ein Team zwei Sätze gewinnt oder «End match» einen Sieger hat: Konfetti, Pokal und grosser Name («Team A wins!»). Antippen schliesst sie, Undo in der Kopfzeile bleibt erreichbar. Bei `prefers-reduced-motion` ohne Konfetti. Kein Ton. Unentschieden und Abbruch ohne Sieger bleiben still.
 
 ## 1.0.0 – 2026-10-13
 

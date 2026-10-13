@@ -31,16 +31,42 @@ export function setWinner(a: number, b: number): TeamId | null {
 }
 
 export function matchWinner(sets: readonly [SetScore, SetScore, SetScore]): TeamId | null {
+  const lead = setLead(sets);
+  if (lead.a >= 2) return 'a';
+  if (lead.b >= 2) return 'b';
+  return null;
+}
+
+function setLead(sets: readonly [SetScore, SetScore, SetScore]): { a: number; b: number } {
   let a = 0;
   let b = 0;
   for (const set of sets) {
     const winner = setWinner(set.a, set.b);
     if (winner === 'a') a += 1;
     if (winner === 'b') b += 1;
-    if (a >= 2) return 'a';
-    if (b >= 2) return 'b';
   }
-  return null;
+  return { a, b };
+}
+
+/**
+ * Full celebration when a team has won the match (two sets), or when End match
+ * leaves one team ahead. A tie or an abandoned match with no lead stays quiet.
+ */
+export function celebrationWinner(state: MatchState): TeamId | null {
+  const decided = matchWinner(state.sets);
+  if (decided) return decided;
+  if (!state.ended) return null;
+  const lead = setLead(state.sets);
+  if (lead.a === lead.b) return null;
+  return lead.a > lead.b ? 'a' : 'b';
+}
+
+/** Stable while the same score stays a win. Ending an already decided match does not change it. */
+export function celebrationStamp(state: MatchState): string | null {
+  const team = celebrationWinner(state);
+  if (!team) return null;
+  const sets = state.sets.map((set) => `${set.a}-${set.b}`).join('/');
+  return `${state.matchId}:${team}:${sets}:${matchWinner(state.sets) ? 'match' : 'ended'}`;
 }
 
 export function canIncrement(score: SetScore, team: TeamId): boolean {

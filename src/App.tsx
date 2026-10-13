@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { TeamPanel } from './components/TeamPanel';
+import { Victory } from './components/Victory';
 import { describeEvent, formatEventTime } from './domain/log';
-import { RULES_SUMMARY, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
+import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
 import { useWakeLock } from './useWakeLock';
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(
+    () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return;
+    const query = matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setReduced(query.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
 
 export function App() {
   const match = useMatch();
@@ -13,16 +28,30 @@ export function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const { state } = match;
   const winner = matchWinner(state.sets);
+  const celebrated = celebrationWinner(state);
+  const stamp = celebrationStamp(state);
+  const reducedMotion = useReducedMotion();
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const [wave, setWave] = useState(0);
+  const previousStamp = useRef<string | null>(null);
+  useEffect(() => {
+    if (previousStamp.current && !stamp) setWave((value) => value + 1);
+    previousStamp.current = stamp;
+  }, [stamp]);
+  const victoryKey = stamp === null ? null : `${stamp}#${wave}`;
+  const showVictory = victoryKey !== null && dismissed !== victoryKey;
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
   const recent = match.events.slice(-8).reverse();
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
   const serve = serveLabel(state.serve);
-  const live = state.ended
-    ? `Match ended. Final score. ${scoreLine}.`
-    : winner
-      ? `Win for ${state.teams[winner].name}. ${serve}.`
-      : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
+  const live = showVictory && celebrated
+    ? `${state.teams[celebrated].name} wins!`
+    : state.ended
+      ? `Match ended. Final score. ${scoreLine}.`
+      : winner
+        ? `Win for ${state.teams[winner].name}. ${serve}.`
+        : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
 
   return (
     <div className="app">
@@ -61,6 +90,14 @@ export function App() {
           </button>
         </div>
       </header>
+      {showVictory && celebrated ? (
+        <Victory
+          name={state.teams[celebrated].name}
+          team={celebrated}
+          reducedMotion={reducedMotion}
+          onClose={() => setDismissed(victoryKey)}
+        />
+      ) : null}
       <main className="board">
         <TeamPanel
           team="a"

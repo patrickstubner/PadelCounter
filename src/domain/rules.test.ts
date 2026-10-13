@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createMatch } from './reducer';
+import { createMatch, matchReducer } from './reducer';
 import {
   RULES_SUMMARY,
   canDecrement,
@@ -7,6 +7,8 @@ import {
   displayGames,
   isPlausibleSetScore,
   isTiebreak,
+  celebrationStamp,
+  celebrationWinner,
   matchWinner,
   rotateServe,
   serveChoice,
@@ -77,6 +79,90 @@ describe('matchWinner', () => {
         { a: 0, b: 0 },
       ]),
     ).toBeNull();
+  });
+});
+
+describe('celebrationWinner', () => {
+  const id = '00000000-0000-4000-8000-00000000000a';
+  const at = 1_700_000_000_000;
+
+  function match(
+    sets: [{ a: number; b: number }, { a: number; b: number }, { a: number; b: number }],
+    ended = false,
+  ) {
+    return { ...createMatch(at, id), sets, ended };
+  }
+
+  it('celebrates two sets, and a lead after End match', () => {
+    const twoSets = match([
+      { a: 6, b: 4 },
+      { a: 6, b: 3 },
+      { a: 0, b: 0 },
+    ]);
+    expect(celebrationWinner(twoSets)).toBe('a');
+    expect(celebrationWinner({ ...twoSets, ended: true })).toBe('a');
+    expect(celebrationStamp(twoSets)).toBe(celebrationStamp({ ...twoSets, ended: true }));
+
+    expect(
+      celebrationWinner(
+        match([
+          { a: 4, b: 6 },
+          { a: 0, b: 0 },
+          { a: 0, b: 0 },
+        ]),
+      ),
+    ).toBeNull();
+    expect(
+      celebrationWinner(
+        match(
+          [
+            { a: 4, b: 6 },
+            { a: 0, b: 0 },
+            { a: 0, b: 0 },
+          ],
+          true,
+        ),
+      ),
+    ).toBe('b');
+  });
+
+  it('stays quiet on a tie, an unfinished set, or an abandoned 0:0', () => {
+    expect(
+      celebrationWinner(
+        match(
+          [
+            { a: 6, b: 4 },
+            { a: 3, b: 6 },
+            { a: 0, b: 0 },
+          ],
+          true,
+        ),
+      ),
+    ).toBeNull();
+    expect(
+      celebrationWinner(
+        match(
+          [
+            { a: 6, b: 5 },
+            { a: 0, b: 0 },
+            { a: 0, b: 0 },
+          ],
+          true,
+        ),
+      ),
+    ).toBeNull();
+    expect(celebrationWinner(match([{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }], true))).toBeNull();
+    expect(celebrationStamp(match([{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }], true))).toBeNull();
+  });
+
+  it('drops the celebration when the winning game is undone', () => {
+    let state = createMatch(at, id);
+    for (let i = 0; i < 12; i += 1) {
+      state = matchReducer(state, { type: 'game/increment', team: 'a', at: at + 1 + i });
+    }
+    expect(celebrationWinner(state)).toBe('a');
+    state = matchReducer(state, { type: 'game/decrement', team: 'a', at: at + 20 });
+    expect(celebrationWinner(state)).toBeNull();
   });
 });
 
