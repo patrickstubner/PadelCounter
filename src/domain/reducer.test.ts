@@ -1,0 +1,153 @@
+import { describe, expect, it } from 'vitest';
+import { matchWinner, setWinner } from './rules';
+import { createMatch, matchReducer } from './reducer';
+import type { MatchEvent, MatchState, TeamId } from './types';
+
+const ID = '00000000-0000-4000-8000-000000000001';
+const NEXT = '00000000-0000-4000-8000-000000000002';
+const T0 = 1_700_000_000_000;
+
+function start(): MatchState {
+  return createMatch(T0, ID);
+}
+
+function play(state: MatchState, team: TeamId, times: number): MatchState {
+  let next = state;
+  for (let i = 0; i < times; i += 1) {
+    const snapshot = structuredClone(next);
+    const event: MatchEvent = { type: 'game/increment', team, at: next.updatedAt + 1 };
+    const previous = next;
+    next = matchReducer(next, event);
+    expect(previous).toEqual(snapshot);
+  }
+  return next;
+}
+
+describe('matchReducer', () => {
+  it('wins a set at 6:0 and opens the next set', () => {
+    const state = play(start(), 'a', 6);
+    expect(state.sets[0]).toEqual({ a: 6, b: 0 });
+    expect(setWinner(6, 0)).toBe('a');
+    expect(state.activeSet).toBe(1);
+    expect(state.sets[1]).toEqual({ a: 0, b: 0 });
+    expect(state.revision).toBe(6);
+    expect(matchWinner(state.sets)).toBeNull();
+  });
+
+  it('does not treat 6:5 as a set and reaches 7:5', () => {
+    let state = start();
+    for (let i = 0; i < 5; i += 1) {
+      state = play(state, 'a', 1);
+      state = play(state, 'b', 1);
+    }
+    expect(state.sets[0]).toEqual({ a: 5, b: 5 });
+    state = play(state, 'a', 1);
+    expect(state.sets[0]).toEqual({ a: 6, b: 5 });
+    expect(state.activeSet).toBe(0);
+    state = play(state, 'a', 1);
+    expect(state.sets[0]).toEqual({ a: 7, b: 5 });
+    expect(state.activeSet).toBe(1);
+  });
+
+  it('records a 6:6 tiebreak as 7:6', () => {
+    let state = start();
+    for (let i = 0; i < 6; i += 1) {
+      state = play(state, 'a', 1);
+      state = play(state, 'b', 1);
+    }
+    expect(state.sets[0]).toEqual({ a: 6, b: 6 });
+    expect(state.activeSet).toBe(0);
+    state = play(state, 'b', 1);
+    expect(state.sets[0]).toEqual({ a: 6, b: 7 });
+    expect(setWinner(6, 7)).toBe('b');
+    expect(state.activeSet).toBe(1);
+  });
+
+  it('ends a best-of-3 match without opening an unplayed set', () => {
+    let state = play(start(), 'a', 6);
+    state = play(state, 'a', 6);
+    expect(state.sets[0]).toEqual({ a: 6, b: 0 });
+    expect(state.sets[1]).toEqual({ a: 6, b: 0 });
+    expect(state.sets[2]).toEqual({ a: 0, b: 0 });
+    expect(state.activeSet).toBe(1);
+    expect(matchWinner(state.sets)).toBe('a');
+  });
+
+  it('lets a finished 6:4 be corrected to 6:5', () => {
+    let state = start();
+    for (let i = 0; i < 4; i += 1) {
+      state = play(state, 'a', 1);
+      state = play(state, 'b', 1);
+    }
+    state = play(state, 'a', 2);
+    expect(state.sets[0]).toEqual({ a: 6, b: 4 });
+    expect(state.activeSet).toBe(1);
+    state = matchReducer(state, { type: 'set/select', index: 0, at: state.updatedAt + 1 });
+    const corrected = play(state, 'b', 1);
+    expect(corrected.sets[0]).toEqual({ a: 6, b: 5 });
+    expect(setWinner(6, 5)).toBeNull();
+    expect(corrected.activeSet).toBe(0);
+  });
+
+  it('ignores increments that are not plausible and decrements down to zero', () => {
+    const state = play(start(), 'a', 6);
+    const selected = matchReducer(state, { type: 'set/select', index: 0, at: state.updatedAt + 1 });
+    const blocked = matchReducer(selected, { type: 'game/increment', team: 'a', at: selected.updatedAt + 1 });
+    expect(blocked).toBe(selected);
+    let undone = selected;
+    for (let i = 0; i < 6; i += 1) undone = matchReducer(undone, { type: 'game/decrement', team: 'a', at: undone.updatedAt + 1 });
+    expect(undone.sets[0]).toEqual({ a: 0, b: 0 });
+    const stuck = matchReducer(undone, { type: 'game/decrement', team: 'a', at: undone.updatedAt + 1 });
+    expect(stuck).toBe(undone);
+  });
+
+  it('keeps names on reset, caps renames, and strips control characters', () => {
+    let state = matchReducer(start(), {
+      type: 'team/rename',
+      team: 'a',
+      name: '  Sonne\nTeam  ',
+      at: T0 + 5,
+    });
+    expect(state.teams.a.name).toBe('SonneTeam');
+    state = matchReducer(state, {
+      type: 'team/rename',
+      team: 'b',
+      name: '12345678901234567890EXTRA',
+      at: T0 + 6,
+    });
+    expect(state.teams.b.name).toHaveLength(20);
+    expect(state.teams.b.name).toBe('12345678901234567890');
+    state = play(state, 'a', 1);
+    const reset = matchReducer(state, { type: 'match/reset', matchId: NEXT, at: T0 + 20 });
+    expect(reset.matchId).toBe(NEXT);
+    expect(reset.revision).toBe(0);
+    expect(reset.activeSet).toBe(0);
+    expect(reset.sets).toEqual([
+      { a: 0, b: 0 },
+      { a: 0, b: 0 },
+      { a: 0, b: 0 },
+    ]);
+    expect(reset.teams.a.name).toBe('SonneTeam');
+    expect(reset.teams.b.name).toBe('12345678901234567890');
+  });
+
+  it('stores angle brackets as text and falls back when a name is empty', () => {
+    const named = matchReducer(start(), {
+      type: 'team/rename',
+      team: 'a',
+      name: '<b>Hi</b>',
+      at: T0 + 1,
+    });
+    expect(named.teams.a.name).toBe('<b>Hi</b>');
+    const cleared = matchReducer(named, { type: 'team/rename', team: 'a', name: '   ', at: T0 + 2 });
+    expect(cleared.teams.a.name).toBe('Team A');
+  });
+
+  it('ignores invalid events', () => {
+    const state = start();
+    expect(matchReducer(state, { type: 'game/increment', team: 'a', at: Number.NaN })).toBe(state);
+    expect(matchReducer(state, { type: 'set/select', index: 3 as never, at: T0 + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'match/reset', matchId: 'not-a-uuid', at: T0 + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'nope' } as never)).toBe(state);
+  });
+});
