@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 – 2026-10-13
+
+- Der Regeltext beschreibt diesen Zähler: ein Satz endet hier bei 6 Games mit zwei Vorsprung, bei 7:5 oder bei 7:6 nach 6:6. Ein Match ist Best of 3. Ein Satz wird angetippt, um ihn auszuwählen.
+- Ein neuer Service Worker, der einen bereits aktiven Worker ablöst, zeigt «Update ready». Der erste Installationsvorgang lädt nicht neu und zeigt den Hinweis nicht. Neu laden passiert einmal, und nur nach Antippen.
+- Ein Tiebreak zählt als ein Game. Punkte darin werden nicht rotiert. Nach diesem Game, und nach einem manuellen Satzwechsel, wird ein gesetzter Aufschlag geleert und «Choose the server» erscheint. Minus geht in derselben Rotation einen Schritt zurück und fragt nicht neu.
+
 ## 1.2.0 – 2026-10-13
 
 - Hochformat: die grosse Satzzahl nutzt mehr von der freien Fläche und bleibt vollständig sichtbar, auch zweistellig.

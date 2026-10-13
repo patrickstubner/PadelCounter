@@ -3,11 +3,13 @@ import { detailHistoryState, matchesHistoryState, screenFromHistory, type Archiv
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { HistoryPage } from './components/HistoryPage';
 import { TeamPanel } from './components/TeamPanel';
+import { UpdateReady } from './components/UpdateReady';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
 import { colonSetScore, currentHistory } from './domain/history';
-import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
+import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, servePickPrompt, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
+import { watchControllerChange } from './registerServiceWorker';
 import { useWakeLock } from './useWakeLock';
 
 function useReducedMotion(): boolean {
@@ -24,9 +26,20 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
+function useUpdateReady(): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    return watchControllerChange(navigator.serviceWorker, () => setReady(true));
+  }, []);
+  return ready;
+}
+
 export function App() {
   const match = useMatch();
   useWakeLock();
+  const updateReady = useUpdateReady();
+  const updateButton = updateReady ? <UpdateReady onReload={() => window.location.reload()} /> : null;
   const [confirming, setConfirming] = useState<'reset' | 'end' | null>(null);
   const [screen, setScreen] = useState<ArchiveScreen>(() =>
     typeof history === 'undefined' ? { view: 'court' } : screenFromHistory(history.state),
@@ -78,6 +91,7 @@ export function App() {
   const showVictory = victoryKey !== null && dismissed !== victoryKey;
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
+  const pick = servePickPrompt(state);
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
   const serve = serveLabel(state.serve);
   const showFinal = state.ended || winner !== null;
@@ -88,7 +102,7 @@ export function App() {
       ? `Final score. ${state.teams[celebrated].name} wins. ${finalSets}.`
       : showFinal
         ? `Match ended. Final score. ${finalSets}.`
-        : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
+        : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${pick ? ` ${pick}.` : ''}${tiebreak ? ` ${tiebreak}.` : ''}`;
   const historyRows = currentHistory(match.log);
   const played = matches.filter((item) => !item.live);
 
@@ -112,6 +126,7 @@ export function App() {
           onBack={closeArchive}
         />
         <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
+        {updateButton}
       </div>
     );
   }
@@ -189,6 +204,11 @@ export function App() {
               {tiebreak}
             </p>
           ) : null}
+          {pick ? (
+            <p className="serve-prompt" data-testid="serve-prompt">
+              {pick}
+            </p>
+          ) : null}
         </div>
         <TeamPanel
           team="b"
@@ -204,6 +224,7 @@ export function App() {
         {match.saveFailed ? <p className="save-note">Saving on this device failed.</p> : null}
         <p className="rules">{RULES_SUMMARY}</p>
         <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
+        {updateButton}
       </footer>
       <p className="sr-only" aria-live="polite">
         {live}

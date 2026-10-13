@@ -35,6 +35,11 @@ export interface MatchState {
   readonly sets: readonly [SetScore, SetScore, SetScore];
   readonly activeSet: SetIndex;
   readonly serve: Server | null;
+  /**
+   * True after a tiebreak game or a manual set change cleared a chosen server.
+   * An older save without this field means false. A match that never had a server stays false.
+   */
+  readonly servePrompt: boolean;
   /** True after End match until resume, undo, or a new match. */
   readonly ended: boolean;
 }

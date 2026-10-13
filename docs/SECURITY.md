@@ -45,7 +45,10 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | P1-06 | Dependabot | Info | Umgesetzt | `.github/dependabot.yml` prüft npm und GitHub Actions wöchentlich. Updates laufen durch dieselbe CI; der Pages-Deploy bleibt auf `main` beschränkt. |
 | P2-03 | Icon 1024 | Info | Behoben | `icon-1024.png` bleibt im Manifest und in `dist/`, wird aber vom Service Worker nicht precacht (`globIgnores`). `verify-build` verlangt die Datei und verbietet sie in `sw.js`. |
 | P2-04 | iOS-Statusleiste | Info | Behoben | `apple-mobile-web-app-status-bar-style` ist `black-translucent`. Zusammen mit `viewport-fit=cover` und `env(safe-area-inset-*)` liegt die Leiste über dem dunklen Seitenhintergrund, der Kopf bleibt darunter frei. |
-| P2-05 | Guillemets | Info | Behoben | Die englische Oberfläche enthält keine deutschen Anführungszeichen `«` `»`. Aufschlagtexte sind `Serve open` und `Serve A1`. | |
+| P2-05 | Guillemets | Info | Behoben | Die englische Oberfläche enthält keine deutschen Anführungszeichen `«` `»`. Aufschlagtexte sind `Serve open` und `Serve A1`. |
+| P4-02 | Regeltext | Info | Behoben | Der Fusszeilentext beschreibt diesen Zähler («This counter ends a set…», «Tap a set to select it») und behauptet kein offizielles Reglement. |
+| P4-03 | Service-Worker-Update | Info | Behoben | `controllerchange` zeigt «Update ready», wenn die Seite schon einen Controller hatte. Die erste Installation löst keinen Hinweis und kein Neuladen aus. Neuladen passiert einmal, nur nach Antippen. |
+| P4-04 | Tiebreak und Korrektur | Info | Behoben | Ein Tiebreak ist ein Game in der Aufschlagfolge; Punkte werden nicht rotiert. Nach diesem Game und nach `set/select` wird ein gesetzter Aufschlag geleert und «Choose the server» erscheint. `game/decrement` geht einen Schritt in derselben Folge zurück. Ein Spiel ohne gesetzten Aufschlag fragt nicht. | |
 
 Keine Befunde mit Schwere Hoch oder Kritisch.
 

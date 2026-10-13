@@ -407,6 +407,31 @@ button:disabled { cursor: not-allowed; }
   color: #d0d0d0;
 }
 
+.serve-prompt {
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.update-ready {
+  position: absolute;
+  z-index: 6;
+  left: max(0.55rem, env(safe-area-inset-left));
+  bottom: max(0.35rem, env(safe-area-inset-bottom));
+  margin: 0;
+  border: 1px solid #ffffff;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.28rem 0.7rem;
+}
+
 .chip {
   max-width: min(92vw, 28rem);
   overflow: hidden;

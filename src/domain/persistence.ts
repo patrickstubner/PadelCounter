@@ -79,11 +79,16 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
   if (!isValidStoredName(teamA.name) || !isValidStoredName(teamB.name)) return null;
 
   let serve: Server | null = null;
+  let servePrompt = false;
   let ended = false;
   if (version === 2) {
     const parsed = parseServe(record.serve);
     if (parsed === undefined) return null;
     serve = parsed;
+    if (record.servePrompt !== undefined) {
+      if (typeof record.servePrompt !== 'boolean') return null;
+      servePrompt = record.servePrompt;
+    }
     if (record.ended !== undefined) {
       if (typeof record.ended !== 'boolean') return null;
       ended = record.ended;
@@ -103,6 +108,7 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
     },
     sets: [set0, set1, set2],
     serve,
+    servePrompt,
     ended,
   };
 }

@@ -47,4 +47,23 @@ describe('match history rows', () => {
     const rows = currentHistory(log);
     expect(rows.map((row) => row.label)).toEqual(['Serve B1']);
   });
+
+  it('restores the tiebreak server when that game is undone', () => {
+    let log = createLog(T0, ID);
+    log = appendEvent(log, { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    for (let i = 0; i < 6; i += 1) {
+      log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 10 + i * 2 });
+      log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 11 + i * 2 });
+    }
+    expect(replay(log).serve).toEqual({ team: 'a', player: 1 });
+    expect(replay(log).servePrompt).toBe(false);
+    log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 100 });
+    expect(replay(log).sets[0]).toEqual({ a: 6, b: 7 });
+    expect(replay(log).serve).toBeNull();
+    expect(replay(log).servePrompt).toBe(true);
+    log = undoLog(log);
+    expect(replay(log).sets[0]).toEqual({ a: 6, b: 6 });
+    expect(replay(log).serve).toEqual({ team: 'a', player: 1 });
+    expect(replay(log).servePrompt).toBe(false);
+  });
 });

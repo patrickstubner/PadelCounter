@@ -25,6 +25,7 @@ export function createMatch(
     ],
     activeSet: 0,
     serve: null,
+    servePrompt: false,
     ended: false,
   };
 }
@@ -34,6 +35,7 @@ function stamp(
   at: number,
   patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'> & {
     readonly serve?: Server | null;
+    readonly servePrompt?: boolean;
     readonly ended?: boolean;
   },
 ): MatchState {
@@ -41,6 +43,7 @@ function stamp(
     ...state,
     ...patch,
     serve: patch.serve === undefined ? state.serve : patch.serve,
+    servePrompt: patch.servePrompt === undefined ? state.servePrompt : patch.servePrompt,
     ended: patch.ended === undefined ? state.ended : patch.ended,
     revision: state.revision + 1,
     updatedAt: Math.max(state.updatedAt, at),
@@ -81,11 +84,13 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
     if (restEmpty) activeSet = nextSetIndex(index);
   }
 
+  const tiebreakGame = delta === 1 && current.a === 6 && current.b === 6 && state.serve !== null;
   return stamp(state, at, {
     sets,
     activeSet,
     teams: state.teams,
-    serve: rotateServe(state.serve, gamesPlayed(state.sets), delta),
+    serve: tiebreakGame ? null : rotateServe(state.serve, gamesPlayed(state.sets), delta),
+    servePrompt: tiebreakGame ? true : state.servePrompt,
   });
 }
 
@@ -106,6 +111,8 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
         sets: state.sets,
         activeSet: event.index,
         teams: state.teams,
+        serve: null,
+        servePrompt: state.serve === null ? state.servePrompt : true,
       });
     case 'team/rename': {
       if (!isTeamId(event.team) || typeof event.name !== 'string') return state;
@@ -142,16 +149,23 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
     case 'serve/set': {
       if (event.team === null || event.player === null) {
         if (event.team !== null || event.player !== null) return state;
-        if (state.serve === null) return state;
-        return stamp(state, event.at, { sets: state.sets, activeSet: state.activeSet, teams: state.teams, serve: null });
+        if (state.serve === null && !state.servePrompt) return state;
+        return stamp(state, event.at, {
+          sets: state.sets,
+          activeSet: state.activeSet,
+          teams: state.teams,
+          serve: null,
+          servePrompt: false,
+        });
       }
       if (!isTeamId(event.team) || !isPlayerSlot(event.player)) return state;
-      if (state.serve?.team === event.team && state.serve.player === event.player) return state;
+      if (state.serve?.team === event.team && state.serve.player === event.player && !state.servePrompt) return state;
       return stamp(state, event.at, {
         sets: state.sets,
         activeSet: state.activeSet,
         teams: state.teams,
         serve: { team: event.team, player: event.player },
+        servePrompt: false,
       });
     }
     default:
