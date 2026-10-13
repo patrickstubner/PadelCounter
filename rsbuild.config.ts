@@ -1,9 +1,36 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig, type RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { generateSW } from 'workbox-build';
 import { PAGE_BASE } from './src/base';
+
+const appVersion = (JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string }).version;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function applyPageBase(dist: string): void {
+  const root = `${PAGE_BASE}/`;
+  for (const name of readdirSync(dist)) {
+    if (!name.endsWith('.webmanifest')) continue;
+    const manifestPath = join(dist, name);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      id: string;
+      start_url: string;
+      scope: string;
+      icons: { src: string }[];
+    };
+    manifest.id = root;
+    manifest.start_url = root;
+    manifest.scope = root;
+    for (const icon of manifest.icons) {
+      icon.src = `${root}${icon.src.replace(/^\.?\//, '')}`;
+    }
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
+}
 
 const workboxPlugin: RsbuildPlugin = {
   name: 'padel-workbox',
@@ -13,10 +40,11 @@ const workboxPlugin: RsbuildPlugin = {
       const dist = api.context.distPath;
       const swDest = join(dist, 'sw.js');
       const prefix = `${PAGE_BASE}/`;
+      applyPageBase(dist);
       await generateSW({
         swDest,
         globDirectory: dist,
-        globPatterns: ['**/*.{html,js,css,webmanifest,png,svg,ico}'],
+        globPatterns: ['**/*.{html,js,css,webmanifest,png,svg,ico,txt}'],
         globIgnores: ['**/sw.js', '**/*.map'],
         modifyURLPrefix: { '': prefix },
         inlineWorkboxRuntime: true,
@@ -27,7 +55,7 @@ const workboxPlugin: RsbuildPlugin = {
         cleanupOutdatedCaches: true,
         disableDevLogs: true,
         navigateFallback: `${prefix}index.html`,
-        navigateFallbackDenylist: [new RegExp(`^${prefix}.+\\.[a-z0-9]+$`, 'i')],
+        navigateFallbackDenylist: [new RegExp(`^${escapeRegExp(prefix)}.+\\.[a-z0-9]+$`, 'i')],
         directoryIndex: 'index.html',
       });
       const original = readFileSync(swDest, 'utf8');
@@ -44,6 +72,9 @@ export default defineConfig({
   source: {
     entry: {
       index: './src/index.tsx',
+    },
+    define: {
+      'import.meta.env.APP_VERSION': JSON.stringify(appVersion),
     },
   },
   html: {

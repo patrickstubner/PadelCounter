@@ -1,11 +1,24 @@
 import { useEffect, useRef } from 'react';
 
 interface ConfirmDialogProps {
+  title: string;
+  body: string;
+  confirmLabel: string;
+  confirmTestId: string;
+  titleId: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function ConfirmDialog({ onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  title,
+  body,
+  confirmLabel,
+  confirmTestId,
+  titleId,
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -25,20 +38,20 @@ export function ConfirmDialog({ onConfirm, onCancel }: ConfirmDialogProps) {
     <dialog
       ref={ref}
       className="dialog"
-      aria-labelledby="new-match-title"
+      aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
         onCancel();
       }}
     >
-      <h2 id="new-match-title">Neues Spiel?</h2>
-      <p>Der Spielstand wird zurückgesetzt. Die Teamnamen bleiben erhalten.</p>
+      <h2 id={titleId}>{title}</h2>
+      <p>{body}</p>
       <div className="dialog-actions">
         <button type="button" className="btn btn-ghost" autoFocus onClick={onCancel}>
-          Abbrechen
+          Cancel
         </button>
-        <button type="button" className="btn btn-solid" data-testid="confirm-reset" onClick={onConfirm}>
-          Zurücksetzen
+        <button type="button" className="btn btn-solid" data-testid={confirmTestId} onClick={onConfirm}>
+          {confirmLabel}
         </button>
       </div>
     </dialog>

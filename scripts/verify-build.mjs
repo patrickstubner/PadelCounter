@@ -1,8 +1,12 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 const dist = join(root, 'dist');
+const baseSource = readFileSync(join(root, 'src/base.ts'), 'utf8');
+const pageBaseMatch = baseSource.match(/export const PAGE_BASE = '([^']+)';/);
+if (!pageBaseMatch) fail('PAGE_BASE missing from src/base.ts');
+const pageBase = `${pageBaseMatch[1]}/`;
 const banned = [
   'storage.googleapis.com',
   'workbox-cdn',
@@ -39,18 +43,45 @@ if (html.includes('unsafe-inline') || html.includes('unsafe-eval')) fail('CSP al
 if (/https?:\/\//.test(html)) fail(`external URL in index.html:\n${html}`);
 if (/<script(?![^>]*\bsrc=)[^>]*>/.test(html)) fail('inline script in index.html');
 if (/<style[\s>]/i.test(html)) fail('inline style in index.html');
-if (!html.includes('/PadelCounter/')) fail('base path missing from index.html');
+if (!html.includes(pageBase)) fail('base path missing from index.html');
 
-const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf8'));
-if (manifest.start_url !== '/PadelCounter/' || manifest.scope !== '/PadelCounter/') {
-  fail(`unexpected manifest scope: ${manifest.start_url}`);
+const manifestNames = readdirSync(dist).filter((name) => name.endsWith('.webmanifest'));
+if (!manifestNames.includes('manifest.webmanifest')) fail('default manifest missing');
+for (const name of manifestNames) {
+  const manifest = JSON.parse(readFileSync(join(dist, name), 'utf8'));
+  if (manifest.start_url !== pageBase || manifest.scope !== pageBase || manifest.id !== pageBase) {
+    fail(`unexpected manifest scope in ${name}: ${manifest.start_url}`);
+  }
+  if (!manifest.icons.every((icon) => typeof icon.src === 'string' && icon.src.startsWith(pageBase))) {
+    fail(`manifest icons are not under PAGE_BASE in ${name}`);
+  }
+  for (const icon of manifest.icons) {
+    const relative = icon.src.slice(pageBase.length);
+    if (!statSync(join(dist, relative)).isFile()) fail(`manifest icon missing from dist: ${relative}`);
+  }
 }
 
+const precached = [
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-1024.png',
+  'icons/icon-maskable-192.png',
+  'icons/icon-maskable-512.png',
+  'icons/apple-touch-icon-180.png',
+  'favicon.ico',
+  'favicon-16.png',
+  'favicon-32.png',
+  'manifest.webmanifest',
+  'NOTICE.txt',
+];
 const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
+for (const file of precached) {
+  if (!sw.includes(`${pageBase}${file}`)) fail(`precache missing ${file}`);
+}
 if (sw.includes('importScripts(')) fail('service worker loads an external script');
 
 for (const file of walk(dist)) {
-  if (file.endsWith('.png')) continue;
+  if (file.endsWith('.png') || file.endsWith('.ico')) continue;
   const text = readFileSync(file, 'utf8');
   for (const host of banned) {
     if (text.includes(host)) fail(`${host} found in ${file}`);

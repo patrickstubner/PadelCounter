@@ -1,30 +1,57 @@
-import { useEffect, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
+import { loadArchive, saveArchive } from '../domain/archive';
 import { createMatchId } from '../domain/id';
-import { loadMatch, saveMatch } from '../domain/persistence';
-import { createMatch, matchReducer } from '../domain/reducer';
-import type { SetIndex, TeamId } from '../domain/types';
+import { createLog, replay } from '../domain/log';
+import { loadLog, saveLog } from '../domain/persistence';
+import { serveChoice } from '../domain/rules';
+import { sessionReducer, type Session } from '../domain/session';
+import type { MatchEvent, SetIndex, TeamId } from '../domain/types';
 
-function initialMatch() {
-  return loadMatch(localStorage) ?? createMatch(Date.now(), createMatchId());
+function initialSession(): Session {
+  return {
+    log: loadLog(localStorage) ?? createLog(Date.now(), createMatchId()),
+    archive: loadArchive(localStorage),
+  };
 }
 
 export function useMatch() {
-  const [state, dispatch] = useReducer(matchReducer, undefined, initialMatch);
+  const [session, dispatch] = useReducer(sessionReducer, undefined, initialSession);
   const [saveFailed, setSaveFailed] = useState(false);
+  const { log } = session;
+  const state = useMemo(() => replay(log), [log]);
 
   useEffect(() => {
-    setSaveFailed(!saveMatch(state, localStorage));
-  }, [state]);
+    const logSaved = saveLog(log, localStorage);
+    const archiveSaved = saveArchive(session.archive, localStorage);
+    setSaveFailed(!logSaved || !archiveSaved);
+  }, [log, session.archive]);
 
   const at = () => Date.now();
+  const record = (event: MatchEvent) => dispatch({ type: 'record', event });
 
   return {
     state,
+    log,
+    archive: session.archive,
+    events: log.events,
     saveFailed,
-    increment: (team: TeamId) => dispatch({ type: 'game/increment', team, at: at() }),
-    decrement: (team: TeamId) => dispatch({ type: 'game/decrement', team, at: at() }),
-    rename: (team: TeamId, name: string) => dispatch({ type: 'team/rename', team, name, at: at() }),
-    selectSet: (index: SetIndex) => dispatch({ type: 'set/select', index, at: at() }),
-    newMatch: () => dispatch({ type: 'match/reset', matchId: createMatchId(), at: at() }),
+    canUndo: log.events.length > 0,
+    increment: (team: TeamId) => record({ type: 'game/increment', team, at: at() }),
+    decrement: (team: TeamId) => record({ type: 'game/decrement', team, at: at() }),
+    rename: (team: TeamId, name: string) => record({ type: 'team/rename', team, name, at: at() }),
+    selectSet: (index: SetIndex) => record({ type: 'set/select', index, at: at() }),
+    newMatch: () => record({ type: 'match/reset', matchId: createMatchId(), at: at() }),
+    endMatch: () => record({ type: 'match/end', at: at() }),
+    resumeMatch: () => record({ type: 'match/resume', at: at() }),
+    chooseServe: (team: TeamId) => {
+      const next = serveChoice(state.serve, team);
+      record({
+        type: 'serve/set',
+        team: next?.team ?? null,
+        player: next?.player ?? null,
+        at: at(),
+      });
+    },
+    undo: () => dispatch({ type: 'undo' }),
   };
 }

@@ -129,6 +129,7 @@ describe('matchReducer', () => {
     ]);
     expect(reset.teams.a.name).toBe('SonneTeam');
     expect(reset.teams.b.name).toBe('12345678901234567890');
+    expect(reset.serve).toBeNull();
   });
 
   it('stores angle brackets as text and falls back when a name is empty', () => {
@@ -148,6 +149,101 @@ describe('matchReducer', () => {
     expect(matchReducer(state, { type: 'game/increment', team: 'a', at: Number.NaN })).toBe(state);
     expect(matchReducer(state, { type: 'set/select', index: 3 as never, at: T0 + 1 })).toBe(state);
     expect(matchReducer(state, { type: 'match/reset', matchId: 'not-a-uuid', at: T0 + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'serve/set', team: null, player: 1, at: T0 + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'serve/set', team: 'a', player: 3 as never, at: T0 + 1 })).toBe(state);
     expect(matchReducer(state, { type: 'nope' } as never)).toBe(state);
+  });
+
+  it('treats a serve chosen at 0:0 as the first game and rotates A1 B1 A2 B2', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+    const order = [
+      { team: 'b', player: 1 },
+      { team: 'a', player: 2 },
+      { team: 'b', player: 2 },
+      { team: 'a', player: 1 },
+    ] as const;
+    for (const expected of order) {
+      state = play(state, 'a', 1);
+      expect(state.serve).toEqual(expected);
+    }
+  });
+
+  it('applies a serve chosen after a scored game to the next game only', () => {
+    let state = play(start(), 'a', 1);
+    expect(state.sets[0]).toEqual({ a: 1, b: 0 });
+    expect(state.serve).toBeNull();
+    state = matchReducer(state, { type: 'serve/set', team: 'a', player: 1, at: state.updatedAt + 1 });
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+    expect(state.sets[0]).toEqual({ a: 1, b: 0 });
+    state = play(state, 'b', 1);
+    expect(state.sets[0]).toEqual({ a: 1, b: 1 });
+    expect(state.serve).toEqual({ team: 'b', player: 1 });
+  });
+
+  it('lets a manual serve override replace the rotation and steps back on decrement', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    state = play(state, 'a', 1);
+    expect(state.serve).toEqual({ team: 'b', player: 1 });
+    state = matchReducer(state, { type: 'serve/set', team: 'b', player: 2, at: state.updatedAt + 1 });
+    expect(state.serve).toEqual({ team: 'b', player: 2 });
+    state = play(state, 'b', 1);
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+    state = matchReducer(state, { type: 'game/decrement', team: 'b', at: state.updatedAt + 1 });
+    expect(state.sets[0]).toEqual({ a: 1, b: 0 });
+    expect(state.serve).toEqual({ team: 'b', player: 2 });
+  });
+
+  it('keeps an unknown serve unknown when games change and clears it on a third tap cycle', () => {
+    const scored = play(start(), 'a', 1);
+    expect(scored.serve).toBeNull();
+    let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 2, at: T0 + 1 });
+    state = matchReducer(state, { type: 'serve/set', team: null, player: null, at: T0 + 2 });
+    expect(state.serve).toBeNull();
+    const again = matchReducer(state, { type: 'serve/set', team: null, player: null, at: T0 + 3 });
+    expect(again).toBe(state);
+  });
+
+  it('names the tiebreak starter and rotates once when that game is scored', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    for (let i = 0; i < 6; i += 1) {
+      state = play(state, 'a', 1);
+      state = play(state, 'b', 1);
+    }
+    expect(state.sets[0]).toEqual({ a: 6, b: 6 });
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+    state = play(state, 'b', 1);
+    expect(state.sets[0]).toEqual({ a: 6, b: 7 });
+    expect(state.activeSet).toBe(1);
+    expect(state.serve).toEqual({ team: 'b', player: 1 });
+  });
+
+  it('ends a match in place, blocks scoring, and resumes', () => {
+    let state = play(start(), 'a', 2);
+    const score = state.sets;
+    state = matchReducer(state, { type: 'match/end', at: state.updatedAt + 1 });
+    expect(state.ended).toBe(true);
+    expect(state.sets).toEqual(score);
+    const blocked = matchReducer(state, { type: 'game/increment', team: 'b', at: state.updatedAt + 1 });
+    expect(blocked).toBe(state);
+    expect(matchReducer(state, { type: 'serve/set', team: 'a', player: 1, at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'team/rename', team: 'a', name: 'Neu', at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'set/select', index: 1, at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'match/end', at: state.updatedAt + 1 })).toBe(state);
+
+    const resumed = matchReducer(state, { type: 'match/resume', at: state.updatedAt + 1 });
+    expect(resumed.ended).toBe(false);
+    expect(resumed.sets).toEqual(score);
+    const continued = matchReducer(resumed, { type: 'game/increment', team: 'b', at: resumed.updatedAt + 1 });
+    expect(continued.sets[0]).toEqual({ a: 2, b: 1 });
+    expect(matchReducer(resumed, { type: 'match/resume', at: resumed.updatedAt + 1 })).toBe(resumed);
+  });
+
+  it('starts a fresh match from an ended one', () => {
+    const ended = matchReducer(play(start(), 'a', 1), { type: 'match/end', at: T0 + 10 });
+    const reset = matchReducer(ended, { type: 'match/reset', matchId: NEXT, at: T0 + 11 });
+    expect(reset.ended).toBe(false);
+    expect(reset.matchId).toBe(NEXT);
+    expect(reset.sets[0]).toEqual({ a: 0, b: 0 });
   });
 });

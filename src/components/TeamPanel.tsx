@@ -1,7 +1,8 @@
-import { canDecrement, canIncrement, displayGames, isUpcomingSet, setWinner } from '../domain/rules';
+import { canDecrement, canIncrement, displayGames, isUpcomingSet, serveChoice, setWinner } from '../domain/rules';
 import type { MatchState, SetIndex, TeamId } from '../domain/types';
-import { MinusIcon, PlusIcon } from './icons';
+import { BallIcon, MinusIcon, PlusIcon } from './icons';
 import { SetScore } from './SetScore';
+import { SplitFlap } from './SplitFlap';
 import { TeamName } from './TeamName';
 
 interface TeamPanelProps {
@@ -11,15 +12,23 @@ interface TeamPanelProps {
   onDecrement: (team: TeamId) => void;
   onRename: (team: TeamId, name: string) => void;
   onSelectSet: (index: SetIndex) => void;
+  onServe: (team: TeamId) => void;
 }
 
 const SETS: readonly SetIndex[] = [0, 1, 2];
 
-export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onSelectSet }: TeamPanelProps) {
+export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onSelectSet, onServe }: TeamPanelProps) {
   const name = state.teams[team].name;
   const active = state.sets[state.activeSet];
-  const plusDisabled = !canIncrement(active, team);
-  const minusDisabled = !canDecrement(active, team);
+  const locked = state.ended;
+  const plusDisabled = locked || !canIncrement(active, team);
+  const minusDisabled = locked || !canDecrement(active, team);
+  const activeWinner = setWinner(active.a, active.b);
+  const serving = state.serve?.team === team;
+  const nextServe = serveChoice(state.serve, team);
+  const serveLabel = nextServe
+    ? `Serve ${nextServe.team.toUpperCase()}${nextServe.player} for ${name}`
+    : `Leave the serve open, ${name}`;
 
   return (
     <section className={`team team-${team}`} aria-label={name}>
@@ -28,13 +37,29 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
         className="step step-minus"
         data-testid={`decrement-${team}`}
         disabled={minusDisabled}
-        aria-label={`${name}: ein Game abziehen`}
+        aria-label={`${name}: remove one game`}
         onClick={() => onDecrement(team)}
       >
         <MinusIcon />
       </button>
       <div className="team-body">
-        <TeamName name={name} onCommit={(next) => onRename(team, next)} />
+        <div className="team-head">
+          <TeamName name={name} locked={locked} onCommit={(next) => onRename(team, next)} />
+          <button
+            type="button"
+            className={serving ? 'ball is-on' : 'ball'}
+            data-testid={`serve-${team}`}
+            aria-pressed={serving}
+            aria-label={serveLabel}
+            disabled={locked}
+            onClick={() => onServe(team)}
+          >
+            <BallIcon />
+          </button>
+        </div>
+        <div className={`current-set${activeWinner === team ? ' is-won' : ''}`} data-testid={`current-${team}`} aria-hidden="true">
+          <SplitFlap value={displayGames(state, state.activeSet, team)} />
+        </div>
         <div className="sets">
           {SETS.map((index) => {
             const score = state.sets[index];
@@ -42,11 +67,13 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
             return (
               <SetScore
                 key={index}
+                team={team}
                 index={index}
                 gamesLabel={displayGames(state, index, team)}
                 active={state.activeSet === index}
                 won={winner === team}
                 upcoming={isUpcomingSet(state, index)}
+                locked={locked}
                 onSelect={() => onSelectSet(index)}
               />
             );
@@ -58,7 +85,7 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
         className="step step-plus"
         data-testid={`increment-${team}`}
         disabled={plusDisabled}
-        aria-label={`${name}: ein Game hinzufügen`}
+        aria-label={`${name}: add one game`}
         onClick={() => onIncrement(team)}
       >
         <PlusIcon />

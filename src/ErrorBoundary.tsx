@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { ARCHIVE_KEY } from './domain/archive';
 import { STORAGE_KEY } from './domain/persistence';
 
 interface ErrorBoundaryProps {
@@ -20,21 +21,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (!this.state.failed) return this.props.children;
     return (
       <div className="fatal" role="alert">
-        <p>Padel Counter konnte die Anzeige nicht laden.</p>
+        <p>Padel Counter could not show the score.</p>
         <button
           type="button"
           onClick={() => {
             try {
               localStorage.removeItem(STORAGE_KEY);
+              localStorage.removeItem(ARCHIVE_KEY);
             } catch {
               // Storage may be blocked; reload anyway.
             }
             window.location.reload();
           }}
         >
-          Neu laden
+          Reload
         </button>
-        <p className="fatal-note">Der gespeicherte Spielstand auf diesem Gerät wird dabei gelöscht.</p>
+        <p className="fatal-note">The score and saved matches on this device will be deleted.</p>
       </div>
     );
   }
