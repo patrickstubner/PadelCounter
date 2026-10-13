@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createMatch, matchReducer } from './reducer';
 import {
   RULES_SUMMARY,
+  servePickPrompt,
   canDecrement,
   canIncrement,
   displayGames,
@@ -197,7 +198,8 @@ describe('display', () => {
     expect(displayGames(state, 2, 'a')).toBe('–');
   });
 
-  it('mentions the padel rules', () => {
+  it('describes this counter without stating a law', () => {
+    expect(RULES_SUMMARY).toContain('This counter');
     expect(RULES_SUMMARY).toContain('6 games');
     expect(RULES_SUMMARY).toContain('lead of 2');
     expect(RULES_SUMMARY).toContain('7–5');
@@ -205,6 +207,9 @@ describe('display', () => {
     expect(RULES_SUMMARY).toContain('7–6');
     expect(RULES_SUMMARY).toContain('best of 3');
     expect(RULES_SUMMARY).toContain('A1, B1, A2, B2');
+    expect(RULES_SUMMARY).toContain('Tap a set to select it');
+    expect(RULES_SUMMARY).not.toContain('Set won');
+    expect(RULES_SUMMARY).not.toContain('correct it');
   });
 });
 
@@ -260,7 +265,11 @@ describe('serve rotation', () => {
       serve: { team: 'b' as const, player: 2 as const },
     };
     expect(isTiebreak(tied)).toBe(true);
-    expect(tiebreakHint(tied)).toBe('Tiebreak · B2 starts, then two each');
+    expect(tiebreakHint(tied)).toBe('Tiebreak · B2 serves this game');
     expect(tiebreakHint({ ...tied, serve: null })).toBe('Tiebreak');
+    expect(servePickPrompt(state)).toBeNull();
+    expect(servePickPrompt({ ...tied, serve: null, servePrompt: true })).toBe('Choose the server');
+    expect(servePickPrompt({ ...tied, serve: null, servePrompt: true, ended: true })).toBeNull();
+    expect(servePickPrompt({ ...tied, servePrompt: true })).toBeNull();
   });
 });

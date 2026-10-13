@@ -234,7 +234,7 @@ describe('matchReducer', () => {
     expect(again).toBe(state);
   });
 
-  it('names the tiebreak starter and rotates once when that game is scored', () => {
+  it('keeps the tiebreak server for that one game, then asks for a new pick', () => {
     let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
     for (let i = 0; i < 6; i += 1) {
       state = play(state, 'a', 1);
@@ -242,10 +242,45 @@ describe('matchReducer', () => {
     }
     expect(state.sets[0]).toEqual({ a: 6, b: 6 });
     expect(state.serve).toEqual({ team: 'a', player: 1 });
+    expect(state.servePrompt).toBe(false);
     state = play(state, 'b', 1);
     expect(state.sets[0]).toEqual({ a: 6, b: 7 });
     expect(state.activeSet).toBe(1);
+    expect(state.serve).toBeNull();
+    expect(state.servePrompt).toBe(true);
+    state = matchReducer(state, { type: 'serve/set', team: 'b', player: 1, at: state.updatedAt + 1 });
     expect(state.serve).toEqual({ team: 'b', player: 1 });
+    expect(state.servePrompt).toBe(false);
+  });
+
+  it('does not ask for a server after a tiebreak the match never assigned', () => {
+    let state = start();
+    for (let i = 0; i < 6; i += 1) {
+      state = play(state, 'a', 1);
+      state = play(state, 'b', 1);
+    }
+    state = play(state, 'a', 1);
+    expect(state.sets[0]).toEqual({ a: 7, b: 6 });
+    expect(state.serve).toBeNull();
+    expect(state.servePrompt).toBe(false);
+  });
+
+  it('asks for the server again after a manual set change and not after minus', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    state = play(state, 'a', 1);
+    expect(state.serve).toEqual({ team: 'b', player: 1 });
+    state = matchReducer(state, { type: 'game/decrement', team: 'a', at: state.updatedAt + 1 });
+    expect(state.sets[0]).toEqual({ a: 0, b: 0 });
+    expect(state.serve).toEqual({ team: 'a', player: 1 });
+    expect(state.servePrompt).toBe(false);
+    state = play(state, 'a', 1);
+    state = matchReducer(state, { type: 'set/select', index: 1, at: state.updatedAt + 1 });
+    expect(state.activeSet).toBe(1);
+    expect(state.serve).toBeNull();
+    expect(state.servePrompt).toBe(true);
+    const open = matchReducer(start(), { type: 'set/select', index: 1, at: T0 + 1 });
+    expect(open.serve).toBeNull();
+    expect(open.servePrompt).toBe(false);
   });
 
   it('ends a match in place, blocks scoring, and resumes', () => {

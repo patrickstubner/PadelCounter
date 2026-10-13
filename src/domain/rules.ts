@@ -1,7 +1,7 @@
 import type { MatchState, PlayerSlot, Server, SetIndex, SetScore, TeamId } from './types';
 
 export const RULES_SUMMARY =
-  'Set won at 6 games with a lead of 2, at 7–5, or 7–6 after 6–6. Match: best of 3. Serve is optional (A1, B1, A2, B2). Tap a set to correct it.';
+  'This counter ends a set at 6 games with a lead of 2, at 7–5, or at 7–6 after 6–6. A match is best of 3. Serve is optional (A1, B1, A2, B2). Tap a set to select it.';
 
 function otherTeam(team: TeamId): TeamId {
   return team === 'a' ? 'b' : 'a';
@@ -127,10 +127,18 @@ export function displayGames(state: MatchState, index: SetIndex, team: TeamId): 
 }
 
 /**
- * Next or previous server.
+ * Next or previous server in the game rotation.
  * The cycle is the one that puts `serve` on game `gamesPlayed` (the score before this step).
  * A manual choice that does not sit on that slot still stays in the cycle of the team
  * that would have started, and steps from the chosen player.
+ *
+ * Tiebreak points are not counted. A 6–6 set is one game in this rotation: the server
+ * shown at 6–6 serves that whole game, and the server does not change every two points.
+ * Scoring that game clears a chosen server so the next set can be picked again.
+ *
+ * Minus walks this same cycle backwards. That restores the server of the game just
+ * removed. It does not ask for a new server. Choosing another set does not change the
+ * game count, so a chosen server is cleared there instead of being stepped.
  */
 export function rotateServe(serve: Server | null, gamesPlayedCount: number, direction: 1 | -1): Server | null {
   if (!serve) return null;
@@ -162,11 +170,21 @@ export function isTiebreak(state: MatchState): boolean {
   return set.a === 6 && set.b === 6;
 }
 
+/**
+ * At 6:6 the hint names who serves that one game. It does not describe a
+ * two-point rotation, because this counter does not score tiebreak points.
+ */
 export function tiebreakHint(state: MatchState): string | null {
   if (!isTiebreak(state)) return null;
   if (!state.serve) return 'Tiebreak';
   const who = `${state.serve.team.toUpperCase()}${state.serve.player}`;
-  return `Tiebreak · ${who} starts, then two each`;
+  return `Tiebreak · ${who} serves this game`;
+}
+
+/** Shown after a tiebreak game or a set change cleared a server the match had chosen. */
+export function servePickPrompt(state: MatchState): string | null {
+  if (!state.servePrompt || state.serve !== null || state.ended || matchWinner(state.sets)) return null;
+  return 'Choose the server';
 }
 
 export function serverMark(team: TeamId, player: PlayerSlot): string {
