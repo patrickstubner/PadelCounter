@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendEvent, createLog } from './log';
+import { appendEvent, createLog, replay } from './log';
 import {
   ARCHIVE_KEY,
   MAX_ARCHIVED_MATCHES,
@@ -80,6 +80,28 @@ describe('match archive', () => {
     expect(undone.archive).toHaveLength(0);
     expect(listMatches(undone.log, undone.archive)).toHaveLength(1);
     expect(listMatches(undone.log, undone.archive)[0]?.status).toBe('Team A wins');
+  });
+
+  it('lists past matches newest first', () => {
+    const listed = listMatches(createLog(T0 + 100, THIRD), [archived(ID, T0), archived(NEXT, T0 + 50)]);
+    expect(listed.filter((match) => !match.live).map((match) => match.id)).toEqual([NEXT, ID]);
+  });
+
+  it('resets names on match/new and restores them when that step is undone', () => {
+    let current = session(played(ID, 1, T0));
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'team/rename', team: 'a', name: 'Lobos', at: T0 + 5 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'match/new', matchId: NEXT, at: T0 + 6 },
+    });
+    expect(replay(current.log).teams.a.name).toBe('Team A');
+    expect(current.archive[0]?.teams.a).toBe('Lobos');
+    const undone = sessionReducer(current, { type: 'undo' });
+    expect(replay(undone.log).teams.a.name).toBe('Lobos');
+    expect(undone.archive).toHaveLength(0);
   });
 
   it('stores an abandoned match as ended early and skips a blank court', () => {

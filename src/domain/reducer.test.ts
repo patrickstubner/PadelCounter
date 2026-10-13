@@ -101,7 +101,7 @@ describe('matchReducer', () => {
     expect(stuck).toBe(undone);
   });
 
-  it('keeps names on reset, caps renames, and strips control characters', () => {
+  it('caps renames, strips control characters, and resets names on a new match', () => {
     let state = matchReducer(start(), {
       type: 'team/rename',
       team: 'a',
@@ -118,7 +118,11 @@ describe('matchReducer', () => {
     expect(state.teams.b.name).toHaveLength(20);
     expect(state.teams.b.name).toBe('12345678901234567890');
     state = play(state, 'a', 1);
-    const reset = matchReducer(state, { type: 'match/reset', matchId: NEXT, at: T0 + 20 });
+    const kept = matchReducer(state, { type: 'match/reset', matchId: NEXT, at: T0 + 20 });
+    expect(kept.matchId).toBe(NEXT);
+    expect(kept.teams.a.name).toBe('SonneTeam');
+    expect(kept.teams.b.name).toBe('12345678901234567890');
+    const reset = matchReducer(state, { type: 'match/new', matchId: NEXT, at: T0 + 21 });
     expect(reset.matchId).toBe(NEXT);
     expect(reset.revision).toBe(0);
     expect(reset.activeSet).toBe(0);
@@ -127,9 +131,10 @@ describe('matchReducer', () => {
       { a: 0, b: 0 },
       { a: 0, b: 0 },
     ]);
-    expect(reset.teams.a.name).toBe('SonneTeam');
-    expect(reset.teams.b.name).toBe('12345678901234567890');
+    expect(reset.teams.a.name).toBe('Team A');
+    expect(reset.teams.b.name).toBe('Team B');
     expect(reset.serve).toBeNull();
+    expect(matchReducer(state, { type: 'match/new', matchId: 'not-a-uuid', at: T0 + 22 })).toBe(state);
   });
 
   it('stores angle brackets as text and falls back when a name is empty', () => {

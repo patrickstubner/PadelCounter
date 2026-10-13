@@ -55,7 +55,8 @@ function plain(value: unknown): Record<string, unknown> | null {
 export function currentMatchEvents(log: MatchLog): MatchEvent[] {
   let start = 0;
   for (let index = 0; index < log.events.length; index += 1) {
-    if (log.events[index]?.type === 'match/reset') start = index + 1;
+    const event = log.events[index];
+    if (event?.type === 'match/reset' || event?.type === 'match/new') start = index + 1;
   }
   return log.events.slice(start);
 }

@@ -1,11 +1,17 @@
 # Changelog
 
+## 1.2.5 – 2026-10-13
+
+- Der Verlauf zeigt den neuesten Eintrag oben, bei den Ereignissen des laufenden Matches und bei den gespeicherten Matches.
+- «New match» setzt die Teamnamen auf Team A und Team B zurück. Ein gespeicherter New-match-Schritt aus 1.2.4 behält die Namen, auch wenn man darüber hinaus rückgängig macht.
+- Die geänderte Zahl im Verlauf steht in `<mark>`.
+
 ## 1.2.4 – 2026-10-13
 
 - Plus-Knöpfe haben dieselbe Umrandung wie Minus und behalten das Pluszeichen. Der Blick bleibt auf den Ziffern.
 - Querformat: Satzziffern, auch 0, 6 und zweistellige Stände, werden rechts nicht mehr abgeschnitten.
 - Jeder Verlaufseintrag zeigt den ganzen neuen Satzstand, zum Beispiel «6:3 5:1». Hervorgehoben ist nur die Zahl, die sich geändert hat. Uhrzeit und Text bleiben.
-- Saved histories are recomputed with the current serve logic. Older matches may therefore show a different server; game scores are unchanged.
+- Gespeicherte Verläufe werden seit 1.2.2 mit der aktuellen Aufschlaglogik neu berechnet. Ältere Matches können deshalb einen anderen Aufschlag zeigen, die Spielstände bleiben unverändert.
 
 ## 1.2.3 – 2026-10-13
 

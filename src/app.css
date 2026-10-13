@@ -713,9 +713,9 @@ button:disabled { cursor: not-allowed; }
   white-space: nowrap;
 }
 
-.history-changed {
+.history-score mark.history-changed {
   color: #0a1a3f;
-  background: #ffffff;
+  background-color: #ffffff;
   border-radius: 0.15em;
   padding: 0 0.08em;
 }

@@ -55,6 +55,7 @@ export type MatchEvent =
   | { readonly type: 'set/select'; readonly index: SetIndex; readonly at: number }
   | { readonly type: 'team/rename'; readonly team: TeamId; readonly name: string; readonly at: number }
   | { readonly type: 'match/reset'; readonly matchId: string; readonly at: number }
+  | { readonly type: 'match/new'; readonly matchId: string; readonly at: number }
   | {
       readonly type: 'serve/set';
       readonly team: TeamId | null;
@@ -74,6 +75,13 @@ export function isSetIndex(value: unknown): value is SetIndex {
 
 export function isPlayerSlot(value: unknown): value is PlayerSlot {
   return value === 1 || value === 2;
+}
+
+/** `match/reset` is a 1.2.4 New match and keeps names. `match/new` also resets the names. */
+export function isNewMatchEvent(
+  event: MatchEvent,
+): event is Extract<MatchEvent, { type: 'match/reset' | 'match/new' }> {
+  return event.type === 'match/reset' || event.type === 'match/new';
 }
 
 export function isTimestamp(value: unknown): value is number {

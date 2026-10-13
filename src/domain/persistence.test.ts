@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createLog, replay } from './log';
+import { createLog, replay, undoLog } from './log';
 import { createMatch } from './reducer';
 import {
   MAX_RAW_LENGTH,
@@ -13,6 +13,7 @@ import {
 import type { MatchState } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000a';
+const NEXT = '00000000-0000-4000-8000-00000000000b';
 const T0 = 1_700_000_000_000;
 
 function memory(): MatchStorage & { dump(): Map<string, string> } {
@@ -193,6 +194,39 @@ describe('parsePersisted', () => {
       },
     });
     expect(parsePersisted(evil)).toBeNull();
+  });
+});
+
+describe('1.2.4 history upgrade', () => {
+  it('keeps names from an old New match, and undo across that step restores the previous score', () => {
+    const saved = JSON.parse(serializeLog(createLog(T0, ID))) as { events: unknown[] };
+    saved.events = [
+      { type: 'team/rename', team: 'a', name: 'Lobos', at: T0 + 1 },
+      { type: 'team/rename', team: 'b', name: 'Wolves', at: T0 + 2 },
+      { type: 'game/increment', team: 'a', at: T0 + 3 },
+      { type: 'match/reset', matchId: NEXT, at: T0 + 4 },
+      { type: 'game/increment', team: 'b', at: T0 + 5 },
+    ];
+    const loaded = parsePersisted(saved);
+    expect(loaded?.events[3]).toEqual({ type: 'match/reset', matchId: NEXT, at: T0 + 4 });
+
+    const live = replay(loaded!);
+    expect(live.matchId).toBe(NEXT);
+    expect(live.teams.a.name).toBe('Lobos');
+    expect(live.teams.b.name).toBe('Wolves');
+    expect(live.sets[0]).toEqual({ a: 0, b: 1 });
+
+    const beforeLastGame = undoLog(loaded!);
+    expect(replay(beforeLastGame).matchId).toBe(NEXT);
+    expect(replay(beforeLastGame).teams.a.name).toBe('Lobos');
+    expect(replay(beforeLastGame).teams.b.name).toBe('Wolves');
+    expect(replay(beforeLastGame).sets[0]).toEqual({ a: 0, b: 0 });
+
+    const beforeReset = undoLog(beforeLastGame);
+    expect(replay(beforeReset).matchId).toBe(ID);
+    expect(replay(beforeReset).teams.a.name).toBe('Lobos');
+    expect(replay(beforeReset).teams.b.name).toBe('Wolves');
+    expect(replay(beforeReset).sets[0]).toEqual({ a: 1, b: 0 });
   });
 });
 

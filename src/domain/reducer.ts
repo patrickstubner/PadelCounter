@@ -1,7 +1,7 @@
 import { createMatchId, isUuid } from './id';
 import { sanitizeTeamName } from './names';
 import { gamesPlayed, isPlausibleSetScore, matchWinner, rotateServe, setWinner } from './rules';
-import { SCHEMA_VERSION, isPlayerSlot, isSetIndex, isTeamId, isTimestamp, type MatchEvent, type MatchState, type Server, type SetIndex, type SetScore, type TeamId } from './types';
+import { SCHEMA_VERSION, isNewMatchEvent, isPlayerSlot, isSetIndex, isTeamId, isTimestamp, type MatchEvent, type MatchState, type Server, type SetIndex, type SetScore, type TeamId } from './types';
 
 export function createMatch(
   at: number,
@@ -118,7 +118,7 @@ function serveAskAfterGame(
 
 export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
   if (!isTimestamp(event.at)) return state;
-  if (state.ended && event.type !== 'match/resume' && event.type !== 'match/reset') return state;
+  if (state.ended && event.type !== 'match/resume' && !isNewMatchEvent(event)) return state;
 
   switch (event.type) {
     case 'game/increment':
@@ -144,12 +144,13 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
           : { a: state.teams.a, b: { name } };
       return stamp(state, event.at, { sets: state.sets, activeSet: state.activeSet, teams });
     }
-    case 'match/reset': {
+    case 'match/reset':
+    case 'match/new': {
       if (!isUuid(event.matchId)) return state;
-      return createMatch(event.at, event.matchId.toLowerCase(), {
-        a: state.teams.a.name,
-        b: state.teams.b.name,
-      });
+      const names = event.type === 'match/reset'
+        ? { a: state.teams.a.name, b: state.teams.b.name }
+        : undefined;
+      return createMatch(event.at, event.matchId.toLowerCase(), names);
     }
     case 'match/end':
       return stamp(state, event.at, {

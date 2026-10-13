@@ -17,6 +17,8 @@ describe('match log', () => {
     expect(replay(log).matchId).toBe(NEXT);
     expect(replay(log).sets[0]).toEqual({ a: 0, b: 0 });
     expect(replay(log).serve).toBeNull();
+    expect(replay(log).teams.a.name).toBe('Nord');
+    expect(replay(log).teams.b.name).toBe('Hafen');
 
     log = undoLog(log);
     expect(replay(log).matchId).toBe(ID);
@@ -80,6 +82,7 @@ describe('match log', () => {
     expect(describeEvent({ type: 'game/decrement', team: 'b', at: T0 })).toBe('Game B back');
     expect(describeEvent({ type: 'set/select', index: 2, at: T0 })).toBe('Set 3');
     expect(describeEvent({ type: 'match/reset', matchId: ID, at: T0 })).toBe('New match');
+    expect(describeEvent({ type: 'match/new', matchId: ID, at: T0 })).toBe('New match');
     expect(describeEvent({ type: 'serve/set', team: 'a', player: 1, at: T0 })).toBe('Serve A1');
     expect(describeEvent({ type: 'serve/set', team: null, player: null, at: T0 })).toBe('Serve open');
     expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Match ended');
