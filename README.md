@@ -11,7 +11,7 @@ Der GitHub-Pages-Pfad ist `/PadelCounter/`, passend zum Repository-Namen.
 Oben Team A, unten Team B. Es werden nur Games gezählt, keine Punkte innerhalb eines Games.
 
 - **Querformat:** die drei Sätze stehen groß nebeneinander, links Satz 1, in der Mitte Satz 2, rechts Satz 3. Es gibt keine Satznummern an den Zahlen.
-- **Hochformat:** der laufende Satz bleibt groß. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, direkt gegenüber an der Mitte, ohne Satznummern. In der Mitte steht groß «Set 1», «Set 2» oder «Set 3».
+- **Hochformat:** der laufende Satz bleibt groß und vollständig sichtbar, auch zweistellig. Plus schiebt die alte Zahl nach oben, Minus die alte nach unten. Die Satzstände von Team A stehen am unteren Rand, die von Team B am oberen Rand, direkt gegenüber an der Mitte, ohne Satznummern. In der Mitte steht groß «Set 1», «Set 2» oder «Set 3».
 - Plus und Minus sind die großen Flächen links und rechts. Jede Satzzahl hat eine Tippfläche (`Set 1` bis `Set 3`) und macht diesen Satz aktiv, damit sich der Stand korrigieren lässt. Der Wechsel steht im Verlauf und lässt sich rückgängig machen.
 - Ein Satz ist gewonnen bei 6 Games mit zwei Vorsprung, bei 7:5, oder nach einem Tiebreak bei 6:6 als 7:6. Das Match ist Best of 3. Die Regeln begrenzen nur unsinnige Stände (zum Beispiel 8:6 oder 7:0); Minus und ein gezieltes Plus bleiben immer möglich.
 - Teamnamen antippen, ändern (höchstens 20 Zeichen) und auf diesem Gerät behalten. „New match“ setzt den Stand nach einer Rückfrage zurück und lässt die Namen stehen. Die Oberfläche ist Englisch.

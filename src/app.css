@@ -336,6 +336,9 @@ button:disabled { cursor: not-allowed; }
   animation: drive-in 0.26s cubic-bezier(0.15, 0.8, 0.2, 1) 0.16s both;
 }
 
+.flap.is-down .flap-leave { animation-name: drive-out-down; }
+.flap.is-down .flap-enter { animation-name: drive-in-down; }
+
 @keyframes drive-out {
   from { transform: translateY(0) rotateX(0deg); opacity: 1; }
   to { transform: translateY(-110%) rotateX(78deg); opacity: 0; }
@@ -343,6 +346,16 @@ button:disabled { cursor: not-allowed; }
 
 @keyframes drive-in {
   from { transform: translateY(110%) rotateX(-78deg); opacity: 0; }
+  to { transform: translateY(0) rotateX(0deg); opacity: 1; }
+}
+
+@keyframes drive-out-down {
+  from { transform: translateY(0) rotateX(0deg); opacity: 1; }
+  to { transform: translateY(110%) rotateX(-78deg); opacity: 0; }
+}
+
+@keyframes drive-in-down {
+  from { transform: translateY(-110%) rotateX(78deg); opacity: 0; }
   to { transform: translateY(0) rotateX(0deg); opacity: 1; }
 }
 
@@ -639,7 +652,14 @@ button:disabled { cursor: not-allowed; }
     container-type: size;
   }
 
-  .current-set .num { font-size: max(6.5rem, min(78cqh, 86cqw)); }
+  .current-set .num {
+    overflow: visible;
+    letter-spacing: 0;
+    line-height: 1;
+    padding-inline: 0.06em;
+    /* Two tabular digits, including a tiebreak 10, stay inside the column. */
+    font-size: clamp(2.25rem, min(78cqh, calc(100cqw / 1.5), 24svh, 42vw), 12rem);
+  }
   .current-set.is-won .num { color: var(--accent); }
 
   .sets { flex: 0 0 auto; }
