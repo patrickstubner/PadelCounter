@@ -337,11 +337,11 @@ button:disabled { cursor: not-allowed; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
+  gap: 0.04rem;
   background: #000000;
   min-height: 2.4rem;
   z-index: 1;
-  padding: 0.12rem 0.4rem;
+  padding: 0 0.4rem;
 }
 
 .serve-line,
@@ -352,9 +352,10 @@ button:disabled { cursor: not-allowed; }
 }
 
 .serve-line {
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.03em;
+  line-height: 1.05;
 }
 
 .tb {
@@ -378,6 +379,19 @@ button:disabled { cursor: not-allowed; }
   border-radius: 999px;
   padding: 0.12rem 0.7rem;
   background: #000000;
+}
+
+.chip-set {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #ffffff;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .chip-a { color: var(--a); border-color: var(--a); }

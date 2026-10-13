@@ -78,7 +78,7 @@ export function App() {
           ) : winner ? (
             <span className={`chip chip-${winner}`}>Sieg · {state.teams[winner].name}</span>
           ) : (
-            <span className="chip">Satz {state.activeSet + 1}</span>
+            <span className="chip chip-set" data-testid="active-set">{`Satz ${state.activeSet + 1}`}</span>
           )}
           {state.ended ? (
             <p className="end-note" data-testid="final-score">
