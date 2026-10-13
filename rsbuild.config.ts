@@ -44,7 +44,7 @@ const workboxPlugin: RsbuildPlugin = {
       await generateSW({
         swDest,
         globDirectory: dist,
-        globPatterns: ['**/*.{html,js,css,webmanifest,png,svg,ico}'],
+        globPatterns: ['**/*.{html,js,css,webmanifest,png,svg,ico,txt}'],
         globIgnores: ['**/sw.js', '**/*.map'],
         modifyURLPrefix: { '': prefix },
         inlineWorkboxRuntime: true,

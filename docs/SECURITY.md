@@ -33,7 +33,7 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | F-11 | `glob@11.1.0` | Niedrig | Akzeptiert | Transitive Dev-Abhängigkeit von `workbox-build@7.4.1`, vom Maintainer als veraltet markiert. `npm audit` meldet dafür keine Schwachstelle. Das Paket läuft nur beim Build und landet nicht im Browser-Bundle. Ein Override auf glob 13 würde den Build von Workbox riskieren, ohne die ausgelieferte App zu ändern. |
 | F-12 | Fehlermeldungen | Info | Umgesetzt | Speicherfehler und Wake-Lock-Fehler werden geschluckt oder als allgemeiner Satz angezeigt. Die Fehlergrenze zeigt keinen Stack und keine Exception-Message. Ungültiger Speicherinhalt wird nicht in die Konsole geschrieben. |
 | F-13 | Service Worker | Info | Umgesetzt | Workbox-Runtime ist inline (`inlineWorkboxRuntime: true`). Der Willkommenskommentar mit `goo.gl`-Links wird entfernt. `verify-build` verbietet bekannte CDNs in `dist/`. |
-| F-14 | Supply Chain der App | Info | Gering | Produktionsabhängigkeiten sind nur `react` und `react-dom`. Vitest (und damit Vite) dient ausschließlich als Testläufer und ist nicht der Bundler. |
+| F-14 | Supply Chain der App | Info | Gering | Produktionsabhängigkeiten sind `react`, `react-dom` und `lottie-web` 5.13.0. Eingebunden wird nur `build/player/lottie_light.js` (SVG, ohne Expression-Laufzeit). Ein Test prüft, dass diese Datei kein `eval(`, kein `new Function` und kein `WebAssembly` enthält. Der Player und die Pokal-JSON liegen im Bundle und im Service-Worker-Precache, nicht auf einem CDN. Vitest ist kein Bundler. |
 | F-15 | Texte mit URLs im Bundle | Info | Akzeptiert | Der React-Produktionsbuild enthält `https://react.dev/errors/…` nur als Text in Minified-Error-Meldungen. Die App ruft die Adresse nicht auf; `connect-src 'self'` würde einen Abruf blockieren. `xmlns="http://www.w3.org/2000/svg"` ist ein XML-Namensraum, kein Request. Der Workbox-Hinweis `bit.ly` wird beim Build aus `sw.js` entfernt. |
 | F-16 | Aufschlag | Info | Behoben | `serve` ist `null` oder `{ team: a\|b, player: 1\|2 }`. Freitext gibt es dort nicht. Ein halbes Paar (Team ohne Spieler) wird weder angewendet noch geladen. Die Anzeige «Serve A1» setzt React als Text. |
 | F-17 | Ereignisprotokoll und Rückgängig | Info | Behoben | Es werden nur bekannte Ereignistypen mit geprüften Feldern gespeichert. «Rückgängig» entfernt das letzte gespeicherte Ereignis und spielt die Liste neu ab; es gibt keinen Index und keinen Typ aus der Oberfläche, der Code ausführt. Die Verlaufsliste rendert feste Sätze und den bereits geprüften Teamnamen als Text. Die Liste ist auf 500 Ereignisse und 96000 Zeichen begrenzt. |
@@ -77,6 +77,7 @@ Direkt, exakt, Stand 2026-10-13:
 | --- | --- | --- |
 | react | 19.3.0 | UI |
 | react-dom | 19.3.0 | UI |
+| lottie-web | 5.13.0 | Pokal-Animation, nur der Light-Build, MIT, Copyright (c) 2015 Bodymovin |
 | typescript | 6.0.3 | Typprüfung (6.0.x liegt im Peer-Bereich von typescript-eslint; TypeScript 7 noch nicht) |
 | @rsbuild/core | 2.2.13 | Bundler |
 | @rsbuild/plugin-react | 2.1.1 | React-Plugin |
@@ -106,4 +107,4 @@ npm run verify-build
 
 Jemand mit Zugriff auf das GitHub-Repository oder auf den Rechner des Spielers kann die App beziehungsweise den lokalen Speicher ändern. Das ist die Grenze einer statischen, lokalen PWA. Ein kompromittierter Deploy würde vom Service Worker gecacht, bis der nächste Deploy `skipWaiting` auslöst; deshalb deployed nur `main` nach grüner Prüfung.
 
-Die Prüfung ersetzt kein unabhängiges Pentest-Gutachten. Sie ist die Review des Stands 1.1.0 vom 2026-10-13 gegen den Quelltext und `npm audit` dieses Commits. Abhängigkeiten sind gegenüber 1.0.0 unverändert.
+Die Prüfung ersetzt kein unabhängiges Pentest-Gutachten. Sie ist die Review des Stands 1.1.0 vom 2026-10-13 gegen den Quelltext und `npm audit` dieses Commits. Gegenüber 1.0.0 ist `lottie-web` 5.13.0 dazugekommen; eingebunden wird der Light-Build ohne `eval`. Die Pokal-Datei steht unter der Lottie Simple License, Text und Quelle in `NOTICE`.

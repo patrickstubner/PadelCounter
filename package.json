@@ -23,6 +23,7 @@
     "url": "git+https://github.com/patrickstubner/PadelCounter.git"
   },
   "dependencies": {
+    "lottie-web": "5.13.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

@@ -118,6 +118,32 @@ describe('shipped source stays local and text-only', () => {
     expect(html).toContain('apple-mobile-web-app-title" content="Padel Counter"');
     expect(html).toContain('content="#0a1a3f"');
   });
+
+  it('pins the light lottie player and keeps the trophy license with the file', () => {
+    const pkg = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
+      dependencies: Record<string, string>;
+    };
+    expect(pkg.dependencies['lottie-web']).toBe('5.13.0');
+    const player = readFileSync(join(repoRoot, 'node_modules/lottie-web/build/player/lottie_light.js'), 'utf8');
+    expect(player.includes('eval(')).toBe(false);
+    expect(player.includes('new Function')).toBe(false);
+    expect(player.includes('WebAssembly')).toBe(false);
+    const notice = readFileSync(join(repoRoot, 'NOTICE'), 'utf8');
+    const published = readFileSync(join(repoRoot, 'public/NOTICE.txt'), 'utf8');
+    expect(published).toBe(notice);
+    expect(notice).toContain('Lottie Simple License');
+    expect(notice).toContain('https://lottiefiles.com/free-animation/trophy-RMNQJVdkXj');
+    expect(notice).toContain('https://lottiefiles.com/page/license');
+    expect(notice).toContain('lottie-web 5.13.0');
+    expect(notice).toContain('lottie_light.js');
+    const trophy = readFileSync(join(repoRoot, 'src/assets/trophy.json'), 'utf8');
+    expect(trophy).not.toContain('http://');
+    expect(trophy).not.toContain('https://');
+    expect(trophy).not.toContain('eval(');
+    const victory = readFileSync(join(repoRoot, 'src/components/Victory.tsx'), 'utf8');
+    expect(victory).toContain('lottie-web/build/player/lottie_light');
+    expect(victory).toContain('license: DISTRIBUTION_NOTICE');
+  });
 });
 
 function pngInfo(file: string): { width: number; height: number; colorType: number } {

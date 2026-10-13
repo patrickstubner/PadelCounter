@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import trophyAnimation from '../assets/trophy.json';
+import { DISTRIBUTION_NOTICE } from '../assets/distribution-notice';
 import type { TeamId } from '../domain/types';
 
 interface VictoryProps {
@@ -42,6 +44,9 @@ function burst(width: number, count: number): Piece[] {
   return pieces;
 }
 
+/** Drawn trophy once the trim-path animation has finished. */
+const STILL_FRAME = 40;
+
 function Trophy() {
   return (
     <svg className="victory-trophy" viewBox="0 0 64 64" aria-hidden="true">
@@ -58,6 +63,36 @@ function Trophy() {
 
 export function Victory({ name, team, reducedMotion, onClose }: VictoryProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trophyRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const container = trophyRef.current;
+    if (!container) return;
+    let cancelled = false;
+    let item: { destroy: () => void } | null = null;
+    const animationData = { ...trophyAnimation, license: DISTRIBUTION_NOTICE };
+    void import('lottie-web/build/player/lottie_light')
+      .then((mod) => {
+        if (cancelled || !trophyRef.current) return;
+        const animation = mod.default.loadAnimation({
+          container: trophyRef.current,
+          renderer: 'svg',
+          loop: !reducedMotion,
+          autoplay: !reducedMotion,
+          animationData,
+          rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
+        });
+        if (reducedMotion) animation.goToAndStop(STILL_FRAME, true);
+        item = animation;
+      })
+      .catch(() => {
+        container.replaceChildren();
+      });
+    return () => {
+      cancelled = true;
+      item?.destroy();
+    };
+  }, [reducedMotion]);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -120,6 +155,7 @@ export function Victory({ name, team, reducedMotion, onClose }: VictoryProps) {
     >
       {reducedMotion ? null : <canvas ref={canvasRef} className="victory-canvas" aria-hidden="true" />}
       <span className="victory-card">
+        <span ref={trophyRef} className="victory-lottie" data-testid="victory-lottie" />
         <Trophy />
         <span className={`victory-title victory-${team}`} data-testid="victory-name">
           {name} wins!

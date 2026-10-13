@@ -599,6 +599,22 @@ button:disabled { cursor: not-allowed; }
   animation: victory-pop 0.45s ease-out;
 }
 
+.victory-lottie {
+  width: min(46vw, 11rem);
+  height: min(46vw, 11rem);
+}
+
+.victory-lottie:empty { display: none; }
+
+.victory-lottie:not(:empty) + .victory-trophy { display: none; }
+
+.victory-lottie svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.victory-lottie svg path { stroke: #ffe56a; }
+
 .victory-trophy {
   width: min(30vw, 7.5rem);
   height: auto;
@@ -628,7 +644,8 @@ button:disabled { cursor: not-allowed; }
 
 .victory.is-calm .victory-canvas { display: none; }
 .victory.is-calm .victory-card,
-.victory.is-calm .victory-trophy { animation: none; }
+.victory.is-calm .victory-trophy,
+.victory.is-calm .victory-lottie { animation: none; }
 
 @keyframes victory-pop {
   from { transform: scale(0.86); opacity: 0; }
@@ -650,7 +667,8 @@ button:disabled { cursor: not-allowed; }
   .step:active:not(:disabled) { filter: none; }
   .victory-canvas { display: none; }
   .victory-card,
-  .victory-trophy { animation: none; }
+  .victory-trophy,
+  .victory-lottie { animation: none; }
 }
 
 @media (forced-colors: active) {

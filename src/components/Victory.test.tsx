@@ -57,6 +57,12 @@ describe('victory celebration', () => {
     expect(won).toContain('data-testid="victory"');
     expect(won).toContain('Team A wins!');
     expect(won).toContain('<canvas');
+    expect(won).toContain('data-testid="victory-lottie"');
+    expect(won).toContain('data-testid="final-score"');
+    expect(won).toContain('Final score');
+    expect(won).toContain('>6<');
+    const undo = won.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
+    expect(undo).not.toContain('disabled');
     expect(won.indexOf('data-testid="undo"')).toBeLessThan(won.indexOf('data-testid="victory"'));
 
     save(games(createLog(T0, ID), 'a', 6, T0 + 1));
@@ -73,7 +79,11 @@ describe('victory celebration', () => {
     expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
     save(appendEvent(games(createLog(T0, ID), 'b', 6, T0 + 1), { type: 'match/end', at: T0 + 20 }));
-    expect(renderToStaticMarkup(<App />)).toContain('Team B wins!');
+    const endedWin = renderToStaticMarkup(<App />);
+    expect(endedWin).toContain('Team B wins!');
+    expect(endedWin).toContain('data-testid="final-score"');
+    const endedUndo = endedWin.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
+    expect(endedUndo).not.toContain('disabled');
 
     const css = readFileSync(join(root, 'src/app.css'), 'utf8');
     const top = css.slice(css.indexOf('.top {'), css.indexOf('.top {') + 180);

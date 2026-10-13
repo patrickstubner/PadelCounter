@@ -45,12 +45,14 @@ export function App() {
   const recent = match.events.slice(-8).reverse();
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
   const serve = serveLabel(state.serve);
+  const showFinal = state.ended || winner !== null;
+  const finalSets = state.sets.map((set, index) => `Set ${index + 1} ${set.a}–${set.b}`).join(', ');
   const live = showVictory && celebrated
     ? `${state.teams[celebrated].name} wins!`
-    : state.ended
-      ? `Match ended. Final score. ${scoreLine}.`
-      : winner
-        ? `Win for ${state.teams[winner].name}. ${serve}.`
+    : showFinal && celebrated
+      ? `Final score. ${state.teams[celebrated].name} wins. ${finalSets}.`
+      : showFinal
+        ? `Match ended. Final score. ${finalSets}.`
         : `Set ${state.activeSet + 1}. ${scoreLine}. ${serve}.${tiebreak ? ` ${tiebreak}.` : ''}`;
 
   return (
@@ -118,14 +120,15 @@ export function App() {
           ) : (
             <span className="chip chip-set" data-testid="active-set">{`Set ${state.activeSet + 1}`}</span>
           )}
-          {state.ended ? (
+          {showFinal ? (
             <p className="end-note" data-testid="final-score">
               Final score
             </p>
-          ) : null}
-          <p className="serve-line" data-testid="serve-label">
-            {serve}
-          </p>
+          ) : (
+            <p className="serve-line" data-testid="serve-label">
+              {serve}
+            </p>
+          )}
           {tiebreak ? (
             <p className="tb" data-testid="tiebreak-hint">
               {tiebreak}
