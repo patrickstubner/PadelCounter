@@ -57,7 +57,7 @@ const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
 if (sw.includes('importScripts(')) fail('service worker loads an external script');
 
 for (const file of walk(dist)) {
-  if (file.endsWith('.png')) continue;
+  if (file.endsWith('.png') || file.endsWith('.ico')) continue;
   const text = readFileSync(file, 'utf8');
   for (const host of banned) {
     if (text.includes(host)) fail(`${host} found in ${file}`);
