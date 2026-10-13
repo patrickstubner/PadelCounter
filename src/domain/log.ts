@@ -64,6 +64,7 @@ export function describeEvent(event: MatchEvent): string {
     case 'team/rename':
       return `Name ${event.team.toUpperCase()} · ${sanitizeTeamName(event.name, event.team)}`;
     case 'match/reset':
+    case 'match/new':
       return 'New match';
     case 'match/end':
       return 'Match ended';

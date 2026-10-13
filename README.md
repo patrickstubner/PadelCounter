@@ -44,7 +44,7 @@ npm run preview
 
 ## Daten
 
-Der Spielstand liegt unter dem Schlüssel `padel-counter.v1` in `localStorage`. Schema-Version 2 speichert einen Basisstand plus höchstens 500 Ereignisse (`game/increment`, `game/decrement`, `set/select`, `team/rename`, `match/reset`, `serve/set`, `match/end`, `match/resume`). Version 1 wird beim Laden übernommen, ohne Aufschlag und ohne Verlauf. Ungültige Daten werden verworfen, nicht angezeigt. Zustand und Ereignisse sind reine Funktionen mit `matchId`, `revision` und Zeitstempel. Eine spätere Live-Ansicht kann dieselben Ereignisse an ein Backend hängen; diese Version spricht keinen Server an.
+Der Spielstand liegt unter dem Schlüssel `padel-counter.v1` in `localStorage`. Schema-Version 2 speichert einen Basisstand plus höchstens 500 Ereignisse (`game/increment`, `game/decrement`, `set/select`, `team/rename`, `match/reset`, `match/new`, `serve/set`, `match/end`, `match/resume`). `match/reset` ist der New-match-Schritt bis 1.2.4 und behält die Namen. `match/new` setzt sie auf Team A und Team B. Version 1 wird beim Laden übernommen, ohne Aufschlag und ohne Verlauf. Ungültige Daten werden verworfen, nicht angezeigt. Zustand und Ereignisse sind reine Funktionen mit `matchId`, `revision` und Zeitstempel. Eine spätere Live-Ansicht kann dieselben Ereignisse an ein Backend hängen; diese Version spricht keinen Server an.
 
 ## Build
 

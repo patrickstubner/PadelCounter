@@ -137,8 +137,9 @@ export function parseStoredEvent(value: unknown): MatchEvent | null {
       if (codePointLength(record.name) > MAX_RENAME_CODE_POINTS) return null;
       return { type: 'team/rename', team: record.team, name: record.name, at: record.at };
     case 'match/reset':
+    case 'match/new':
       if (typeof record.matchId !== 'string' || !isUuid(record.matchId)) return null;
-      return { type: 'match/reset', matchId: record.matchId.toLowerCase(), at: record.at };
+      return { type: record.type, matchId: record.matchId.toLowerCase(), at: record.at };
     case 'match/end':
       return { type: 'match/end', at: record.at };
     case 'match/resume':

@@ -3,7 +3,7 @@
 ## 1.2.5 – 2026-10-13
 
 - Der Verlauf zeigt den neuesten Eintrag oben, bei den Ereignissen des laufenden Matches und bei den gespeicherten Matches.
-- «New match» setzt die Teamnamen auf Team A und Team B zurück.
+- «New match» setzt die Teamnamen auf Team A und Team B zurück. Ein gespeicherter New-match-Schritt aus 1.2.4 behält die Namen, auch wenn man darüber hinaus rückgängig macht.
 - Die geänderte Zahl im Verlauf steht in `<mark>`.
 
 ## 1.2.4 – 2026-10-13

@@ -40,7 +40,7 @@ export function useMatch() {
     decrement: (team: TeamId) => record({ type: 'game/decrement', team, at: at() }),
     rename: (team: TeamId, name: string) => record({ type: 'team/rename', team, name, at: at() }),
     selectSet: (index: SetIndex) => record({ type: 'set/select', index, at: at() }),
-    newMatch: () => record({ type: 'match/reset', matchId: createMatchId(), at: at() }),
+    newMatch: () => record({ type: 'match/new', matchId: createMatchId(), at: at() }),
     endMatch: () => record({ type: 'match/end', at: at() }),
     resumeMatch: () => record({ type: 'match/resume', at: at() }),
     chooseServe: (team: TeamId) => {
