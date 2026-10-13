@@ -5,6 +5,28 @@ import { pluginReact } from '@rsbuild/plugin-react';
 import { generateSW } from 'workbox-build';
 import { PAGE_BASE } from './src/base';
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function applyPageBase(dist: string): void {
+  const manifestPath = join(dist, 'manifest.webmanifest');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+    id: string;
+    start_url: string;
+    scope: string;
+    icons: { src: string }[];
+  };
+  const root = `${PAGE_BASE}/`;
+  manifest.id = root;
+  manifest.start_url = root;
+  manifest.scope = root;
+  for (const icon of manifest.icons) {
+    icon.src = `${root}${icon.src.replace(/^\.?\//, '')}`;
+  }
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
 const workboxPlugin: RsbuildPlugin = {
   name: 'padel-workbox',
   setup(api) {
@@ -13,6 +35,7 @@ const workboxPlugin: RsbuildPlugin = {
       const dist = api.context.distPath;
       const swDest = join(dist, 'sw.js');
       const prefix = `${PAGE_BASE}/`;
+      applyPageBase(dist);
       await generateSW({
         swDest,
         globDirectory: dist,
@@ -27,7 +50,7 @@ const workboxPlugin: RsbuildPlugin = {
         cleanupOutdatedCaches: true,
         disableDevLogs: true,
         navigateFallback: `${prefix}index.html`,
-        navigateFallbackDenylist: [new RegExp(`^${prefix}.+\\.[a-z0-9]+$`, 'i')],
+        navigateFallbackDenylist: [new RegExp(`^${escapeRegExp(prefix)}.+\\.[a-z0-9]+$`, 'i')],
         directoryIndex: 'index.html',
       });
       const original = readFileSync(swDest, 'utf8');

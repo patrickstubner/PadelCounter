@@ -122,6 +122,13 @@ describe('parsePersisted', () => {
     unknownEvent.events = [{ type: 'game/steal', team: 'a', at: T0 + 1 }];
     expect(parsePersisted(unknownEvent)).toBeNull();
 
+    const emojiName = structuredClone(envelope);
+    emojiName.events = [{ type: 'team/rename', team: 'a', name: '🎾'.repeat(80), at: T0 + 2 }];
+    expect(parsePersisted(emojiName)?.events).toHaveLength(1);
+    const tooManyPoints = structuredClone(envelope);
+    tooManyPoints.events = [{ type: 'team/rename', team: 'a', name: '🎾'.repeat(81), at: T0 + 2 }];
+    expect(parsePersisted(tooManyPoints)).toBeNull();
+
     const tooMany = structuredClone(envelope);
     tooMany.events = Array.from({ length: 501 }, (_, index) => ({
       type: 'set/select',

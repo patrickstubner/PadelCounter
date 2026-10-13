@@ -3,6 +3,10 @@ import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 const dist = join(root, 'dist');
+const baseSource = readFileSync(join(root, 'src/base.ts'), 'utf8');
+const pageBaseMatch = baseSource.match(/export const PAGE_BASE = '([^']+)';/);
+if (!pageBaseMatch) fail('PAGE_BASE missing from src/base.ts');
+const pageBase = `${pageBaseMatch[1]}/`;
 const banned = [
   'storage.googleapis.com',
   'workbox-cdn',
@@ -39,11 +43,14 @@ if (html.includes('unsafe-inline') || html.includes('unsafe-eval')) fail('CSP al
 if (/https?:\/\//.test(html)) fail(`external URL in index.html:\n${html}`);
 if (/<script(?![^>]*\bsrc=)[^>]*>/.test(html)) fail('inline script in index.html');
 if (/<style[\s>]/i.test(html)) fail('inline style in index.html');
-if (!html.includes('/PadelCounter/')) fail('base path missing from index.html');
+if (!html.includes(pageBase)) fail('base path missing from index.html');
 
 const manifest = JSON.parse(readFileSync(join(dist, 'manifest.webmanifest'), 'utf8'));
-if (manifest.start_url !== '/PadelCounter/' || manifest.scope !== '/PadelCounter/') {
+if (manifest.start_url !== pageBase || manifest.scope !== pageBase || manifest.id !== pageBase) {
   fail(`unexpected manifest scope: ${manifest.start_url}`);
+}
+if (!manifest.icons.every((icon) => typeof icon.src === 'string' && icon.src.startsWith(pageBase))) {
+  fail('manifest icons are not under PAGE_BASE');
 }
 
 const sw = readFileSync(join(dist, 'sw.js'), 'utf8');

@@ -1,6 +1,6 @@
 import { isUuid } from './id';
 import { MAX_EVENTS, type MatchLog } from './log';
-import { isValidStoredName } from './names';
+import { codePointLength, isValidStoredName } from './names';
 import { isPlausibleSetScore } from './rules';
 import {
   SCHEMA_VERSION,
@@ -18,7 +18,7 @@ export const STORAGE_KEY = 'padel-counter.v1';
 
 export const MAX_RAW_LENGTH = 96_000;
 const MAX_REVISION = 10_000_000;
-const MAX_RENAME_CHARS = 80;
+const MAX_RENAME_CODE_POINTS = 80;
 
 export interface MatchStorage {
   getItem(key: string): string | null;
@@ -115,7 +115,7 @@ function parseEvent(value: unknown): MatchEvent | null {
       return { type: 'set/select', index: record.index, at: record.at };
     case 'team/rename':
       if (!isTeamId(record.team) || typeof record.name !== 'string') return null;
-      if (record.name.length > MAX_RENAME_CHARS) return null;
+      if (codePointLength(record.name) > MAX_RENAME_CODE_POINTS) return null;
       return { type: 'team/rename', team: record.team, name: record.name, at: record.at };
     case 'match/reset':
       if (typeof record.matchId !== 'string' || !isUuid(record.matchId)) return null;

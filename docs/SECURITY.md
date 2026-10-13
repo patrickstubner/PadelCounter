@@ -23,7 +23,7 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | F-01 | XSS über Teamnamen | Info | Behoben | Namen werden als React-Kinder gerendert. `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML` und `insertAdjacentHTML` sind per ESLint verboten und per Test im Quelltext ausgeschlossen. |
 | F-02 | Gespeicherter Spielstand | Info | Behoben | Laden prüft Schema-Version 2 (Basisstand plus Ereignisliste) und übernimmt Version 1 als Stand ohne Aufschlag und ohne Verlauf. UUID, Zeitstempel, Satzstände, Aufschlag (`null` oder Team a/b mit Spieler 1/2) und Namen werden geprüft. Ein ungültiges Ereignis verwirft das ganze Dokument. Unmögliche Scores (z. B. 7:4), zu lange Namen, Steuerzeichen, mehr als 500 Ereignisse und Payloads über 96000 Zeichen werden verworfen. Felder werden in ein neues Objekt kopiert. |
 | F-03 | Prototype Pollution | Info | Behoben | `JSON.parse` wird nicht in Prototypen gemischt. Ein Test prüft, dass `__proto__` im Payload `Object.prototype` nicht verändert. Werfer in Gettern liefern `null`. |
-| F-04 | Bidi- und Steuerzeichen | Info | Behoben | Steuerzeichen, bidirektionale Steuerzeichen und unsichtbare Zeichen werden beim Speichern entfernt. Bereits gespeicherte Namen mit diesen Zeichen oder halben Surrogates werden abgelehnt. |
+| F-04 | Bidi- und Steuerzeichen | Info | Behoben | Beim Speichern und beim Laden gilt `/[\p{Cc}\p{Cf}\u2028\u2029]/gu` (Steuerzeichen inklusive C1, Formatzeichen, Zeilen- und Absatztrenner). Nach dem Kürzen auf 20 Codepoints wird erneut getrimmt und ein einzelnes Surrogate entfernt. Gespeicherte Namen mit diesen Zeichen werden abgelehnt, nicht repariert. |
 | F-05 | Content-Security-Policy | Info | Umgesetzt | Meta-CSP: `default-src 'self'` und konkrete Direktiven ohne `unsafe-inline` und ohne `unsafe-eval`. Keine externen Hosts. |
 | F-06 | Clickjacking | Niedrig | Akzeptiert | `frame-ancestors` wirkt nicht in einem CSP-Meta-Tag (Browser warnen und ignorieren es). Die Direktive steht deshalb nicht im Meta-Tag. GitHub Pages setzt hier keine Security-Header. Die App hat kein Konto und keine Geheimnisse. |
 | F-07 | Fehlende Response-Header | Niedrig | Akzeptiert | `X-Content-Type-Options`, `Referrer-Policy` als Header und eine Header-CSP kann Pages im Workflow-Modus hier nicht setzen. `Referrer-Policy` steht zusätzlich als Meta-Tag (`no-referrer`). Es gibt keine fremden Requests, die einen Referrer tragen würden. |
@@ -37,12 +37,17 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | F-15 | Texte mit URLs im Bundle | Info | Akzeptiert | Der React-Produktionsbuild enthält `https://react.dev/errors/…` nur als Text in Minified-Error-Meldungen. Die App ruft die Adresse nicht auf; `connect-src 'self'` würde einen Abruf blockieren. `xmlns="http://www.w3.org/2000/svg"` ist ein XML-Namensraum, kein Request. Der Workbox-Hinweis `bit.ly` wird beim Build aus `sw.js` entfernt. |
 | F-16 | Aufschlag | Info | Behoben | `serve` ist `null` oder `{ team: a\|b, player: 1\|2 }`. Freitext gibt es dort nicht. Ein halbes Paar (Team ohne Spieler) wird weder angewendet noch geladen. Die Anzeige «Aufschlag A1» setzt React als Text. |
 | F-17 | Ereignisprotokoll und Rückgängig | Info | Behoben | Es werden nur bekannte Ereignistypen mit geprüften Feldern gespeichert. «Rückgängig» entfernt das letzte gespeicherte Ereignis und spielt die Liste neu ab; es gibt keinen Index und keinen Typ aus der Oberfläche, der Code ausführt. Die Verlaufsliste rendert feste Sätze und den bereits geprüften Teamnamen als Text. Die Liste ist auf 500 Ereignisse und 96000 Zeichen begrenzt. |
+| P1-01 | Namensfilter | Info | Behoben | `sanitizeTeamName` und `isValidStoredName` nutzen dieselbe Klasse `/[\p{Cc}\p{Cf}\u2028\u2029]/gu`. Tests prüfen C0, C1, Formatzeichen und U+2028/U+2029, und dass `lastIndex` die zweite Prüfung nicht überspringt. |
+| P1-02 | Kürzung | Info | Behoben | Nach dem Schnitt auf 20 Codepoints wird getrimmt und ein halbes Surrogate entfernt, danach noch einmal getrimmt. Ein fast-check-Lauf (200 Zeichenketten, auch einzelne Surrogates) erwartet, dass das Ergebnis die Ladeprüfung besteht. |
+| P1-04 | Längenmaß | Info | Behoben | Die Grenze ist 20 Codepoints. Das Eingabefeld erlaubt 40 UTF-16-Einheiten, damit 20 Emoji hineinpassen, und schneidet danach nach Codepoints. Roh-Namen im Ereignisprotokoll sind auf 80 Codepoints begrenzt. |
+| P1-05 | Basis-Pfad | Info | Behoben | `index.html` setzt die Links über `assetPrefix`, der aus `PAGE_BASE` kommt. Das ausgelieferte Manifest bekommt `id`, `start_url`, `scope` und Icon-Pfade aus `PAGE_BASE`. Die Service-Worker-Ausnahme maskiert denselben Pfad. `verify-build` liest `PAGE_BASE` aus `src/base.ts`. |
+| P1-06 | Dependabot | Info | Umgesetzt | `.github/dependabot.yml` prüft npm und GitHub Actions wöchentlich. Updates laufen durch dieselbe CI; der Pages-Deploy bleibt auf `main` beschränkt. |
 
 Keine Befunde mit Schwere Hoch oder Kritisch.
 
 ## Eingabevalidierung
 
-- **Teamname:** Unicode NFC, Trim, keine Steuerzeichen (`U+0000`–`U+001F`, `U+007F`), keine Bidi-/Zero-Width-Zeichen, höchstens 20 Codepoints. Leer wird zu „Team A“ oder „Team B“. Das Eingabefeld setzt zusätzlich `maxLength`. Zeichen wie `<` bleiben erlaubt, weil React sie als Text escaped; ein Test speichert `<b>Hi</b>` und erwartet genau diese Zeichenkette.
+- **Teamname:** Unicode NFC, Trim, keine Zeichen aus `/[\p{Cc}\p{Cf}\u2028\u2029]/gu`, höchstens 20 Codepoints. Nach dem Kürzen wird erneut getrimmt und ein einzelnes Surrogate entfernt. Leer wird zu „Team A“ oder „Team B“. Das Eingabefeld begrenzt auf 40 UTF-16-Einheiten und schneidet auf 20 Codepoints. Zeichen wie `<` bleiben erlaubt, weil React sie als Text escaped; ein Test speichert `<b>Hi</b>` und erwartet genau diese Zeichenkette.
 - **Satzstand:** nur ganze Zahlen, plausibel für Padel (0–6 beliebig, 7 nur neben 5 oder 6). 7:0, 7:4, 8:6 und Brüche werden weder erzeugt noch aus dem Speicher geladen.
 - **Ereignisse:** der Reducer ignoriert ungültige Zeitstempel, Teams, Satzindizes, Aufschlag-Paare und Match-IDs. Er wirft dabei nicht. Beim Laden gilt dasselbe: ein unbekanntes oder unvollständiges Ereignis verwirft den gespeicherten Stand.
 - **Aufschlag:** nur die Paare A1, A2, B1, B2 oder ausdrücklich offen (`null`). Die Rotation leitet den nächsten Aufschlag daraus ab und nimmt keinen Text entgegen.
@@ -79,6 +84,7 @@ Direkt, exakt, Stand 2026-10-13:
 | eslint | 10.12.0 | Lint |
 | typescript-eslint | 8.71.2 | Lint |
 | eslint-plugin-react-hooks | 7.1.1 | Hooks |
+| fast-check | 4.10.2 | Property-Tests für Teamnamen, nur Testlauf, nicht im Browser-Bundle |
 
 `npm audit` (vollständig, inklusive Dev-Dependencies): **0 Schwachstellen**. Wiederholen mit:
 

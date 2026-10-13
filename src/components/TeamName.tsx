@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { MAX_TEAM_NAME_LENGTH } from '../domain/names';
+import { MAX_TEAM_NAME_UTF16_UNITS, clampTeamNameDraft } from '../domain/names';
 
 interface TeamNameProps {
   name: string;
@@ -27,7 +27,7 @@ export function TeamName({ name, onCommit }: TeamNameProps) {
     <input
       className="team-name-input"
       value={draft}
-      maxLength={MAX_TEAM_NAME_LENGTH}
+      maxLength={MAX_TEAM_NAME_UTF16_UNITS}
       autoFocus
       enterKeyHint="done"
       autoCapitalize="words"
@@ -36,7 +36,7 @@ export function TeamName({ name, onCommit }: TeamNameProps) {
       spellCheck={false}
       aria-label="Teamname"
       onChange={(event) => {
-        setDraft(Array.from(event.target.value).slice(0, MAX_TEAM_NAME_LENGTH).join(''));
+        setDraft(clampTeamNameDraft(event.target.value));
       }}
       onBlur={() => {
         setEditing(false);
