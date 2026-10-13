@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { ARCHIVE_KEY } from './domain/archive';
 import { STORAGE_KEY } from './domain/persistence';
 
 interface ErrorBoundaryProps {
@@ -26,6 +27,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           onClick={() => {
             try {
               localStorage.removeItem(STORAGE_KEY);
+              localStorage.removeItem(ARCHIVE_KEY);
             } catch {
               // Storage may be blocked; reload anyway.
             }
@@ -34,7 +36,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         >
           Reload
         </button>
-        <p className="fatal-note">The score saved on this device will be deleted.</p>
+        <p className="fatal-note">The score and saved matches on this device will be deleted.</p>
       </div>
     );
   }

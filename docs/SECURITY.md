@@ -9,7 +9,7 @@
 | Fläche | Was sie kann | Was sie nicht kann |
 | --- | --- | --- |
 | Statische Dateien auf GitHub Pages | HTML, CSS, JS, Manifest, Icons, Service Worker unter `/PadelCounter/` | Keine serverseitige Ausführung, keine geheimen Header, die wir selbst setzen könnten |
-| `localStorage` (`padel-counter.v1`) | Spielstand, Teamnamen und bis zu 500 Ereignisse nur in diesem Browser | Kein Zugriff von anderen Origins; Inhalt ist kein Geheimnis |
+| `localStorage` (`padel-counter.v1`, `padel-counter.matches`) | Spielstand, Teamnamen, bis zu 500 Ereignisse und höchstens 100 abgeschlossene Matches nur in diesem Browser | Kein Zugriff von anderen Origins; Inhalt ist kein Geheimnis |
 | Service Worker | Precache derselben Origin, Navigation-Fallback auf `index.html` | Kein `importScripts` von einem CDN, kein Runtime-Caching fremder Hosts |
 | Screen Wake Lock | Bildschirm wach halten, wenn der Browser es erlaubt | Kein Mikrofon, keine Kamera, kein Standort |
 | Teamnamen | Freitext, höchstens 20 Zeichen, nur als React-Text | Kein HTML, keine URLs, die die App lädt |
@@ -37,6 +37,7 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | F-15 | Texte mit URLs im Bundle | Info | Akzeptiert | Der React-Produktionsbuild enthält `https://react.dev/errors/…` nur als Text in Minified-Error-Meldungen. Die App ruft die Adresse nicht auf; `connect-src 'self'` würde einen Abruf blockieren. `xmlns="http://www.w3.org/2000/svg"` ist ein XML-Namensraum, kein Request. Der Workbox-Hinweis `bit.ly` wird beim Build aus `sw.js` entfernt. |
 | F-16 | Aufschlag | Info | Behoben | `serve` ist `null` oder `{ team: a\|b, player: 1\|2 }`. Freitext gibt es dort nicht. Ein halbes Paar (Team ohne Spieler) wird weder angewendet noch geladen. Die Anzeige «Serve A1» setzt React als Text. |
 | F-17 | Ereignisprotokoll und Rückgängig | Info | Behoben | Es werden nur bekannte Ereignistypen mit geprüften Feldern gespeichert. «Rückgängig» entfernt das letzte gespeicherte Ereignis und spielt die Liste neu ab; es gibt keinen Index und keinen Typ aus der Oberfläche, der Code ausführt. Die Verlaufsliste rendert feste Sätze und den bereits geprüften Teamnamen als Text. Die Liste ist auf 500 Ereignisse und 96000 Zeichen begrenzt. |
+| F-18 | Match-Archiv | Info | Behoben | Abgeschlossene Matches liegen unter `padel-counter.matches` (Schema 1, höchstens 100, älteste zuerst weg, Rohtext höchstens 1,5 MB). Ein ungültiger Eintrag verwirft das ganze Archiv, nicht den laufenden Stand. Namen und Ereignisse durchlaufen dieselbe Prüfung wie der Spielstand und werden als Text gezeigt. Die History-Ansicht schreibt keinen Hash und liest `location.search` nicht; Zurück nutzt `history.back`. |
 | P1-01 | Namensfilter | Info | Behoben | `sanitizeTeamName` und `isValidStoredName` nutzen dieselbe Klasse `/[\p{Cc}\p{Cf}\u2028\u2029]/gu`. Tests prüfen C0, C1, Formatzeichen und U+2028/U+2029, und dass `lastIndex` die zweite Prüfung nicht überspringt. |
 | P1-02 | Kürzung | Info | Behoben | Nach dem Schnitt auf 20 Codepoints wird getrimmt und ein halbes Surrogate entfernt, danach noch einmal getrimmt. Ein fast-check-Lauf (200 Zeichenketten, auch einzelne Surrogates) erwartet, dass das Ergebnis die Ladeprüfung besteht. |
 | P1-04 | Längenmaß | Info | Behoben | Die Grenze ist 20 Codepoints. Das Eingabefeld erlaubt 40 UTF-16-Einheiten, damit 20 Emoji hineinpassen, und schneidet danach nach Codepoints. Roh-Namen im Ereignisprotokoll sind auf 80 Codepoints begrenzt. |
@@ -100,7 +101,7 @@ npm run verify-build
 ## Fehlermeldungen
 
 - Speicher voll oder blockiert: „Speichern auf diesem Gerät ist fehlgeschlagen.“
-- Render-Fehler: „Padel Counter konnte die Anzeige nicht laden.“ Der Knopf löscht nur den eigenen Speicher-Schlüssel und lädt neu. Der Hinweis sagt, dass der lokale Spielstand dabei gelöscht wird.
+- Render-Fehler: „Padel Counter could not show the score.“ Der Knopf löscht `padel-counter.v1` und `padel-counter.matches` und lädt neu. Der Hinweis sagt, dass der lokale Spielstand und die gespeicherten Matches dabei gelöscht werden.
 - Wake Lock und Service-Worker-Registrierung: stiller Fallback, die Anzeige bleibt bedienbar.
 
 ## Restrisiko

@@ -107,7 +107,7 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
   };
 }
 
-function parseEvent(value: unknown): MatchEvent | null {
+export function parseStoredEvent(value: unknown): MatchEvent | null {
   const record = plain(value);
   if (!record || !isTimestamp(record.at)) return null;
 
@@ -159,7 +159,7 @@ export function parsePersisted(input: unknown): MatchLog | null {
 
     const events: MatchEvent[] = [];
     for (const item of record.events) {
-      const event = parseEvent(item);
+      const event = parseStoredEvent(item);
       if (!event) return null;
       events.push(event);
     }

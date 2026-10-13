@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendEvent, createLog, describeEvent, formatEventTime, replay, undoLog } from './log';
+import { appendEvent, createLog, describeEvent, formatEventTime, formatMatchStamp, replay, undoLog } from './log';
 import type { MatchEvent } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000c';
@@ -110,5 +110,6 @@ describe('match log', () => {
     const now = new Date(2026, 9, 13, 18, 0, 0).getTime();
     expect(formatEventTime(new Date(2026, 9, 13, 14, 5, 9).getTime(), now)).toBe('14:05:09');
     expect(formatEventTime(new Date(2026, 9, 12, 9, 1, 2).getTime(), now)).toBe('10/12/2026 09:01:02');
+    expect(formatMatchStamp(new Date(2026, 9, 12, 9, 1, 2).getTime())).toBe('10/12/2026 09:01:02');
   });
 });

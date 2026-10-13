@@ -90,6 +90,12 @@ const ENGLISH_DATE = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
+/** Local date and clock in en-US, always `MM/DD/YYYY HH:MM:SS`. */
+export function formatMatchStamp(at: number): string {
+  const date = new Date(at);
+  return `${ENGLISH_DATE.format(date)} ${ENGLISH_TIME.format(date)}`;
+}
+
 /** Local clock in en-US. A different calendar day is prefixed as `MM/DD/YYYY`. */
 export function formatEventTime(at: number, now = Date.now()): string {
   const date = new Date(at);

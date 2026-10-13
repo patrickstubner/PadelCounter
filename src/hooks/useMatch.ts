@@ -1,28 +1,38 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
+import { loadArchive, saveArchive } from '../domain/archive';
 import { createMatchId } from '../domain/id';
-import { createLog, logReducer, replay } from '../domain/log';
+import { createLog, replay } from '../domain/log';
 import { loadLog, saveLog } from '../domain/persistence';
 import { serveChoice } from '../domain/rules';
+import { sessionReducer, type Session } from '../domain/session';
 import type { MatchEvent, SetIndex, TeamId } from '../domain/types';
 
-function initialLog() {
-  return loadLog(localStorage) ?? createLog(Date.now(), createMatchId());
+function initialSession(): Session {
+  return {
+    log: loadLog(localStorage) ?? createLog(Date.now(), createMatchId()),
+    archive: loadArchive(localStorage),
+  };
 }
 
 export function useMatch() {
-  const [log, dispatch] = useReducer(logReducer, undefined, initialLog);
+  const [session, dispatch] = useReducer(sessionReducer, undefined, initialSession);
   const [saveFailed, setSaveFailed] = useState(false);
+  const { log } = session;
   const state = useMemo(() => replay(log), [log]);
 
   useEffect(() => {
-    setSaveFailed(!saveLog(log, localStorage));
-  }, [log]);
+    const logSaved = saveLog(log, localStorage);
+    const archiveSaved = saveArchive(session.archive, localStorage);
+    setSaveFailed(!logSaved || !archiveSaved);
+  }, [log, session.archive]);
 
   const at = () => Date.now();
   const record = (event: MatchEvent) => dispatch({ type: 'record', event });
 
   return {
     state,
+    log,
+    archive: session.archive,
     events: log.events,
     saveFailed,
     canUndo: log.events.length > 0,
