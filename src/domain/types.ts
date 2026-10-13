@@ -35,6 +35,8 @@ export interface MatchState {
   readonly sets: readonly [SetScore, SetScore, SetScore];
   readonly activeSet: SetIndex;
   readonly serve: Server | null;
+  /** True after «Spiel beenden» until resume, undo, or a new match. */
+  readonly ended: boolean;
 }
 
 export type MatchEvent =
@@ -48,7 +50,9 @@ export type MatchEvent =
       readonly team: TeamId | null;
       readonly player: PlayerSlot | null;
       readonly at: number;
-    };
+    }
+  | { readonly type: 'match/end'; readonly at: number }
+  | { readonly type: 'match/resume'; readonly at: number };
 
 export function isTeamId(value: unknown): value is TeamId {
   return value === 'a' || value === 'b';

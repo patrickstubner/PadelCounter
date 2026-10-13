@@ -31,6 +31,8 @@ export function useMatch() {
     rename: (team: TeamId, name: string) => record({ type: 'team/rename', team, name, at: at() }),
     selectSet: (index: SetIndex) => record({ type: 'set/select', index, at: at() }),
     newMatch: () => record({ type: 'match/reset', matchId: createMatchId(), at: at() }),
+    endMatch: () => record({ type: 'match/end', at: at() }),
+    resumeMatch: () => record({ type: 'match/resume', at: at() }),
     chooseServe: (team: TeamId) => {
       const next = serveChoice(state.serve, team);
       record({

@@ -65,10 +65,31 @@ export function describeEvent(event: MatchEvent): string {
       return `Name ${event.team.toUpperCase()} · ${sanitizeTeamName(event.name, event.team)}`;
     case 'match/reset':
       return 'Neues Spiel';
+    case 'match/end':
+      return 'Spiel beendet';
+    case 'match/resume':
+      return 'Fortsetzen';
     case 'serve/set':
       if (event.team === null || event.player === null) return 'Aufschlag offen';
       return `Aufschlag ${serverMark(event.team, event.player)}`;
     default:
       return 'Änderung';
   }
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+/** Local clock `HH:MM:SS`. A different calendar day is prefixed as `DD.MM.YYYY`. */
+export function formatEventTime(at: number, now = Date.now()): string {
+  const date = new Date(at);
+  const clock = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  const today = new Date(now);
+  const sameDay =
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+  if (sameDay) return clock;
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${clock}`;
 }

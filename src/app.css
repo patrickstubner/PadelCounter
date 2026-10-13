@@ -388,6 +388,16 @@ button:disabled { cursor: not-allowed; }
 
 .chip-a { color: var(--a); border-color: var(--a); }
 .chip-b { color: var(--b); border-color: var(--b); }
+.chip-ended { color: #ffffff; border-color: #ffffff; }
+
+.end-note {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f2f2f2;
+}
 
 .foot {
   border-top: 1px solid var(--line);
@@ -427,6 +437,13 @@ button:disabled { cursor: not-allowed; }
   border-radius: 999px;
   padding: 0.18rem 0.55rem;
   color: #f4f4f4;
+}
+
+.history time {
+  margin-right: 0.4rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: #d0d0d0;
 }
 
 .sr-only {

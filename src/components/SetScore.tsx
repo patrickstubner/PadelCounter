@@ -6,10 +6,11 @@ interface SetScoreProps {
   active: boolean;
   won: boolean;
   upcoming: boolean;
+  locked: boolean;
   onSelect: () => void;
 }
 
-export function SetScore({ index, gamesLabel, active, won, upcoming, onSelect }: SetScoreProps) {
+export function SetScore({ index, gamesLabel, active, won, upcoming, locked, onSelect }: SetScoreProps) {
   const classes = [
     'set',
     active ? 'is-active' : '',
@@ -27,6 +28,7 @@ export function SetScore({ index, gamesLabel, active, won, upcoming, onSelect }:
       type="button"
       className={classes}
       aria-pressed={active}
+      disabled={locked}
       aria-label={`Satz ${index + 1}, ${gamesLabel === '–' ? 'noch kein Game' : `${gamesLabel} Games`}, ${status}. Zum Korrigieren auswählen.`}
       onClick={onSelect}
     >

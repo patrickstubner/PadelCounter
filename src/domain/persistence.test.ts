@@ -62,6 +62,30 @@ describe('parsePersisted', () => {
     expect(replay(loaded!).sets[0]).toEqual({ a: 1, b: 0 });
     expect(replay(loaded!).revision).toBe(1);
     expect(replay(loaded!).serve).toBeNull();
+    expect(replay(loaded!).ended).toBe(false);
+  });
+
+  it('keeps an ended match and rejects a forged status', () => {
+    let log = validLog();
+    log = {
+      ...log,
+      events: [...log.events, { type: 'match/end', at: T0 + 2 }],
+    };
+    const loaded = parsePersisted(JSON.parse(serializeLog(log)) as unknown);
+    expect(replay(loaded!).ended).toBe(true);
+    expect(replay(loaded!).sets[0]).toEqual({ a: 1, b: 0 });
+
+    const legacy = JSON.parse(serializeLog(validLog())) as { base: Record<string, unknown> };
+    delete legacy.base.ended;
+    expect(parsePersisted(legacy)?.base.ended).toBe(false);
+
+    const forged = JSON.parse(serializeLog(validLog())) as { base: Record<string, unknown> };
+    forged.base.ended = 'yes';
+    expect(parsePersisted(forged)).toBeNull();
+
+    const badResume = JSON.parse(serializeLog(validLog())) as { events: unknown[] };
+    badResume.events = [{ type: 'match/resume', at: 'now' }];
+    expect(parsePersisted(badResume)).toBeNull();
   });
 
   it('migrates a version-1 snapshot and drops any forged serve', () => {

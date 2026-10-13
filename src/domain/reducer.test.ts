@@ -217,4 +217,33 @@ describe('matchReducer', () => {
     expect(state.activeSet).toBe(1);
     expect(state.serve).toEqual({ team: 'b', player: 1 });
   });
+
+  it('ends a match in place, blocks scoring, and resumes', () => {
+    let state = play(start(), 'a', 2);
+    const score = state.sets;
+    state = matchReducer(state, { type: 'match/end', at: state.updatedAt + 1 });
+    expect(state.ended).toBe(true);
+    expect(state.sets).toEqual(score);
+    const blocked = matchReducer(state, { type: 'game/increment', team: 'b', at: state.updatedAt + 1 });
+    expect(blocked).toBe(state);
+    expect(matchReducer(state, { type: 'serve/set', team: 'a', player: 1, at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'team/rename', team: 'a', name: 'Neu', at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'set/select', index: 1, at: state.updatedAt + 1 })).toBe(state);
+    expect(matchReducer(state, { type: 'match/end', at: state.updatedAt + 1 })).toBe(state);
+
+    const resumed = matchReducer(state, { type: 'match/resume', at: state.updatedAt + 1 });
+    expect(resumed.ended).toBe(false);
+    expect(resumed.sets).toEqual(score);
+    const continued = matchReducer(resumed, { type: 'game/increment', team: 'b', at: resumed.updatedAt + 1 });
+    expect(continued.sets[0]).toEqual({ a: 2, b: 1 });
+    expect(matchReducer(resumed, { type: 'match/resume', at: resumed.updatedAt + 1 })).toBe(resumed);
+  });
+
+  it('starts a fresh match from an ended one', () => {
+    const ended = matchReducer(play(start(), 'a', 1), { type: 'match/end', at: T0 + 10 });
+    const reset = matchReducer(ended, { type: 'match/reset', matchId: NEXT, at: T0 + 11 });
+    expect(reset.ended).toBe(false);
+    expect(reset.matchId).toBe(NEXT);
+    expect(reset.sets[0]).toEqual({ a: 0, b: 0 });
+  });
 });

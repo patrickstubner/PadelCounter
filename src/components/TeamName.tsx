@@ -3,21 +3,28 @@ import { MAX_TEAM_NAME_UTF16_UNITS, clampTeamNameDraft } from '../domain/names';
 
 interface TeamNameProps {
   name: string;
+  locked: boolean;
   onCommit: (name: string) => void;
 }
 
-export function TeamName({ name, onCommit }: TeamNameProps) {
+export function TeamName({ name, locked, onCommit }: TeamNameProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const cancel = useRef(false);
 
   if (!editing) {
     return (
-      <button type="button" className="team-name" onClick={() => {
-        cancel.current = false;
-        setDraft(name);
-        setEditing(true);
-      }}>
+      <button
+        type="button"
+        className="team-name"
+        disabled={locked}
+        onClick={() => {
+          if (locked) return;
+          cancel.current = false;
+          setDraft(name);
+          setEditing(true);
+        }}
+      >
         {name}
       </button>
     );

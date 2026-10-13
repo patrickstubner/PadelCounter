@@ -51,6 +51,7 @@ Keine Befunde mit Schwere Hoch oder Kritisch.
 - **Satzstand:** nur ganze Zahlen, plausibel für Padel (0–6 beliebig, 7 nur neben 5 oder 6). 7:0, 7:4, 8:6 und Brüche werden weder erzeugt noch aus dem Speicher geladen.
 - **Ereignisse:** der Reducer ignoriert ungültige Zeitstempel, Teams, Satzindizes, Aufschlag-Paare und Match-IDs. Er wirft dabei nicht. Beim Laden gilt dasselbe: ein unbekanntes oder unvollständiges Ereignis verwirft den gespeicherten Stand.
 - **Aufschlag:** nur die Paare A1, A2, B1, B2 oder ausdrücklich offen (`null`). Die Rotation leitet den nächsten Aufschlag daraus ab und nimmt keinen Text entgegen.
+- **Spielende:** `ended` ist ein Boolean. Fehlt das Feld in einem älteren Stand, gilt das Spiel als laufend. `match/end` und `match/resume` haben keinen Freitext. Solange `ended` wahr ist, ignoriert der Reducer Zähl-, Aufschlag- und Namensereignisse.
 - **Match-ID:** UUID. `crypto.randomUUID`, sonst 16 Bytes aus `crypto.getRandomValues`.
 - **Protokoll:** höchstens 500 Ereignisse. Ältere Ereignisse werden in den Basisstand gerechnet, nicht verworfen ohne Faltung. «Rückgängig» kann nur Ereignisse entfernen, die noch in der Liste stehen.
 

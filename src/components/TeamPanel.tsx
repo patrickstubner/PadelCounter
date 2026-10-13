@@ -19,8 +19,9 @@ const SETS: readonly SetIndex[] = [0, 1, 2];
 export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onSelectSet, onServe }: TeamPanelProps) {
   const name = state.teams[team].name;
   const active = state.sets[state.activeSet];
-  const plusDisabled = !canIncrement(active, team);
-  const minusDisabled = !canDecrement(active, team);
+  const locked = state.ended;
+  const plusDisabled = locked || !canIncrement(active, team);
+  const minusDisabled = locked || !canDecrement(active, team);
   const serving = state.serve?.team === team;
   const nextServe = serveChoice(state.serve, team);
   const serveLabel = nextServe
@@ -41,13 +42,14 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
       </button>
       <div className="team-body">
         <div className="team-head">
-          <TeamName name={name} onCommit={(next) => onRename(team, next)} />
+          <TeamName name={name} locked={locked} onCommit={(next) => onRename(team, next)} />
           <button
             type="button"
             className={serving ? 'ball is-on' : 'ball'}
             data-testid={`serve-${team}`}
             aria-pressed={serving}
             aria-label={serveLabel}
+            disabled={locked}
             onClick={() => onServe(team)}
           >
             <BallIcon />
@@ -65,6 +67,7 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
                 active={state.activeSet === index}
                 won={winner === team}
                 upcoming={isUpcomingSet(state, index)}
+                locked={locked}
                 onSelect={() => onSelectSet(index)}
               />
             );

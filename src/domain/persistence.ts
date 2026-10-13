@@ -79,10 +79,15 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
   if (!isValidStoredName(teamA.name) || !isValidStoredName(teamB.name)) return null;
 
   let serve: Server | null = null;
+  let ended = false;
   if (version === 2) {
     const parsed = parseServe(record.serve);
     if (parsed === undefined) return null;
     serve = parsed;
+    if (record.ended !== undefined) {
+      if (typeof record.ended !== 'boolean') return null;
+      ended = record.ended;
+    }
   }
 
   return {
@@ -98,6 +103,7 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
     },
     sets: [set0, set1, set2],
     serve,
+    ended,
   };
 }
 
@@ -120,6 +126,10 @@ function parseEvent(value: unknown): MatchEvent | null {
     case 'match/reset':
       if (typeof record.matchId !== 'string' || !isUuid(record.matchId)) return null;
       return { type: 'match/reset', matchId: record.matchId.toLowerCase(), at: record.at };
+    case 'match/end':
+      return { type: 'match/end', at: record.at };
+    case 'match/resume':
+      return { type: 'match/resume', at: record.at };
     case 'serve/set':
       if (record.team === null && record.player === null) {
         return { type: 'serve/set', team: null, player: null, at: record.at };

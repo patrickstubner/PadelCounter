@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendEvent, createLog, describeEvent, replay, undoLog } from './log';
+import { appendEvent, createLog, describeEvent, formatEventTime, replay, undoLog } from './log';
 import type { MatchEvent } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000c';
@@ -60,6 +60,33 @@ describe('match log', () => {
     expect(describeEvent({ type: 'match/reset', matchId: ID, at: T0 })).toBe('Neues Spiel');
     expect(describeEvent({ type: 'serve/set', team: 'a', player: 1, at: T0 })).toBe('Aufschlag A1');
     expect(describeEvent({ type: 'serve/set', team: null, player: null, at: T0 })).toBe('Aufschlag offen');
+    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Spiel beendet');
+    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Fortsetzen');
     expect(describeEvent({ type: 'team/rename', team: 'a', name: '<b>Hi</b>', at: T0 })).toBe('Name A · <b>Hi</b>');
+    expect(describeEvent({ type: 'match/end', at: T0 })).toBe('Spiel beendet');
+    expect(describeEvent({ type: 'match/resume', at: T0 })).toBe('Fortsetzen');
+  });
+
+  it('undo and resume both reopen an ended match, and timestamps show the local clock', () => {
+    let log = createLog(T0, ID);
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    log = appendEvent(log, { type: 'match/end', at: T0 + 2 });
+    expect(replay(log).ended).toBe(true);
+    expect(replay(log).sets[0]).toEqual({ a: 1, b: 0 });
+
+    const undone = undoLog(log);
+    expect(replay(undone).ended).toBe(false);
+    expect(replay(undone).sets[0]).toEqual({ a: 1, b: 0 });
+
+    log = appendEvent(log, { type: 'match/resume', at: T0 + 3 });
+    expect(replay(log).ended).toBe(false);
+    log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 4 });
+    expect(replay(log).sets[0]).toEqual({ a: 1, b: 1 });
+    expect(describeEvent(log.events[1]!)).toBe('Spiel beendet');
+    expect(describeEvent(log.events[2]!)).toBe('Fortsetzen');
+
+    const now = new Date(2026, 9, 13, 18, 0, 0).getTime();
+    expect(formatEventTime(new Date(2026, 9, 13, 14, 5, 9).getTime(), now)).toBe('14:05:09');
+    expect(formatEventTime(new Date(2026, 9, 12, 9, 1, 2).getTime(), now)).toBe('12.10.2026 09:01:02');
   });
 });

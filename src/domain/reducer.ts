@@ -25,18 +25,23 @@ export function createMatch(
     ],
     activeSet: 0,
     serve: null,
+    ended: false,
   };
 }
 
 function stamp(
   state: MatchState,
   at: number,
-  patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'> & { readonly serve?: Server | null },
+  patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'> & {
+    readonly serve?: Server | null;
+    readonly ended?: boolean;
+  },
 ): MatchState {
   return {
     ...state,
     ...patch,
     serve: patch.serve === undefined ? state.serve : patch.serve,
+    ended: patch.ended === undefined ? state.ended : patch.ended,
     revision: state.revision + 1,
     updatedAt: Math.max(state.updatedAt, at),
   };
@@ -86,6 +91,7 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
 
 export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
   if (!isTimestamp(event.at)) return state;
+  if (state.ended && event.type !== 'match/resume' && event.type !== 'match/reset') return state;
 
   switch (event.type) {
     case 'game/increment':
@@ -118,6 +124,21 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
         b: state.teams.b.name,
       });
     }
+    case 'match/end':
+      return stamp(state, event.at, {
+        sets: state.sets,
+        activeSet: state.activeSet,
+        teams: state.teams,
+        ended: true,
+      });
+    case 'match/resume':
+      if (!state.ended) return state;
+      return stamp(state, event.at, {
+        sets: state.sets,
+        activeSet: state.activeSet,
+        teams: state.teams,
+        ended: false,
+      });
     case 'serve/set': {
       if (event.team === null || event.player === null) {
         if (event.team !== null || event.player !== null) return state;

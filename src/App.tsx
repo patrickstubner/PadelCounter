@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { TeamPanel } from './components/TeamPanel';
-import { describeEvent } from './domain/log';
+import { describeEvent, formatEventTime } from './domain/log';
 import { RULES_SUMMARY, matchWinner, serveLabel, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
 import { useWakeLock } from './useWakeLock';
@@ -9,16 +9,19 @@ import { useWakeLock } from './useWakeLock';
 export function App() {
   const match = useMatch();
   useWakeLock();
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState<'reset' | 'end' | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const { state } = match;
   const winner = matchWinner(state.sets);
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
   const recent = match.events.slice(-8).reverse();
-  const live = winner
-    ? `Sieg für ${state.teams[winner].name}. ${serveLabel(state.serve)}.`
-    : `Satz ${state.activeSet + 1}. ${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}. ${serveLabel(state.serve)}.${tiebreak ? ` ${tiebreak}.` : ''}`;
+  const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
+  const live = state.ended
+    ? `Spiel beendet. Endstand. ${scoreLine}.`
+    : winner
+      ? `Sieg für ${state.teams[winner].name}. ${serveLabel(state.serve)}.`
+      : `Satz ${state.activeSet + 1}. ${scoreLine}. ${serveLabel(state.serve)}.${tiebreak ? ` ${tiebreak}.` : ''}`;
 
   return (
     <div className="app">
@@ -43,7 +46,16 @@ export function App() {
           >
             Verlauf
           </button>
-          <button type="button" className="text-btn" data-testid="new-match" onClick={() => setConfirming(true)}>
+          {state.ended ? (
+            <button type="button" className="text-btn undo-btn" data-testid="resume-match" onClick={match.resumeMatch}>
+              Fortsetzen
+            </button>
+          ) : (
+            <button type="button" className="text-btn" data-testid="end-match" onClick={() => setConfirming('end')}>
+              Spiel beenden
+            </button>
+          )}
+          <button type="button" className="text-btn" data-testid="new-match" onClick={() => setConfirming('reset')}>
             Neues Spiel
           </button>
         </div>
@@ -59,11 +71,20 @@ export function App() {
           onServe={match.chooseServe}
         />
         <div className="mid">
-          {winner ? (
+          {state.ended ? (
+            <span className="chip chip-ended" data-testid="match-status">
+              Beendet
+            </span>
+          ) : winner ? (
             <span className={`chip chip-${winner}`}>Sieg · {state.teams[winner].name}</span>
           ) : (
             <span className="chip">Satz {state.activeSet + 1}</span>
           )}
+          {state.ended ? (
+            <p className="end-note" data-testid="final-score">
+              Endstand
+            </p>
+          ) : null}
           <p className="serve-line" data-testid="serve-label">
             {serveLabel(state.serve)}
           </p>
@@ -89,7 +110,10 @@ export function App() {
           recent.length > 0 ? (
             <ol className="history" data-testid="history-list">
               {recent.map((event, index) => (
-                <li key={`${event.at}-${event.type}-${index}`}>{describeEvent(event)}</li>
+                <li key={`${event.at}-${event.type}-${index}`}>
+                  <time dateTime={new Date(event.at).toISOString()}>{formatEventTime(event.at)}</time>{' '}
+                  {describeEvent(event)}
+                </li>
               ))}
             </ol>
           ) : (
@@ -103,12 +127,31 @@ export function App() {
       <p className="sr-only" aria-live="polite">
         {live}
       </p>
-      {confirming ? (
+      {confirming === 'reset' ? (
         <ConfirmDialog
-          onCancel={() => setConfirming(false)}
+          titleId="new-match-title"
+          title="Neues Spiel?"
+          body="Der Spielstand wird zurückgesetzt. Die Teamnamen bleiben erhalten."
+          confirmLabel="Zurücksetzen"
+          confirmTestId="confirm-reset"
+          onCancel={() => setConfirming(null)}
           onConfirm={() => {
             match.newMatch();
-            setConfirming(false);
+            setConfirming(null);
+          }}
+        />
+      ) : null}
+      {confirming === 'end' ? (
+        <ConfirmDialog
+          titleId="end-match-title"
+          title="Spiel beenden?"
+          body="Der Endstand bleibt stehen. Plus, Minus, Aufschlag und Namen sind gesperrt, bis das Spiel fortgesetzt wird."
+          confirmLabel="Beenden"
+          confirmTestId="confirm-end"
+          onCancel={() => setConfirming(null)}
+          onConfirm={() => {
+            match.endMatch();
+            setConfirming(null);
           }}
         />
       ) : null}
