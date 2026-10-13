@@ -264,6 +264,39 @@ describe('matchReducer', () => {
     expect(state.serveAsk).toBeNull();
   });
 
+  it('moves a pending tiebreak team to the other side when the next game is won', () => {
+    let asked = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
+    for (let i = 0; i < 6; i += 1) {
+      asked = play(asked, 'a', 1);
+      asked = play(asked, 'b', 1);
+    }
+    asked = play(asked, 'b', 1);
+    expect(asked.serveAsk).toBe('b');
+    expect(asked.serve).toBeNull();
+
+    const wonByA = play(asked, 'a', 1);
+    const wonByB = play(asked, 'b', 1);
+    expect(wonByA.sets[1]).toEqual({ a: 1, b: 0 });
+    expect(wonByB.sets[1]).toEqual({ a: 0, b: 1 });
+    expect(wonByA.serve).toBeNull();
+    expect(wonByB.serve).toBeNull();
+    expect(wonByA.serveAsk).toBe('a');
+    expect(wonByB.serveAsk).toBe('a');
+    expect(wonByA.servePrompt).toBe(false);
+    expect(wonByB.servePrompt).toBe(false);
+
+    const again = play(wonByA, 'a', 1);
+    expect(again.sets[1]).toEqual({ a: 2, b: 0 });
+    expect(again.serve).toBeNull();
+    expect(again.serveAsk).toBe('b');
+
+    const picked = matchReducer(wonByA, { type: 'serve/set', team: 'a', player: 2, at: wonByA.updatedAt + 1 });
+    expect(picked.serve).toEqual({ team: 'a', player: 2 });
+    expect(picked.serveAsk).toBeNull();
+    const wrongTeam = matchReducer(wonByA, { type: 'serve/set', team: 'b', player: 1, at: wonByA.updatedAt + 1 });
+    expect(wrongTeam).toBe(wonByA);
+  });
+
   it('asks the team opposite a tiebreak started by B', () => {
     let state = matchReducer(start(), { type: 'serve/set', team: 'b', player: 1, at: T0 + 1 });
     for (let i = 0; i < 6; i += 1) {
@@ -274,6 +307,10 @@ describe('matchReducer', () => {
     state = play(state, 'a', 1);
     expect(state.sets[0]).toEqual({ a: 7, b: 6 });
     expect(state.serveAsk).toBe('a');
+    expect(state.serve).toBeNull();
+    state = play(state, 'b', 1);
+    expect(state.sets[1]).toEqual({ a: 0, b: 1 });
+    expect(state.serveAsk).toBe('b');
     expect(state.serve).toBeNull();
   });
 

@@ -94,9 +94,26 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
     activeSet,
     teams: state.teams,
     serve: tiebreakGame ? null : rotateServe(starter, gamesPlayed(state.sets), delta),
-    serveAsk: tiebreakGame && starter ? (starter.team === 'a' ? 'b' : 'a') : delta === -1 ? null : state.serveAsk,
+    serveAsk: serveAskAfterGame(state, starter, tiebreakGame, delta),
     servePrompt: tiebreakGame ? false : state.servePrompt,
   });
+}
+
+/**
+ * A tiebreak with a known server preselects the other team.
+ * While that choice is still only a team, every game won moves the preselection
+ * to the other team. Who won the game does not matter. Minus clears it.
+ */
+function serveAskAfterGame(
+  state: MatchState,
+  starter: Server | null,
+  tiebreakGame: boolean,
+  delta: 1 | -1,
+): TeamId | null {
+  if (tiebreakGame && starter) return starter.team === 'a' ? 'b' : 'a';
+  if (delta === -1) return null;
+  if (starter === null && state.serveAsk) return state.serveAsk === 'a' ? 'b' : 'a';
+  return state.serveAsk;
 }
 
 export function matchReducer(state: MatchState, event: MatchEvent): MatchState {

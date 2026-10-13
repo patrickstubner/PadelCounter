@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3 – 2026-10-13
+
+- Gewinnt ein Team das nächste Game, während nach einem Tiebreak nur das Team vorausgewählt ist, wechselt die Vorauswahl auf das andere Team. Das gilt für beide Sieger gleich. Der Spieler bleibt offen («Choose the player»).
+
 ## 1.2.2 – 2026-10-13
 
 - Kopfzeile oben, gleich in Hoch- und Querformat: links «Padel Counter», in der Mitte Set 1, Set 2 oder Set 3, rechts das Menü. Die Satzbezeichnung zwischen den Teams entfällt.
