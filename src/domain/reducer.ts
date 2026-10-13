@@ -1,7 +1,7 @@
 import { createMatchId, isUuid } from './id';
 import { sanitizeTeamName } from './names';
-import { isPlausibleSetScore, matchWinner, setWinner } from './rules';
-import { SCHEMA_VERSION, isSetIndex, isTeamId, isTimestamp, type MatchEvent, type MatchState, type SetIndex, type SetScore, type TeamId } from './types';
+import { isPlausibleSetScore, matchWinner, rotateServe, setWinner } from './rules';
+import { SCHEMA_VERSION, isPlayerSlot, isSetIndex, isTeamId, isTimestamp, type MatchEvent, type MatchState, type Server, type SetIndex, type SetScore, type TeamId } from './types';
 
 export function createMatch(
   at: number,
@@ -24,13 +24,19 @@ export function createMatch(
       { a: 0, b: 0 },
     ],
     activeSet: 0,
+    serve: null,
   };
 }
 
-function stamp(state: MatchState, at: number, patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'>): MatchState {
+function stamp(
+  state: MatchState,
+  at: number,
+  patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'> & { readonly serve?: Server | null },
+): MatchState {
   return {
     ...state,
     ...patch,
+    serve: patch.serve === undefined ? state.serve : patch.serve,
     revision: state.revision + 1,
     updatedAt: Math.max(state.updatedAt, at),
   };
@@ -70,7 +76,12 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
     if (restEmpty) activeSet = nextSetIndex(index);
   }
 
-  return stamp(state, at, { sets, activeSet, teams: state.teams });
+  return stamp(state, at, {
+    sets,
+    activeSet,
+    teams: state.teams,
+    serve: rotateServe(state.serve, delta),
+  });
 }
 
 export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
@@ -105,6 +116,21 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
       return createMatch(event.at, event.matchId.toLowerCase(), {
         a: state.teams.a.name,
         b: state.teams.b.name,
+      });
+    }
+    case 'serve/set': {
+      if (event.team === null || event.player === null) {
+        if (event.team !== null || event.player !== null) return state;
+        if (state.serve === null) return state;
+        return stamp(state, event.at, { sets: state.sets, activeSet: state.activeSet, teams: state.teams, serve: null });
+      }
+      if (!isTeamId(event.team) || !isPlayerSlot(event.player)) return state;
+      if (state.serve?.team === event.team && state.serve.player === event.player) return state;
+      return stamp(state, event.at, {
+        sets: state.sets,
+        activeSet: state.activeSet,
+        teams: state.teams,
+        serve: { team: event.team, player: event.player },
       });
     }
     default:

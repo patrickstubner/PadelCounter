@@ -1,8 +1,16 @@
-export const SCHEMA_VERSION = 1 as const;
+export const SCHEMA_VERSION = 2 as const;
 
 export type TeamId = 'a' | 'b';
 
+export type PlayerSlot = 1 | 2;
+
 export type SetIndex = 0 | 1 | 2;
+
+/** Who serves the game that has not been scored yet. `null` means unknown. */
+export interface Server {
+  readonly team: TeamId;
+  readonly player: PlayerSlot;
+}
 
 export interface SetScore {
   readonly a: number;
@@ -26,6 +34,7 @@ export interface MatchState {
   };
   readonly sets: readonly [SetScore, SetScore, SetScore];
   readonly activeSet: SetIndex;
+  readonly serve: Server | null;
 }
 
 export type MatchEvent =
@@ -33,7 +42,13 @@ export type MatchEvent =
   | { readonly type: 'game/decrement'; readonly team: TeamId; readonly at: number }
   | { readonly type: 'set/select'; readonly index: SetIndex; readonly at: number }
   | { readonly type: 'team/rename'; readonly team: TeamId; readonly name: string; readonly at: number }
-  | { readonly type: 'match/reset'; readonly matchId: string; readonly at: number };
+  | { readonly type: 'match/reset'; readonly matchId: string; readonly at: number }
+  | {
+      readonly type: 'serve/set';
+      readonly team: TeamId | null;
+      readonly player: PlayerSlot | null;
+      readonly at: number;
+    };
 
 export function isTeamId(value: unknown): value is TeamId {
   return value === 'a' || value === 'b';
@@ -41,6 +56,10 @@ export function isTeamId(value: unknown): value is TeamId {
 
 export function isSetIndex(value: unknown): value is SetIndex {
   return value === 0 || value === 1 || value === 2;
+}
+
+export function isPlayerSlot(value: unknown): value is PlayerSlot {
+  return value === 1 || value === 2;
 }
 
 export function isTimestamp(value: unknown): value is number {

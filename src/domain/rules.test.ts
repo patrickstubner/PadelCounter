@@ -6,8 +6,13 @@ import {
   canIncrement,
   displayGames,
   isPlausibleSetScore,
+  isTiebreak,
   matchWinner,
+  rotateServe,
+  serveChoice,
+  serveLabel,
   setWinner,
+  tiebreakHint,
 } from './rules';
 import type { TeamId } from './types';
 
@@ -109,5 +114,41 @@ describe('display', () => {
     expect(RULES_SUMMARY).toContain('6:6');
     expect(RULES_SUMMARY).toContain('7:6');
     expect(RULES_SUMMARY).toContain('Best of 3');
+    expect(RULES_SUMMARY).toContain('A1, B1, A2, B2');
+  });
+});
+
+describe('serve rotation', () => {
+  it('cycles teams and partners, and can be cleared from the same team', () => {
+    expect(rotateServe({ team: 'a', player: 1 }, 1)).toEqual({ team: 'b', player: 1 });
+    expect(rotateServe({ team: 'b', player: 1 }, 1)).toEqual({ team: 'a', player: 2 });
+    expect(rotateServe({ team: 'a', player: 2 }, 1)).toEqual({ team: 'b', player: 2 });
+    expect(rotateServe({ team: 'b', player: 2 }, 1)).toEqual({ team: 'a', player: 1 });
+    expect(rotateServe({ team: 'a', player: 1 }, -1)).toEqual({ team: 'b', player: 2 });
+    expect(rotateServe(null, 1)).toBeNull();
+    expect(serveChoice(null, 'b')).toEqual({ team: 'b', player: 1 });
+    expect(serveChoice({ team: 'a', player: 1 }, 'a')).toEqual({ team: 'a', player: 2 });
+    expect(serveChoice({ team: 'a', player: 2 }, 'a')).toBeNull();
+    expect(serveChoice({ team: 'a', player: 2 }, 'b')).toEqual({ team: 'b', player: 1 });
+    expect(serveLabel(null)).toBe('«Aufschlag offen»');
+    expect(serveLabel({ team: 'a', player: 1 })).toBe('«Aufschlag A1»');
+  });
+
+  it('marks only a 6:6 active set as a tiebreak', () => {
+    const state = createMatch(1_700_000_000_000, '00000000-0000-4000-8000-000000000001');
+    expect(isTiebreak(state)).toBe(false);
+    expect(tiebreakHint(state)).toBeNull();
+    const tied = {
+      ...state,
+      sets: [
+        { a: 6, b: 6 },
+        { a: 0, b: 0 },
+        { a: 0, b: 0 },
+      ] as const,
+      serve: { team: 'b' as const, player: 2 as const },
+    };
+    expect(isTiebreak(tied)).toBe(true);
+    expect(tiebreakHint(tied)).toBe('Tiebreak · B2 beginnt, danach je 2');
+    expect(tiebreakHint({ ...tied, serve: null })).toBe('Tiebreak');
   });
 });

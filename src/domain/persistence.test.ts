@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { createMatch, matchReducer } from './reducer';
-import { STORAGE_KEY, loadMatch, parsePersisted, saveMatch, serializeMatch, type MatchStorage } from './persistence';
+import { createLog, replay } from './log';
+import { createMatch } from './reducer';
+import {
+  MAX_RAW_LENGTH,
+  STORAGE_KEY,
+  loadLog,
+  parsePersisted,
+  saveLog,
+  serializeLog,
+  type MatchStorage,
+} from './persistence';
+import type { MatchState } from './types';
 
 const ID = '00000000-0000-4000-8000-00000000000a';
 const T0 = 1_700_000_000_000;
@@ -16,58 +26,114 @@ function memory(): MatchStorage & { dump(): Map<string, string> } {
   };
 }
 
-function validState() {
-  let state = createMatch(T0, ID, { a: 'A < B', b: 'Möwe' });
-  state = matchReducer(state, { type: 'game/increment', team: 'a', at: T0 + 1 });
-  return state;
+function validLog() {
+  let log = createLog(T0, ID, { a: 'A < B', b: 'Möwe' });
+  log = {
+    ...log,
+    events: [{ type: 'game/increment', team: 'a', at: T0 + 1 }],
+  };
+  return log;
+}
+
+function v1Envelope(state: MatchState) {
+  return {
+    schemaVersion: 1,
+    state: {
+      schemaVersion: 1,
+      matchId: state.matchId,
+      revision: state.revision,
+      createdAt: state.createdAt,
+      updatedAt: state.updatedAt,
+      activeSet: state.activeSet,
+      teams: state.teams,
+      sets: state.sets,
+    },
+  };
 }
 
 describe('parsePersisted', () => {
-  it('round-trips a valid match and lowercases the id', () => {
-    const state = validState();
-    const raw = serializeMatch(state).replace(ID, ID.toUpperCase());
+  it('round-trips a log and lowercases the id', () => {
+    const log = validLog();
+    const raw = serializeLog(log).replace(ID, ID.toUpperCase());
     const loaded = parsePersisted(JSON.parse(raw) as unknown);
-    expect(loaded?.matchId).toBe(ID);
-    expect(loaded?.teams.a.name).toBe('A < B');
-    expect(loaded?.teams.b.name).toBe('Möwe');
-    expect(loaded?.sets[0]).toEqual({ a: 1, b: 0 });
-    expect(loaded?.revision).toBe(1);
+    expect(loaded?.base.matchId).toBe(ID);
+    expect(loaded?.base.teams.a.name).toBe('A < B');
+    expect(loaded?.base.teams.b.name).toBe('Möwe');
+    expect(replay(loaded!).sets[0]).toEqual({ a: 1, b: 0 });
+    expect(replay(loaded!).revision).toBe(1);
+    expect(replay(loaded!).serve).toBeNull();
   });
 
-  it('rejects a wrong schema, corrupt shapes, and impossible scores', () => {
-    const state = validState();
-    const envelope = JSON.parse(serializeMatch(state)) as { schemaVersion: number; state: Record<string, unknown> };
-    expect(parsePersisted({ ...envelope, schemaVersion: 2 })).toBeNull();
+  it('migrates a version-1 snapshot and drops any forged serve', () => {
+    const state = createMatch(T0, ID, { a: 'Alt', b: 'Team B' });
+    const legacy = v1Envelope(state) as { state: Record<string, unknown> };
+    legacy.state.serve = { team: 'a', player: 1 };
+    const loaded = parsePersisted(legacy);
+    expect(loaded?.events).toEqual([]);
+    expect(loaded?.base.schemaVersion).toBe(2);
+    expect(loaded?.base.serve).toBeNull();
+    expect(loaded?.base.teams.a.name).toBe('Alt');
+  });
+
+  it('rejects a wrong schema, corrupt shapes, impossible scores, and bad events', () => {
+    const log = validLog();
+    const envelope = JSON.parse(serializeLog(log)) as {
+      schemaVersion: number;
+      base: Record<string, unknown>;
+      events: unknown[];
+    };
+    expect(parsePersisted({ ...envelope, schemaVersion: 3 })).toBeNull();
+    expect(parsePersisted({ schemaVersion: 2 })).toBeNull();
     expect(parsePersisted({ schemaVersion: 1 })).toBeNull();
     expect(parsePersisted(null)).toBeNull();
     expect(parsePersisted([])).toBeNull();
     expect(parsePersisted('nope')).toBeNull();
 
     const badSets = structuredClone(envelope);
-    badSets.state.sets = [{ a: 7, b: 4 }, { a: 0, b: 0 }, { a: 0, b: 0 }];
+    badSets.base.sets = [{ a: 7, b: 4 }, { a: 0, b: 0 }, { a: 0, b: 0 }];
     expect(parsePersisted(badSets)).toBeNull();
 
     const tooLong = structuredClone(envelope);
-    const teams = tooLong.state.teams as { a: { name: string } };
+    const teams = tooLong.base.teams as { a: { name: string } };
     teams.a.name = '123456789012345678901';
     expect(parsePersisted(tooLong)).toBeNull();
 
     const control = structuredClone(envelope);
-    (control.state.teams as { a: { name: string } }).a.name = 'Bad\nName';
+    (control.base.teams as { a: { name: string } }).a.name = 'Bad\nName';
     expect(parsePersisted(control)).toBeNull();
 
     const active = structuredClone(envelope);
-    active.state.activeSet = 3;
+    active.base.activeSet = 3;
     expect(parsePersisted(active)).toBeNull();
 
     const fractional = structuredClone(envelope);
-    (fractional.state.sets as Array<{ a: number; b: number }>)[0] = { a: 1.5, b: 0 };
+    (fractional.base.sets as Array<{ a: number; b: number }>)[0] = { a: 1.5, b: 0 };
     expect(parsePersisted(fractional)).toBeNull();
+
+    const badServe = structuredClone(envelope);
+    badServe.base.serve = { team: 'a', player: 3 };
+    expect(parsePersisted(badServe)).toBeNull();
+
+    const badEvent = structuredClone(envelope);
+    badEvent.events = [{ type: 'serve/set', team: 'a', player: null, at: T0 + 1 }];
+    expect(parsePersisted(badEvent)).toBeNull();
+
+    const unknownEvent = structuredClone(envelope);
+    unknownEvent.events = [{ type: 'game/steal', team: 'a', at: T0 + 1 }];
+    expect(parsePersisted(unknownEvent)).toBeNull();
+
+    const tooMany = structuredClone(envelope);
+    tooMany.events = Array.from({ length: 501 }, (_, index) => ({
+      type: 'set/select',
+      index: 1,
+      at: T0 + 1 + index,
+    }));
+    expect(parsePersisted(tooMany)).toBeNull();
   });
 
   it('does not pollute Object.prototype and survives throwing getters', () => {
     const payload = JSON.parse(
-      '{"schemaVersion":1,"__proto__":{"polluted":true},"state":{"schemaVersion":1}}',
+      '{"schemaVersion":2,"__proto__":{"polluted":true},"base":{"schemaVersion":2}}',
     ) as unknown;
     expect(parsePersisted(payload)).toBeNull();
     expect(({} as { polluted?: boolean }).polluted).toBeUndefined();
@@ -82,22 +148,22 @@ describe('parsePersisted', () => {
   });
 });
 
-describe('loadMatch / saveMatch', () => {
+describe('loadLog / saveLog', () => {
   it('persists and reloads', () => {
     const storage = memory();
-    const state = validState();
-    expect(saveMatch(state, storage)).toBe(true);
-    expect(storage.dump().get(STORAGE_KEY)).toContain('"schemaVersion":1');
-    expect(loadMatch(storage)).toEqual(state);
+    const log = validLog();
+    expect(saveLog(log, storage)).toBe(true);
+    expect(storage.dump().get(STORAGE_KEY)).toContain('"schemaVersion":2');
+    expect(loadLog(storage)).toEqual(log);
   });
 
   it('returns null for missing, huge, and broken payloads', () => {
     const storage = memory();
-    expect(loadMatch(storage)).toBeNull();
+    expect(loadLog(storage)).toBeNull();
     storage.setItem(STORAGE_KEY, '{');
-    expect(loadMatch(storage)).toBeNull();
-    storage.setItem(STORAGE_KEY, 'x'.repeat(8_001));
-    expect(loadMatch(storage)).toBeNull();
+    expect(loadLog(storage)).toBeNull();
+    storage.setItem(STORAGE_KEY, 'x'.repeat(MAX_RAW_LENGTH + 1));
+    expect(loadLog(storage)).toBeNull();
   });
 
   it('swallows storage failures', () => {
@@ -109,7 +175,7 @@ describe('loadMatch / saveMatch', () => {
         throw new Error('quota');
       },
     };
-    expect(loadMatch(broken)).toBeNull();
-    expect(saveMatch(validState(), broken)).toBe(false);
+    expect(loadLog(broken)).toBeNull();
+    expect(saveLog(validLog(), broken)).toBe(false);
   });
 });
