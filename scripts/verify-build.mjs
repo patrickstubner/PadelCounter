@@ -52,8 +52,26 @@ if (manifest.start_url !== pageBase || manifest.scope !== pageBase || manifest.i
 if (!manifest.icons.every((icon) => typeof icon.src === 'string' && icon.src.startsWith(pageBase))) {
   fail('manifest icons are not under PAGE_BASE');
 }
+for (const icon of manifest.icons) {
+  const relative = icon.src.slice(pageBase.length);
+  if (!statSync(join(dist, relative)).isFile()) fail(`manifest icon missing from dist: ${relative}`);
+}
 
+const precached = [
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-1024.png',
+  'icons/icon-maskable-192.png',
+  'icons/icon-maskable-512.png',
+  'icons/apple-touch-icon-180.png',
+  'favicon.ico',
+  'favicon-16.png',
+  'favicon-32.png',
+];
 const sw = readFileSync(join(dist, 'sw.js'), 'utf8');
+for (const file of precached) {
+  if (!sw.includes(`${pageBase}${file}`)) fail(`precache missing ${file}`);
+}
 if (sw.includes('importScripts(')) fail('service worker loads an external script');
 
 for (const file of walk(dist)) {

@@ -78,9 +78,15 @@ describe('shipped source stays local and text-only', () => {
     expect(manifest.name).toBe('Padel Counter');
     expect(manifest.short_name).toBe('Padel Counter');
     expect(manifest.display).toBe('standalone');
-    expect(manifest.theme_color).toBe('#000825');
-    expect(manifest.background_color).toBe('#000825');
-    expect(manifest.icons.some((icon) => icon.purpose === 'maskable' && icon.sizes === '512x512')).toBe(true);
+    expect(manifest.theme_color).toBe('#0a1a3f');
+    expect(manifest.background_color).toBe('#0a1a3f');
+    expect(manifest.icons).toEqual([
+      { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: 'icons/icon-1024.png', sizes: '1024x1024', type: 'image/png', purpose: 'any' },
+      { src: 'icons/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+    ]);
     for (const icon of manifest.icons) {
       const file = join(repoRoot, 'public', icon.src);
       expect(existsSync(file), icon.src).toBe(true);
@@ -89,17 +95,23 @@ describe('shipped source stays local and text-only', () => {
       expect(png.width).toBe(size);
       expect(png.height).toBe(size);
     }
-    const apple = pngInfo(join(repoRoot, 'public/icons/apple-touch-icon.png'));
-    expect(apple).toEqual({ width: 180, height: 180, colorType: 2 });
-    const favicon = pngInfo(join(repoRoot, 'public/favicon-32.png'));
-    expect(favicon.width).toBe(32);
+    expect(pngInfo(join(repoRoot, 'public/icons/apple-touch-icon-180.png'))).toEqual({
+      width: 180,
+      height: 180,
+      colorType: 2,
+    });
+    expect(pngInfo(join(repoRoot, 'public/favicon-16.png')).width).toBe(16);
+    expect(pngInfo(join(repoRoot, 'public/favicon-32.png')).width).toBe(32);
     expect(existsSync(join(repoRoot, 'public/favicon.ico'))).toBe(true);
     const html = readFileSync(join(repoRoot, 'src/index.html'), 'utf8');
     expect(html).toContain('apple-touch-icon');
+    expect(html).toContain('icons/apple-touch-icon-180.png');
+    expect(html).toContain('favicon-16.png');
+    expect(html).toContain('favicon-32.png');
+    expect(html).toContain('favicon.ico');
     expect(html).toContain('apple-mobile-web-app-capable');
-    expect(html).toContain('apple-mobile-web-app-title');
-    expect(html).toContain('apple-mobile-web-app-status-bar-style');
-    expect(html).toContain('content="#000825"');
+    expect(html).toContain('apple-mobile-web-app-title" content="Padel Counter"');
+    expect(html).toContain('content="#0a1a3f"');
   });
 });
 

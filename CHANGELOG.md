@@ -6,7 +6,7 @@
 - Jede Änderung (Games, Aufschlag, Namen, neues Spiel) liegt als Ereignis am Match. «Rückgängig» nimmt mehrere Schritte zurück, eine kurze Verlaufsliste zeigt die letzten Einträge. Höchstens 500 Ereignisse, Prüfung beim Laden. Ein Speicherstand von 1.0.0 wird übernommen.
 - Namensfilter `/[\p{Cc}\p{Cf}\u2028\u2029]/gu` in beiden Prüfungen. Nach dem Kürzen wird erneut getrimmt und ein einzelnes Surrogate entfernt. Längengrenze in Codepoints. Seitenpfad aus `PAGE_BASE`. Wöchentliches Dependabot für npm und GitHub Actions.
 - Der Verlauf zeigt die lokale Uhrzeit, an anderen Tagen auch das Datum. «Spiel beenden» sperrt den Endstand nach einer Rückfrage. «Fortsetzen» und «Rückgängig» nehmen das Spiel wieder auf.
-- App-Icon aus dem freigegebenen Motiv: 192, 512, maskable 512, Apple-Touch 180, Favicon 32 und ICO. Theme-Farbe ist das gemessene Dunkelblau.
+- Installations-Icons sind die freigegebenen Dateien (192, 512, 1024, maskable 192 und 512, Apple-Touch 180, Favicon 16, 32 und ICO). Theme-Farbe `#0a1a3f`.
 
 ## 1.0.0 – 2026-10-13
 
