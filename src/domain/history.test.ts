@@ -60,10 +60,12 @@ describe('match history rows', () => {
     log = appendEvent(log, { type: 'game/increment', team: 'b', at: T0 + 100 });
     expect(replay(log).sets[0]).toEqual({ a: 6, b: 7 });
     expect(replay(log).serve).toBeNull();
-    expect(replay(log).servePrompt).toBe(true);
+    expect(replay(log).serveAsk).toBe('b');
+    expect(replay(log).servePrompt).toBe(false);
     log = undoLog(log);
     expect(replay(log).sets[0]).toEqual({ a: 6, b: 6 });
     expect(replay(log).serve).toEqual({ team: 'a', player: 1 });
+    expect(replay(log).serveAsk).toBeNull();
     expect(replay(log).servePrompt).toBe(false);
   });
 });

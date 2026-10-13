@@ -90,6 +90,16 @@ describe('parsePersisted', () => {
     forgedPrompt.base.servePrompt = 'yes';
     expect(parsePersisted(forgedPrompt)).toBeNull();
 
+    const asked = JSON.parse(serializeLog(validLog())) as { base: Record<string, unknown> };
+    asked.base.serveAsk = 'b';
+    expect(parsePersisted(asked)?.base.serveAsk).toBe('b');
+    const missingAsk = JSON.parse(serializeLog(validLog())) as { base: Record<string, unknown> };
+    delete missingAsk.base.serveAsk;
+    expect(parsePersisted(missingAsk)?.base.serveAsk).toBeNull();
+    const forgedAsk = JSON.parse(serializeLog(validLog())) as { base: Record<string, unknown> };
+    forgedAsk.base.serveAsk = 'c';
+    expect(parsePersisted(forgedAsk)).toBeNull();
+
     const badResume = JSON.parse(serializeLog(validLog())) as { events: unknown[] };
     badResume.events = [{ type: 'match/resume', at: 'now' }];
     expect(parsePersisted(badResume)).toBeNull();

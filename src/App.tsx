@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { detailHistoryState, matchesHistoryState, screenFromHistory, type ArchiveScreen } from './archiveNav';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { CourtHeader, type CourtAction } from './components/CourtHeader';
 import { HistoryPage } from './components/HistoryPage';
 import { TeamPanel } from './components/TeamPanel';
 import { UpdateReady } from './components/UpdateReady';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
 import { colonSetScore, currentHistory } from './domain/history';
-import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, servePickPrompt, tiebreakHint } from './domain/rules';
+import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
 import { watchControllerChange } from './registerServiceWorker';
 import { useWakeLock } from './useWakeLock';
@@ -93,7 +94,7 @@ export function App() {
   const tiebreak = tiebreakHint(state);
   const pick = servePickPrompt(state);
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
-  const serve = serveLabel(state.serve);
+  const serve = serveCourtLabel(state);
   const showFinal = state.ended || winner !== null;
   const finalSets = state.sets.map((set, index) => `Set ${index + 1} ${set.a}–${set.b}`).join(', ');
   const live = showVictory && celebrated
@@ -131,41 +132,18 @@ export function App() {
     );
   }
 
+  const actions: readonly CourtAction[] = [
+    { id: 'undo', label: 'Undo', testId: 'undo', disabled: !match.canUndo, emphasized: true, onSelect: match.undo },
+    { id: 'history', label: 'History', testId: 'history-open', onSelect: openMatches },
+    state.ended
+      ? { id: 'resume', label: 'Resume', testId: 'resume-match', emphasized: true, onSelect: match.resumeMatch }
+      : { id: 'end', label: 'End match', testId: 'end-match', onSelect: () => setConfirming('end') },
+    { id: 'reset', label: 'New match', testId: 'new-match', onSelect: () => setConfirming('reset') },
+  ];
+
   return (
     <div className="app">
-      <header className="top">
-        <h1 className="brand">
-          <button type="button" className="brand-btn" data-testid="open-matches" onClick={openMatches}>
-            Padel Counter
-          </button>
-        </h1>
-        <div className="top-actions">
-          <button
-            type="button"
-            className="text-btn undo-btn"
-            data-testid="undo"
-            disabled={!match.canUndo}
-            onClick={match.undo}
-          >
-            Undo
-          </button>
-          <button type="button" className="text-btn" data-testid="history-open" onClick={openMatches}>
-            History
-          </button>
-          {state.ended ? (
-            <button type="button" className="text-btn undo-btn" data-testid="resume-match" onClick={match.resumeMatch}>
-              Resume
-            </button>
-          ) : (
-            <button type="button" className="text-btn" data-testid="end-match" onClick={() => setConfirming('end')}>
-              End match
-            </button>
-          )}
-          <button type="button" className="text-btn" data-testid="new-match" onClick={() => setConfirming('reset')}>
-            New match
-          </button>
-        </div>
-      </header>
+      <CourtHeader setLabel={`Set ${state.activeSet + 1}`} onBrand={openMatches} actions={actions} />
       {showVictory && screen.view === 'court' && celebrated ? (
         <Victory
           name={state.teams[celebrated].name}
@@ -191,9 +169,7 @@ export function App() {
             </span>
           ) : winner ? (
             <span className={`chip chip-${winner}`}>Win · {state.teams[winner].name}</span>
-          ) : (
-            <span className="chip chip-set" data-testid="active-set">{`Set ${state.activeSet + 1}`}</span>
-          )}
+          ) : null}
           {showFinal ? (
             <p className="end-note" data-testid="final-score">
               Final score

@@ -1,7 +1,7 @@
 import type { MatchState, PlayerSlot, Server, SetIndex, SetScore, TeamId } from './types';
 
 export const RULES_SUMMARY =
-  'This counter ends a set at 6 games with a lead of 2, at 7–5, or at 7–6 after 6–6. A match is best of 3. Serve is optional (A1, B1, A2, B2). Tap a set to select it.';
+  'This counter ends a set at 6 games with a lead of 2, at 7–5, or at 7–6 after 6–6. A match is best of 3. Serve is optional and rotates between teams and partners. Tap a set to select it.';
 
 function otherTeam(team: TeamId): TeamId {
   return team === 'a' ? 'b' : 'a';
@@ -134,11 +134,11 @@ export function displayGames(state: MatchState, index: SetIndex, team: TeamId): 
  *
  * Tiebreak points are not counted. A 6–6 set is one game in this rotation: the server
  * shown at 6–6 serves that whole game, and the server does not change every two points.
- * Scoring that game clears a chosen server so the next set can be picked again.
+ * Scoring that game keeps the opposite team and asks which partner serves next.
  *
  * Minus walks this same cycle backwards. That restores the server of the game just
- * removed. It does not ask for a new server. Choosing another set does not change the
- * game count, so a chosen server is cleared there instead of being stepped.
+ * removed. It does not ask for a new server. Choosing another set leaves the server
+ * as it is.
  */
 export function rotateServe(serve: Server | null, gamesPlayedCount: number, direction: 1 | -1): Server | null {
   if (!serve) return null;
@@ -164,6 +164,13 @@ export function serveLabel(serve: Server | null): string {
   return `Serve ${serve.team.toUpperCase()}${serve.player}`;
 }
 
+/** Spoken score line. After a tiebreak the team can be known before the partner is. */
+export function serveCourtLabel(state: MatchState): string {
+  if (state.serve) return serveLabel(state.serve);
+  if (state.serveAsk) return `Team ${state.serveAsk.toUpperCase()} to serve`;
+  return serveLabel(null);
+}
+
 /** The unscored game of the active set is a tiebreak when the set is 6:6. */
 export function isTiebreak(state: MatchState): boolean {
   const set = state.sets[state.activeSet];
@@ -181,9 +188,14 @@ export function tiebreakHint(state: MatchState): string | null {
   return `Tiebreak · ${who} serves this game`;
 }
 
-/** Shown after a tiebreak game or a set change cleared a server the match had chosen. */
+/**
+ * After a tiebreak the opposite team is already chosen, so the court asks only for the partner.
+ * An older save that cleared the whole server still asks for a server.
+ */
 export function servePickPrompt(state: MatchState): string | null {
-  if (!state.servePrompt || state.serve !== null || state.ended || matchWinner(state.sets)) return null;
+  if (state.ended || matchWinner(state.sets)) return null;
+  if (state.serveAsk && state.serve === null) return 'Choose the player';
+  if (!state.servePrompt || state.serve !== null) return null;
   return 'Choose the server';
 }
 

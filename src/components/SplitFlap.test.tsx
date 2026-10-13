@@ -42,9 +42,8 @@ describe('split flap direction', () => {
     expect(rule).toContain('overflow: visible');
     expect(rule).toContain('letter-spacing: 0');
     expect(rule).toContain('clamp(');
-    expect(rule).toContain('100cqw / 1.25');
-    expect(rule).toContain('svh');
-    expect(rule).toContain('vw');
+    expect(rule).toContain('100cqw / 1.22');
+    expect(rule).toContain('96cqh');
     expect(css).toContain('font-variant-numeric: tabular-nums');
   });
 });

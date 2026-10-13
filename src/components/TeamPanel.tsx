@@ -24,11 +24,14 @@ export function TeamPanel({ team, state, onIncrement, onDecrement, onRename, onS
   const plusDisabled = locked || !canIncrement(active, team);
   const minusDisabled = locked || !canDecrement(active, team);
   const activeWinner = setWinner(active.a, active.b);
-  const serving = state.serve?.team === team;
+  const asking = state.serveAsk === team && state.serve === null;
+  const serving = state.serve?.team === team || asking;
   const nextServe = serveChoice(state.serve, team);
-  const serveLabel = nextServe
-    ? `Serve ${nextServe.team.toUpperCase()}${nextServe.player} for ${name}`
-    : `Leave the serve open, ${name}`;
+  const serveLabel = asking
+    ? `Choose the player for ${name}`
+    : nextServe
+      ? `Serve ${nextServe.team.toUpperCase()}${nextServe.player} for ${name}`
+      : `Leave the serve open, ${name}`;
 
   return (
     <section className={`team team-${team}`} aria-label={name}>

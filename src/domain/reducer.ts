@@ -25,6 +25,7 @@ export function createMatch(
     ],
     activeSet: 0,
     serve: null,
+    serveAsk: null,
     servePrompt: false,
     ended: false,
   };
@@ -35,6 +36,7 @@ function stamp(
   at: number,
   patch: Pick<MatchState, 'sets' | 'activeSet' | 'teams'> & {
     readonly serve?: Server | null;
+    readonly serveAsk?: TeamId | null;
     readonly servePrompt?: boolean;
     readonly ended?: boolean;
   },
@@ -43,6 +45,7 @@ function stamp(
     ...state,
     ...patch,
     serve: patch.serve === undefined ? state.serve : patch.serve,
+    serveAsk: patch.serveAsk === undefined ? state.serveAsk : patch.serveAsk,
     servePrompt: patch.servePrompt === undefined ? state.servePrompt : patch.servePrompt,
     ended: patch.ended === undefined ? state.ended : patch.ended,
     revision: state.revision + 1,
@@ -84,13 +87,15 @@ function applyGame(state: MatchState, team: TeamId, at: number, delta: 1 | -1): 
     if (restEmpty) activeSet = nextSetIndex(index);
   }
 
-  const tiebreakGame = delta === 1 && current.a === 6 && current.b === 6 && state.serve !== null;
+  const starter = state.serve;
+  const tiebreakGame = delta === 1 && current.a === 6 && current.b === 6 && starter !== null;
   return stamp(state, at, {
     sets,
     activeSet,
     teams: state.teams,
-    serve: tiebreakGame ? null : rotateServe(state.serve, gamesPlayed(state.sets), delta),
-    servePrompt: tiebreakGame ? true : state.servePrompt,
+    serve: tiebreakGame ? null : rotateServe(starter, gamesPlayed(state.sets), delta),
+    serveAsk: tiebreakGame && starter ? (starter.team === 'a' ? 'b' : 'a') : delta === -1 ? null : state.serveAsk,
+    servePrompt: tiebreakGame ? false : state.servePrompt,
   });
 }
 
@@ -111,8 +116,6 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
         sets: state.sets,
         activeSet: event.index,
         teams: state.teams,
-        serve: null,
-        servePrompt: state.serve === null ? state.servePrompt : true,
       });
     case 'team/rename': {
       if (!isTeamId(event.team) || typeof event.name !== 'string') return state;
@@ -149,22 +152,25 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
     case 'serve/set': {
       if (event.team === null || event.player === null) {
         if (event.team !== null || event.player !== null) return state;
-        if (state.serve === null && !state.servePrompt) return state;
+        if (state.serve === null && !state.servePrompt && !state.serveAsk) return state;
         return stamp(state, event.at, {
           sets: state.sets,
           activeSet: state.activeSet,
           teams: state.teams,
           serve: null,
+          serveAsk: null,
           servePrompt: false,
         });
       }
       if (!isTeamId(event.team) || !isPlayerSlot(event.player)) return state;
-      if (state.serve?.team === event.team && state.serve.player === event.player && !state.servePrompt) return state;
+      if (state.serveAsk && state.serve === null && event.team !== state.serveAsk) return state;
+      if (state.serve?.team === event.team && state.serve.player === event.player && !state.servePrompt && !state.serveAsk) return state;
       return stamp(state, event.at, {
         sets: state.sets,
         activeSet: state.activeSet,
         teams: state.teams,
         serve: { team: event.team, player: event.player },
+        serveAsk: null,
         servePrompt: false,
       });
     }

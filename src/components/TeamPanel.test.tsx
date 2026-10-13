@@ -21,4 +21,22 @@ describe('serve marker', () => {
     expect(html).toContain('>2<');
     expect(html).not.toContain('data-testid="serve-player-a"');
   });
+
+  it('highlights the tiebreak team without a player number', () => {
+    const state = {
+      ...createMatch(1_700_000_000_000, '00000000-0000-4000-8000-000000000001'),
+      serve: null,
+      serveAsk: 'b' as const,
+    };
+    const html = renderToStaticMarkup(
+      <>
+        <TeamPanel team="a" state={state} onIncrement={noop} onDecrement={noop} onRename={noop} onSelectSet={noop} onServe={noop} />
+        <TeamPanel team="b" state={state} onIncrement={noop} onDecrement={noop} onRename={noop} onSelectSet={noop} onServe={noop} />
+      </>,
+    );
+    expect(html).toContain('Choose the player for Team B');
+    expect(html).not.toContain('data-testid="serve-player-b"');
+    expect(html).not.toContain('data-testid="serve-player-a"');
+    expect(html).toContain('class="ball is-on"');
+  });
 });
