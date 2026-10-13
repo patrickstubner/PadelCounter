@@ -11,6 +11,7 @@ import {
   type MatchEvent,
   type MatchState,
   type Server,
+  type TeamId,
   type SetScore,
 } from './types';
 
@@ -79,12 +80,17 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
   if (!isValidStoredName(teamA.name) || !isValidStoredName(teamB.name)) return null;
 
   let serve: Server | null = null;
+  let serveAsk: TeamId | null = null;
   let servePrompt = false;
   let ended = false;
   if (version === 2) {
     const parsed = parseServe(record.serve);
     if (parsed === undefined) return null;
     serve = parsed;
+    if (record.serveAsk !== undefined && record.serveAsk !== null) {
+      if (!isTeamId(record.serveAsk)) return null;
+      serveAsk = record.serveAsk;
+    }
     if (record.servePrompt !== undefined) {
       if (typeof record.servePrompt !== 'boolean') return null;
       servePrompt = record.servePrompt;
@@ -108,6 +114,7 @@ function parseState(value: unknown, version: 1 | 2): MatchState | null {
     },
     sets: [set0, set1, set2],
     serve,
+    serveAsk,
     servePrompt,
     ended,
   };

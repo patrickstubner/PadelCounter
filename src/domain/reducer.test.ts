@@ -234,7 +234,7 @@ describe('matchReducer', () => {
     expect(again).toBe(state);
   });
 
-  it('keeps the tiebreak server for that one game, then asks for a new pick', () => {
+  it('keeps the tiebreak server for that one game, then asks which partner of the other team', () => {
     let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
     for (let i = 0; i < 6; i += 1) {
       state = play(state, 'a', 1);
@@ -242,15 +242,39 @@ describe('matchReducer', () => {
     }
     expect(state.sets[0]).toEqual({ a: 6, b: 6 });
     expect(state.serve).toEqual({ team: 'a', player: 1 });
-    expect(state.servePrompt).toBe(false);
+    expect(state.serveAsk).toBeNull();
     state = play(state, 'b', 1);
     expect(state.sets[0]).toEqual({ a: 6, b: 7 });
     expect(state.activeSet).toBe(1);
     expect(state.serve).toBeNull();
-    expect(state.servePrompt).toBe(true);
-    state = matchReducer(state, { type: 'serve/set', team: 'b', player: 1, at: state.updatedAt + 1 });
-    expect(state.serve).toEqual({ team: 'b', player: 1 });
+    expect(state.serveAsk).toBe('b');
     expect(state.servePrompt).toBe(false);
+    const stillAsking = matchReducer(state, { type: 'set/select', index: 0, at: state.updatedAt + 1 });
+    expect(stillAsking.activeSet).toBe(0);
+    expect(stillAsking.serveAsk).toBe('b');
+    expect(stillAsking.serve).toBeNull();
+    const steppedBack = matchReducer(stillAsking, { type: 'game/decrement', team: 'b', at: stillAsking.updatedAt + 1 });
+    expect(steppedBack.sets[0]).toEqual({ a: 6, b: 6 });
+    expect(steppedBack.serve).toBeNull();
+    expect(steppedBack.serveAsk).toBeNull();
+    const wrongTeam = matchReducer(state, { type: 'serve/set', team: 'a', player: 2, at: state.updatedAt + 1 });
+    expect(wrongTeam).toBe(state);
+    state = matchReducer(state, { type: 'serve/set', team: 'b', player: 2, at: state.updatedAt + 1 });
+    expect(state.serve).toEqual({ team: 'b', player: 2 });
+    expect(state.serveAsk).toBeNull();
+  });
+
+  it('asks the team opposite a tiebreak started by B', () => {
+    let state = matchReducer(start(), { type: 'serve/set', team: 'b', player: 1, at: T0 + 1 });
+    for (let i = 0; i < 6; i += 1) {
+      state = play(state, 'b', 1);
+      state = play(state, 'a', 1);
+    }
+    expect(state.serve).toEqual({ team: 'b', player: 1 });
+    state = play(state, 'a', 1);
+    expect(state.sets[0]).toEqual({ a: 7, b: 6 });
+    expect(state.serveAsk).toBe('a');
+    expect(state.serve).toBeNull();
   });
 
   it('does not ask for a server after a tiebreak the match never assigned', () => {
@@ -262,22 +286,25 @@ describe('matchReducer', () => {
     state = play(state, 'a', 1);
     expect(state.sets[0]).toEqual({ a: 7, b: 6 });
     expect(state.serve).toBeNull();
+    expect(state.serveAsk).toBeNull();
     expect(state.servePrompt).toBe(false);
   });
 
-  it('asks for the server again after a manual set change and not after minus', () => {
+  it('keeps the server when a set is tapped, and minus still steps back', () => {
     let state = matchReducer(start(), { type: 'serve/set', team: 'a', player: 1, at: T0 + 1 });
     state = play(state, 'a', 1);
     expect(state.serve).toEqual({ team: 'b', player: 1 });
     state = matchReducer(state, { type: 'game/decrement', team: 'a', at: state.updatedAt + 1 });
     expect(state.sets[0]).toEqual({ a: 0, b: 0 });
     expect(state.serve).toEqual({ team: 'a', player: 1 });
-    expect(state.servePrompt).toBe(false);
+    expect(state.serveAsk).toBeNull();
     state = play(state, 'a', 1);
+    const beforeSelect = state.serve;
     state = matchReducer(state, { type: 'set/select', index: 1, at: state.updatedAt + 1 });
     expect(state.activeSet).toBe(1);
-    expect(state.serve).toBeNull();
-    expect(state.servePrompt).toBe(true);
+    expect(state.serve).toEqual(beforeSelect);
+    expect(state.serveAsk).toBeNull();
+    expect(state.servePrompt).toBe(false);
     const open = matchReducer(start(), { type: 'set/select', index: 1, at: T0 + 1 });
     expect(open.serve).toBeNull();
     expect(open.servePrompt).toBe(false);

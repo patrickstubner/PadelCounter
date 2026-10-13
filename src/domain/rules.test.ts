@@ -17,6 +17,7 @@ import {
   rotateServe,
   serveChoice,
   serveCycle,
+  serveCourtLabel,
   serveLabel,
   setWinner,
   tiebreakHint,
@@ -206,7 +207,7 @@ describe('display', () => {
     expect(RULES_SUMMARY).toContain('6–6');
     expect(RULES_SUMMARY).toContain('7–6');
     expect(RULES_SUMMARY).toContain('best of 3');
-    expect(RULES_SUMMARY).toContain('A1, B1, A2, B2');
+    expect(RULES_SUMMARY).toContain('Serve is optional and rotates between teams and partners.');
     expect(RULES_SUMMARY).toContain('Tap a set to select it');
     expect(RULES_SUMMARY).not.toContain('Set won');
     expect(RULES_SUMMARY).not.toContain('correct it');
@@ -269,6 +270,8 @@ describe('serve rotation', () => {
     expect(tiebreakHint({ ...tied, serve: null })).toBe('Tiebreak');
     expect(servePickPrompt(state)).toBeNull();
     expect(servePickPrompt({ ...tied, serve: null, servePrompt: true })).toBe('Choose the server');
+    expect(servePickPrompt({ ...tied, serve: null, serveAsk: 'b', servePrompt: false })).toBe('Choose the player');
+    expect(serveCourtLabel({ ...tied, serve: null, serveAsk: 'b' })).toBe('Team B to serve');
     expect(servePickPrompt({ ...tied, serve: null, servePrompt: true, ended: true })).toBeNull();
     expect(servePickPrompt({ ...tied, servePrompt: true })).toBeNull();
   });

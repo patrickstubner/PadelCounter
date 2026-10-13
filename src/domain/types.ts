@@ -36,7 +36,12 @@ export interface MatchState {
   readonly activeSet: SetIndex;
   readonly serve: Server | null;
   /**
-   * True after a tiebreak game or a manual set change cleared a chosen server.
+   * Team already chosen after a tiebreak, while the partner is still open.
+   * An older save without this field means null.
+   */
+  readonly serveAsk: TeamId | null;
+  /**
+   * True when an older score cleared the whole server and the court asked for a new one.
    * An older save without this field means false. A match that never had a server stays false.
    */
   readonly servePrompt: boolean;

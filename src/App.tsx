@@ -7,7 +7,7 @@ import { UpdateReady } from './components/UpdateReady';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
 import { colonSetScore, currentHistory } from './domain/history';
-import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveLabel, servePickPrompt, tiebreakHint } from './domain/rules';
+import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
 import { useMatch } from './hooks/useMatch';
 import { watchControllerChange } from './registerServiceWorker';
 import { useWakeLock } from './useWakeLock';
@@ -93,7 +93,7 @@ export function App() {
   const tiebreak = tiebreakHint(state);
   const pick = servePickPrompt(state);
   const scoreLine = `${state.teams.a.name} ${active.a}, ${state.teams.b.name} ${active.b}`;
-  const serve = serveLabel(state.serve);
+  const serve = serveCourtLabel(state);
   const showFinal = state.ended || winner !== null;
   const finalSets = state.sets.map((set, index) => `Set ${index + 1} ${set.a}–${set.b}`).join(', ');
   const live = showVictory && celebrated

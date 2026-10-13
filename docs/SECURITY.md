@@ -48,7 +48,10 @@ Es gibt keine Formulare mit Server-Ziel, keine Abfrage von `location.search` ode
 | P2-05 | Guillemets | Info | Behoben | Die englische Oberfläche enthält keine deutschen Anführungszeichen `«` `»`. Aufschlagtexte sind `Serve open` und `Serve A1`. |
 | P4-02 | Regeltext | Info | Behoben | Der Fusszeilentext beschreibt diesen Zähler («This counter ends a set…», «Tap a set to select it») und behauptet kein offizielles Reglement. |
 | P4-03 | Service-Worker-Update | Info | Behoben | `controllerchange` zeigt «Update ready», wenn die Seite schon einen Controller hatte. Die erste Installation löst keinen Hinweis und kein Neuladen aus. Neuladen passiert einmal, nur nach Antippen. |
-| P4-04 | Tiebreak und Korrektur | Info | Behoben | Ein Tiebreak ist ein Game in der Aufschlagfolge; Punkte werden nicht rotiert. Nach diesem Game und nach `set/select` wird ein gesetzter Aufschlag geleert und «Choose the server» erscheint. `game/decrement` geht einen Schritt in derselben Folge zurück. Ein Spiel ohne gesetzten Aufschlag fragt nicht. | |
+| P4-04 | Tiebreak und Korrektur | Info | Behoben | Ein Tiebreak ist ein Game in der Aufschlagfolge; Punkte werden nicht rotiert. Nach diesem Game und nach `set/select` wird ein gesetzter Aufschlag geleert und «Choose the server» erscheint. `game/decrement` geht einen Schritt in derselben Folge zurück. Ein Spiel ohne gesetzten Aufschlag fragt nicht. |
+| P5-01 | Regeltext Aufschlag | Info | Behoben | Der Satz zum Aufschlag lautet «Serve is optional and rotates between teams and partners.» |
+| P5-02 | Tiebreak-Spieler | Info | Behoben | Nach dem Tiebreak-Game ist das Team gegenüber dem Starter vorausgewählt (`serveAsk`). Die Oberfläche fragt «Choose the player». Ein Aufschlag für das andere Team wird ignoriert. Ohne gesetzten Aufschlag bleibt die Frage aus. |
+| P5-03 | Satz antippen | Info | Behoben | `set/select` ändert den Aufschlag nicht. | |
 
 Keine Befunde mit Schwere Hoch oder Kritisch.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 – 2026-10-13
+
+- Der Aufschlag im Regeltext: «Serve is optional and rotates between teams and partners.»
+- Nach einem Tiebreak bleibt das Team gegenüber dem Tiebreak-Aufschlag vorausgewählt. Die Frage ist nur noch, welcher Spieler aufschlägt («Choose the player»). Das andere Team lässt sich in dieser Frage nicht wählen.
+- Ein angetippter Satz behält den Aufschlag.
+
 ## 1.2.1 – 2026-10-13
 
 - Der Regeltext beschreibt diesen Zähler: ein Satz endet hier bei 6 Games mit zwei Vorsprung, bei 7:5 oder bei 7:6 nach 6:6. Ein Match ist Best of 3. Ein Satz wird angetippt, um ihn auszuwählen.
