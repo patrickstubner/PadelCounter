@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.8 – 2026-10-14
+
+- Der iOS-Hinweis «Add to Home Screen» ist gedämpft und ohne Rahmen. Er steht als `note` unter dem Menü, nicht als Menüpunkt.
+
 ## 1.2.7 – 2026-10-14
 
 - Schlägt `prompt()` fehl, bleibt «Add to Home Screen» stehen. Der gespeicherte Schritt wird erst nach einem gelungenen Aufruf verworfen.

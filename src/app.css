@@ -190,16 +190,28 @@ button:disabled { cursor: not-allowed; }
   color: #000000;
 }
 
-.menu-install {
+.match-menu-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-top: 0.35rem;
+  gap: 0.5rem;
+}
+
+.menu-note {
+  margin: 0.15rem 0 0;
+  padding: 0.15rem 0.35rem 0;
+  border: 0;
+  background: transparent;
+  color: #b4bdd4;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .menu-hint {
-  margin: 0;
-  color: #ffffff;
+  display: block;
+  margin: 0.12rem 0 0;
+  color: #b4bdd4;
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.25;

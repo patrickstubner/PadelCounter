@@ -137,7 +137,8 @@ describe('Add to Home Screen in the app', () => {
     expect(html).toContain('>Add to Home Screen<');
     expect(html).toContain(`>${IOS_INSTALL_HINT}<`);
     expect(IOS_INSTALL_HINT).toBe('Share → Add to Home Screen');
-    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain('role="note"');
+    expect(html).not.toContain('aria-disabled');
     expect(html.indexOf('data-testid="new-match"')).toBeLessThan(html.indexOf('data-testid="add-to-home-screen"'));
     expect(html).toContain('data-testid="menu-toggle"');
   });

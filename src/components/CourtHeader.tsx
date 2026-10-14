@@ -145,35 +145,9 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
             <span className="burger-line" />
             <span className="burger-line" />
           </button>
-          <div
-            ref={menuRef}
-            id={menuId}
-            className="match-menu"
-            role="menu"
-            aria-label="Match"
-            hidden={!open}
-          >
-            {shown.map((action) => {
-              if (action.textOnly) {
-                const hintId = action.detail ? `${menuId}-install-hint` : undefined;
-                return (
-                  <div key={action.id} className="menu-install">
-                    <p
-                      className="menu-item is-install"
-                      data-testid={action.testId}
-                      aria-disabled="true"
-                      aria-describedby={hintId}
-                    >
-                      {action.label}
-                    </p>
-                    {action.detail ? (
-                      <p id={hintId} className="menu-hint">{action.detail}</p>
-                    ) : null}
-                  </div>
-                );
-              }
-              const index = commands.indexOf(action);
-              return (
+          <div ref={menuRef} className="match-menu" hidden={!open}>
+            <div id={menuId} className="match-menu-actions" role="menu" aria-label="Match">
+              {commands.map((action, index) => (
                 <button
                   key={action.id}
                   ref={(node) => {
@@ -193,8 +167,14 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
                 >
                   {action.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+            {shown.filter((action) => action.textOnly).map((action) => (
+              <p key={action.id} className="menu-note" role="note" data-testid={action.testId}>
+                {action.label}
+                {action.detail ? <span className="menu-hint">{action.detail}</span> : null}
+              </p>
+            ))}
           </div>
         </div>
       )}
