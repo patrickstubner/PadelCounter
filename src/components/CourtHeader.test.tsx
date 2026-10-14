@@ -43,6 +43,28 @@ describe('court header', () => {
     expect(html).not.toContain('role="menu"');
   });
 
+  it('keeps Add to Home Screen last in the menu and out of the landscape bar', () => {
+    const install: CourtAction = {
+      id: 'install',
+      label: 'Add to Home Screen',
+      testId: 'add-to-home-screen',
+      menuOnly: true,
+      detail: 'Share → Add to Home Screen',
+      onSelect: () => undefined,
+    };
+    const first = actions[0];
+    if (!first) throw new Error('missing action');
+    const mixed: readonly CourtAction[] = [first, install, ...actions.slice(1)];
+    const menu = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="menu" />);
+    expect(menu.indexOf('data-testid="new-match"')).toBeLessThan(menu.indexOf('data-testid="add-to-home-screen"'));
+    expect(menu.indexOf('>Add to Home Screen<')).toBeLessThan(menu.indexOf('Share → Add to Home Screen'));
+    expect(menu).toContain('class="menu-detail"');
+    const bar = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="bar" />);
+    expect(bar).not.toContain('add-to-home-screen');
+    expect(bar).not.toContain('Add to Home Screen');
+    expect(bar).toContain('data-testid="new-match"');
+  });
+
   it('gives menu rows at least 56px and tightens the title', () => {
     const css = readFileSync(join(root, 'src/app.css'), 'utf8');
     const item = css.slice(css.indexOf('.menu-item {'), css.indexOf('.menu-item.is-emphasis'));
@@ -50,6 +72,10 @@ describe('court header', () => {
     const menu = css.slice(css.indexOf('.match-menu {'), css.indexOf('.match-menu[hidden]'));
     expect(menu).toContain('position: absolute');
     expect(menu).toContain('gap: 0.5rem');
+    expect(menu).toContain('overflow-y: auto');
+    expect(menu).toContain('max-height: calc(100dvh - 4.25rem)');
+    const install = css.slice(css.indexOf('.menu-item.is-install {'), css.indexOf('.menu-item.has-detail'));
+    expect(install).toContain('margin-top: 0.35rem');
     const brand = css.slice(css.indexOf('.brand {'), css.indexOf('.brand-btn'));
     expect(brand).toContain('letter-spacing: 0.08em');
     expect(brand).not.toContain('letter-spacing: 0.16em');

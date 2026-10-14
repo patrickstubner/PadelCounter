@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { nextMenuIndex } from '../menuKeys';
 
 export interface CourtAction {
@@ -7,7 +7,19 @@ export interface CourtAction {
   readonly testId: string;
   readonly disabled?: boolean;
   readonly emphasized?: boolean;
+  /** Stays in the hamburger menu. The wide landscape bar skips it. */
+  readonly menuOnly?: boolean;
+  /** Second line, used for the iOS home-screen instruction. */
+  readonly detail?: string;
   readonly onSelect: () => void;
+}
+
+function menuActions(actions: readonly CourtAction[], mode: 'menu' | 'bar'): readonly CourtAction[] {
+  if (mode === 'bar') return actions.filter((action) => !action.menuOnly);
+  return [
+    ...actions.filter((action) => !action.menuOnly),
+    ...actions.filter((action) => action.menuOnly),
+  ];
 }
 
 interface CourtHeaderProps {
@@ -37,6 +49,7 @@ function useWideBar(): boolean {
 export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderProps) {
   const wide = useWideBar();
   const mode = layout ?? (wide ? 'bar' : 'menu');
+  const shown = useMemo(() => menuActions(actions, mode), [actions, mode]);
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -45,7 +58,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
 
   useEffect(() => {
     if (mode !== 'menu' || !open || typeof document === 'undefined') return;
-    const enabled = actions.findIndex((action) => !action.disabled);
+    const enabled = shown.findIndex((action) => !action.disabled);
     itemRefs.current[enabled]?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
@@ -65,7 +78,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('pointerdown', onPointer);
     };
-  }, [actions, mode, open]);
+  }, [shown, mode, open]);
 
   const close = (returnFocus: boolean) => {
     setOpen(false);
@@ -73,7 +86,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
   };
 
   const onItemKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
-    const next = nextMenuIndex(event.key, index, actions.map((action) => !action.disabled));
+    const next = nextMenuIndex(event.key, index, shown.map((action) => !action.disabled));
     if (next === null) return;
     event.preventDefault();
     event.stopPropagation();
@@ -94,7 +107,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
       <p className="set-heading" data-testid="active-set">{setLabel}</p>
       {mode === 'bar' ? (
         <div className="top-actions">
-          {actions.map((action) => (
+          {shown.map((action) => (
             <button
               key={action.id}
               type="button"
@@ -137,7 +150,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
             aria-label="Match"
             hidden={!open}
           >
-            {actions.map((action, index) => (
+            {shown.map((action, index) => (
               <button
                 key={action.id}
                 ref={(node) => {
@@ -145,17 +158,23 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
                 }}
                 type="button"
                 role="menuitem"
-                className={action.emphasized ? 'menu-item is-emphasis' : 'menu-item'}
+                className={[
+                  'menu-item',
+                  action.emphasized ? 'is-emphasis' : '',
+                  action.menuOnly ? 'is-install' : '',
+                  action.detail ? 'has-detail' : '',
+                ].filter(Boolean).join(' ')}
                 data-testid={action.testId}
                 disabled={action.disabled}
                 tabIndex={open ? 0 : -1}
                 onClick={() => {
-                  close(action.id === 'undo');
+                  if (!action.detail) close(action.id === 'undo');
                   action.onSelect();
                 }}
                 onKeyDown={(event) => onItemKeyDown(event, index)}
               >
                 {action.label}
+                {action.detail ? <span className="menu-detail">{action.detail}</span> : null}
               </button>
             ))}
           </div>

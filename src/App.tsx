@@ -9,7 +9,9 @@ import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
 import { colonSetScore, currentHistory } from './domain/history';
 import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
+import { useInstallOffer } from './hooks/useInstallOffer';
 import { useMatch } from './hooks/useMatch';
+import { INSTALL_LABEL, IOS_INSTALL_HINT } from './installOffer';
 import { watchControllerChange } from './registerServiceWorker';
 import { useWakeLock } from './useWakeLock';
 
@@ -38,6 +40,7 @@ function useUpdateReady(): boolean {
 
 export function App() {
   const match = useMatch();
+  const install = useInstallOffer();
   useWakeLock();
   const updateReady = useUpdateReady();
   const updateButton = updateReady ? <UpdateReady onReload={() => window.location.reload()} /> : null;
@@ -139,6 +142,16 @@ export function App() {
       ? { id: 'resume', label: 'Resume', testId: 'resume-match', emphasized: true, onSelect: match.resumeMatch }
       : { id: 'end', label: 'End match', testId: 'end-match', onSelect: () => setConfirming('end') },
     { id: 'reset', label: 'New match', testId: 'new-match', onSelect: () => setConfirming('reset') },
+    ...(install.kind === 'hidden'
+      ? []
+      : [{
+          id: 'install',
+          label: INSTALL_LABEL,
+          testId: 'add-to-home-screen',
+          menuOnly: true,
+          detail: install.kind === 'ios' ? IOS_INSTALL_HINT : undefined,
+          onSelect: install.kind === 'prompt' ? () => { void install.prompt(); } : () => undefined,
+        }]),
   ];
 
   return (
