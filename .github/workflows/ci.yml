@@ -53,9 +53,6 @@ jobs:
     name: Upload Pages artifact
     needs: verify
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    concurrency:
-      group: pages
-      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -104,6 +101,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Confirm this commit is still main
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
+          head="$(git ls-remote "$remote" refs/heads/main | awk 'NR==1 { print $1 }')"
+          if [ -z "$head" ]; then
+            echo "::error::Could not read the head of main from ${remote}."
+            exit 1
+          fi
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::error::Refusing to deploy ${GITHUB_SHA} because main is now ${head}."
+            exit 1
+          fi
+          echo "Deploying ${GITHUB_SHA}, which is still the head of main."
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
