@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../App';
+import { CELEBRATED_KEY } from '../domain/celebration';
 import { appendEvent, createLog } from '../domain/log';
 import { STORAGE_KEY, serializeLog } from '../domain/persistence';
 import type { MatchLog } from '../domain/log';
@@ -84,6 +85,39 @@ describe('victory celebration', () => {
     expect(endedWin).toContain('data-testid="final-score"');
     const endedUndo = endedWin.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
     expect(endedUndo).not.toContain('disabled');
+
+    const continued = appendEvent(
+      appendEvent(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20), {
+        type: 'set/select',
+        index: 2,
+        at: T0 + 40,
+      }),
+      { type: 'game/increment', team: 'a', at: T0 + 41 },
+    );
+    save(continued);
+    const thirdSet = renderToStaticMarkup(<App />);
+    expect(thirdSet).not.toContain('data-testid="victory"');
+    expect(thirdSet).toContain('data-testid="final-score"');
+    save(appendEvent(continued, { type: 'game/increment', team: 'b', at: T0 + 42 }));
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+
+    save(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20));
+    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 1 }));
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+
+    const again = appendEvent(
+      appendEvent(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20), {
+        type: 'game/decrement',
+        team: 'a',
+        at: T0 + 40,
+      }),
+      { type: 'game/increment', team: 'a', at: T0 + 41 },
+    );
+    save(again);
+    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 1 }));
+    expect(renderToStaticMarkup(<App />)).toContain('Team A wins!');
+    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 2 }));
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
     const css = readFileSync(join(root, 'src/app.css'), 'utf8');
     const top = css.slice(css.indexOf('.top {'), css.indexOf('.top {') + 180);

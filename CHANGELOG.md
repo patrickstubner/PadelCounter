@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.9 – 2026-10-14
+
+- Die Siegerfeier erscheint nur einmal, beim Übergang von «noch nicht gewonnen» zu «gewonnen». Ein weiteres Game, während das Match gewonnen bleibt, startet sie nicht neu. Nimmt Undo oder Minus den Sieg zurück und das Team gewinnt danach wieder, erscheint sie noch einmal. Der gemerkte Stand überlebt ein Neuladen.
+
 ## 1.2.8 – 2026-10-14
 
 - Der iOS-Hinweis «Add to Home Screen» ist gedämpft und ohne Rahmen. Er steht als `note` unter dem Menü, nicht als Menüpunkt.

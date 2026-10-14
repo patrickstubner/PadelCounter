@@ -96,12 +96,14 @@ export function celebrationWinner(state: MatchState): TeamId | null {
   return lead.a > lead.b ? 'a' : 'b';
 }
 
-/** Stable while the same score stays a win. Ending an already decided match does not change it. */
+/**
+ * Stable for one win. A later game in an already won match does not change it,
+ * and ending an already decided match does not change it either.
+ */
 export function celebrationStamp(state: MatchState): string | null {
   const team = celebrationWinner(state);
   if (!team) return null;
-  const sets = state.sets.map((set) => `${set.a}-${set.b}`).join('/');
-  return `${state.matchId}:${team}:${sets}:${matchWinner(state.sets) ? 'match' : 'ended'}`;
+  return `${state.matchId}:${team}:${matchWinner(state.sets) ? 'match' : 'ended'}`;
 }
 
 export function canIncrement(score: SetScore, team: TeamId): boolean {

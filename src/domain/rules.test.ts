@@ -108,6 +108,15 @@ describe('celebrationWinner', () => {
     expect(celebrationWinner(twoSets)).toBe('a');
     expect(celebrationWinner({ ...twoSets, ended: true })).toBe('a');
     expect(celebrationStamp(twoSets)).toBe(celebrationStamp({ ...twoSets, ended: true }));
+    expect(celebrationStamp(twoSets)).toBe(
+      celebrationStamp(
+        match([
+          { a: 6, b: 4 },
+          { a: 6, b: 3 },
+          { a: 3, b: 1 },
+        ]),
+      ),
+    );
 
     expect(
       celebrationWinner(
