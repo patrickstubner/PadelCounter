@@ -2,7 +2,7 @@
 
 ## 1.2.9 – 2026-10-14
 
-- Die Siegerfeier erscheint nur einmal, beim Übergang von «noch nicht gewonnen» zu «gewonnen». Ein weiteres Game, während das Match gewonnen bleibt, startet sie nicht neu. Nimmt Undo oder Minus den Sieg zurück und das Team gewinnt danach wieder, erscheint sie noch einmal. Der gemerkte Stand überlebt ein Neuladen.
+- Die Siegerfeier erscheint nur einmal, beim Übergang von «noch nicht gewonnen» zu «gewonnen». Ein weiteres Game, während das Match gewonnen bleibt, startet sie nicht neu. Nimmt Undo oder Minus den Sieg zurück und das Team gewinnt danach wieder, erscheint sie noch einmal: jeder Sieg hängt am Zeitpunkt des siegenden Schritts. Der gemerkte Stand überlebt ein Neuladen. Ein Match, das beim Update von 1.2.8 schon gewonnen war, bleibt still.
 
 ## 1.2.8 – 2026-10-14
 

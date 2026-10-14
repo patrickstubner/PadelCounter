@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../App';
-import { CELEBRATED_KEY } from '../domain/celebration';
-import { appendEvent, createLog } from '../domain/log';
+import { CELEBRATED_KEY, celebrationKey, currentWin } from '../domain/celebration';
+import { appendEvent, createLog, undoLog } from '../domain/log';
 import { STORAGE_KEY, serializeLog } from '../domain/persistence';
 import type { MatchLog } from '../domain/log';
 import type { TeamId } from '../domain/types';
@@ -52,24 +52,26 @@ describe('victory celebration', () => {
     expect(html).not.toContain('<canvas');
   });
 
-  it('opens for two sets or a lead after End match, and keeps Undo available', () => {
-    save(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20));
+  it('stays quiet for an already won match on first start and keeps Undo available', () => {
+    const wonLog = games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20);
+    save(wonLog);
     const won = renderToStaticMarkup(<App />);
-    expect(won).toContain('data-testid="victory"');
-    expect(won).toContain('Team A wins!');
-    expect(won).toContain('<canvas');
-    expect(won).toContain('data-testid="victory-lottie"');
+    expect(won).not.toContain('data-testid="victory"');
     expect(won).toContain('data-testid="final-score"');
     expect(won).toContain('Final score');
     expect(won).toContain('>6<');
     const undo = won.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
     expect(undo).not.toContain('disabled');
-    expect(won.indexOf('data-testid="undo"')).toBeLessThan(won.indexOf('data-testid="victory"'));
+    const win = currentWin(wonLog);
+    expect(win).not.toBeNull();
+    expect(localStorage.getItem(CELEBRATED_KEY)).toBe(JSON.stringify(win));
 
     save(games(createLog(T0, ID), 'a', 6, T0 + 1));
+    localStorage.removeItem(CELEBRATED_KEY);
     expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
     save(appendEvent(createLog(T0, ID), { type: 'match/end', at: T0 + 1 }));
+    localStorage.removeItem(CELEBRATED_KEY);
     expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
     const split = appendEvent(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'b', 6, T0 + 20), {
@@ -77,14 +79,18 @@ describe('victory celebration', () => {
       at: T0 + 40,
     });
     save(split);
+    localStorage.removeItem(CELEBRATED_KEY);
     expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
-    save(appendEvent(games(createLog(T0, ID), 'b', 6, T0 + 1), { type: 'match/end', at: T0 + 20 }));
-    const endedWin = renderToStaticMarkup(<App />);
-    expect(endedWin).toContain('Team B wins!');
-    expect(endedWin).toContain('data-testid="final-score"');
-    const endedUndo = endedWin.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
+    const ended = appendEvent(games(createLog(T0, ID), 'b', 6, T0 + 1), { type: 'match/end', at: T0 + 20 });
+    save(ended);
+    localStorage.removeItem(CELEBRATED_KEY);
+    const endedQuiet = renderToStaticMarkup(<App />);
+    expect(endedQuiet).not.toContain('data-testid="victory"');
+    expect(endedQuiet).toContain('data-testid="final-score"');
+    const endedUndo = endedQuiet.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
     expect(endedUndo).not.toContain('disabled');
+    expect(localStorage.getItem(CELEBRATED_KEY)).toBe(JSON.stringify(currentWin(ended)));
 
     const continued = appendEvent(
       appendEvent(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20), {
@@ -95,28 +101,11 @@ describe('victory celebration', () => {
       { type: 'game/increment', team: 'a', at: T0 + 41 },
     );
     save(continued);
+    localStorage.removeItem(CELEBRATED_KEY);
     const thirdSet = renderToStaticMarkup(<App />);
     expect(thirdSet).not.toContain('data-testid="victory"');
     expect(thirdSet).toContain('data-testid="final-score"');
     save(appendEvent(continued, { type: 'game/increment', team: 'b', at: T0 + 42 }));
-    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
-
-    save(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20));
-    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 1 }));
-    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
-
-    const again = appendEvent(
-      appendEvent(games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20), {
-        type: 'game/decrement',
-        team: 'a',
-        at: T0 + 40,
-      }),
-      { type: 'game/increment', team: 'a', at: T0 + 41 },
-    );
-    save(again);
-    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 1 }));
-    expect(renderToStaticMarkup(<App />)).toContain('Team A wins!');
-    localStorage.setItem(CELEBRATED_KEY, JSON.stringify({ matchId: ID, episode: 2 }));
     expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
 
     const css = readFileSync(join(root, 'src/app.css'), 'utf8');
@@ -125,5 +114,47 @@ describe('victory celebration', () => {
     expect(css).toContain('.victory {');
     expect(css).toContain('z-index: 3');
     expect(css).toContain('.victory-canvas { display: none; }');
+  });
+
+  it('opens again after undo removes the win and the team wins again', () => {
+    const wonLog = games(games(createLog(T0, ID), 'a', 6, T0 + 1), 'a', 6, T0 + 20);
+    save(wonLog);
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+    const first = currentWin(wonLog);
+    expect(first).not.toBeNull();
+    expect(localStorage.getItem(CELEBRATED_KEY)).toBe(JSON.stringify(first));
+
+    const undone = undoLog(wonLog);
+    save(undone);
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+
+    const again = appendEvent(undone, { type: 'game/increment', team: 'a', at: T0 + 80 });
+    save(again);
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('data-testid="victory"');
+    expect(html).toContain('Team A wins!');
+    expect(html).toContain('<canvas');
+    expect(html).toContain('data-testid="victory-lottie"');
+    const win = currentWin(again);
+    expect(win).not.toBeNull();
+    if (!first || !win) throw new Error('expected both wins');
+    expect(celebrationKey(win)).not.toBe(celebrationKey(first));
+    const undo = html.match(/<button[^>]*data-testid="undo"[^>]*>/)?.[0] ?? '';
+    expect(undo).not.toContain('disabled');
+    expect(html.indexOf('data-testid="undo"')).toBeLessThan(html.indexOf('data-testid="victory"'));
+  });
+
+  it('opens again after undo of End match and End match again', () => {
+    const ended = appendEvent(games(createLog(T0, ID), 'b', 6, T0 + 1), { type: 'match/end', at: T0 + 20 });
+    save(ended);
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+
+    save(undoLog(ended));
+    expect(renderToStaticMarkup(<App />)).not.toContain('data-testid="victory"');
+
+    save(appendEvent(undoLog(ended), { type: 'match/end', at: T0 + 30 }));
+    const html = renderToStaticMarkup(<App />);
+    expect(html).toContain('data-testid="victory"');
+    expect(html).toContain('Team B wins!');
   });
 });

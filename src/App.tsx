@@ -7,7 +7,14 @@ import { TeamPanel } from './components/TeamPanel';
 import { UpdateReady } from './components/UpdateReady';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
-import { currentWin, loadCelebrated, saveCelebrated, shouldCelebrate, type WinEpisode } from './domain/celebration';
+import {
+  acknowledgeCelebrated,
+  celebrationKey,
+  currentWin,
+  saveCelebrated,
+  winBeganOnLastEvent,
+  type CelebratedWin,
+} from './domain/celebration';
 import { colonSetScore, currentHistory } from './domain/history';
 import { RULES_SUMMARY, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
 import { useInstallOffer } from './hooks/useInstallOffer';
@@ -84,26 +91,34 @@ export function App() {
   const winner = matchWinner(state.sets);
   const celebrated = celebrationWinner(state);
   const reducedMotion = useReducedMotion();
-  const [remembered] = useState<WinEpisode | null>(() => {
+  const [remembered, setRemembered] = useState<CelebratedWin | null>(() => {
     try {
       if (typeof localStorage === 'undefined') return null;
-      return loadCelebrated(localStorage);
+      return acknowledgeCelebrated(match.log, localStorage);
     } catch {
       return null;
     }
   });
   const [dismissed, setDismissed] = useState<string | null>(null);
+  const [opened, setOpened] = useState<string | null>(null);
   const win = useMemo(() => currentWin(match.log), [match.log]);
-  const victoryKey = win ? `${win.matchId}:${win.episode}` : null;
-  const showVictory = victoryKey !== null && shouldCelebrate(match.log, remembered) && dismissed !== victoryKey;
+  const victoryKey = win ? celebrationKey(win) : null;
+  const rememberedKey = remembered ? celebrationKey(remembered) : null;
+  const fresh =
+    victoryKey !== null &&
+    winBeganOnLastEvent(match.log) &&
+    dismissed !== victoryKey &&
+    rememberedKey !== victoryKey;
+  const showVictory = victoryKey !== null && dismissed !== victoryKey && (opened === victoryKey || fresh);
   useEffect(() => {
-    if (!showVictory || !win) return;
+    if (!fresh || !win || victoryKey === null) return;
     try {
-      saveCelebrated(win, localStorage);
+      if (saveCelebrated(win, localStorage)) setRemembered(win);
     } catch {
-      // Storage may be blocked. The in-memory dismiss still closes this showing.
+      // Storage may be blocked. Dismissal still closes this showing.
     }
-  }, [showVictory, win]);
+    setOpened(victoryKey);
+  }, [fresh, victoryKey, win]);
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
   const pick = servePickPrompt(state);

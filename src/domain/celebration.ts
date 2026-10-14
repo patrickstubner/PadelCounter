@@ -3,96 +3,121 @@ import type { MatchLog } from './log';
 import type { MatchStorage } from './persistence';
 import { matchReducer } from './reducer';
 import { celebrationWinner } from './rules';
+import { isTimestamp } from './types';
 
 /** Separate from the match log so a remembered celebration cannot fail log parsing. */
 export const CELEBRATED_KEY = 'padel-counter.celebrated';
 
-const MAX_EPISODE = 10_000;
 const MAX_RAW_LENGTH = 200;
 
-/** One not-won to won transition inside a single match. */
-export interface WinEpisode {
+/**
+ * The not-won to won transition that is on the court now.
+ * `at` is the timestamp of the event that caused it, or the base `updatedAt`
+ * when that event has already been folded into the base.
+ */
+export interface CelebratedWin {
   readonly matchId: string;
-  readonly episode: number;
+  readonly at: number;
 }
 
 interface Trail {
-  readonly current: WinEpisode | null;
+  readonly current: CelebratedWin | null;
   readonly beganOnLast: boolean;
 }
 
 /**
- * Walk the log once. `episode` counts not-won to won edges for the current
- * match only. Removing the win keeps the count, so the next edge is a new episode.
+ * Walk the log once. The key is the winning event's own timestamp, so undo
+ * (which deletes that event) and a later win do not share a key. Folding older
+ * events into the base does not renumber a win that is still in the log.
  */
 function trail(log: MatchLog): Trail {
   let state = log.base;
-  let episode = celebrationWinner(state) ? 1 : 0;
-  let beganOnLast = episode > 0;
+  let at: number | null = celebrationWinner(state) ? state.updatedAt : null;
+  let beganOnLast = false;
 
   for (const event of log.events) {
     const next = matchReducer(state, event);
     const wasWon = celebrationWinner(state) !== null;
     const nowWon = celebrationWinner(next) !== null;
     if (next.matchId !== state.matchId) {
-      episode = nowWon ? 1 : 0;
+      at = nowWon ? event.at : null;
       beganOnLast = nowWon;
     } else if (!wasWon && nowWon) {
-      episode += 1;
+      at = event.at;
       beganOnLast = true;
     } else {
       beganOnLast = false;
+      if (!nowWon) at = null;
     }
     state = next;
   }
 
-  const won = celebrationWinner(state) !== null;
+  if (celebrationWinner(state) === null || at === null) {
+    return { current: null, beganOnLast: false };
+  }
   return {
-    current: won ? { matchId: state.matchId, episode } : null,
-    beganOnLast: won && beganOnLast,
+    current: { matchId: state.matchId, at },
+    beganOnLast,
   };
 }
 
 /** The win on the court now, or null when the match is not won. */
-export function currentWin(log: MatchLog): WinEpisode | null {
+export function currentWin(log: MatchLog): CelebratedWin | null {
   return trail(log).current;
 }
 
 /**
- * True when the latest step is what made this match won.
- * A later game, rename, or End match on an already decided score is not that step.
- * A won base with no events counts, so a compacted save can still celebrate once.
+ * True when the latest event is what made this match won.
+ * A later game, rename, or End match on an already decided score is not that event.
  */
 export function winBeganOnLastEvent(log: MatchLog): boolean {
   return trail(log).beganOnLast;
 }
 
-/**
- * Show the celebration only on the not-won to won edge, and only if this
- * episode was not already celebrated (including after a reload).
- */
-export function shouldCelebrate(log: MatchLog, saved: WinEpisode | null): boolean {
-  const win = currentWin(log);
-  if (!win) return false;
-  if (saved && saved.matchId === win.matchId && saved.episode === win.episode) return false;
-  return winBeganOnLastEvent(log);
+/** Same string for the stored win and the in-memory dismissal. */
+export function celebrationKey(win: CelebratedWin): string {
+  return `${win.matchId}:${win.at}`;
 }
 
-function parseCelebrated(value: unknown): WinEpisode | null {
+/**
+ * Show the celebration only on the not-won to won edge, and only if this
+ * win's key was not already celebrated (including after a reload).
+ */
+export function shouldCelebrate(log: MatchLog, saved: CelebratedWin | null): boolean {
+  const win = currentWin(log);
+  if (!win || !winBeganOnLastEvent(log)) return false;
+  if (saved && celebrationKey(saved) === celebrationKey(win)) return false;
+  return true;
+}
+
+/**
+ * First launch after 1.2.8 has no stored key. Remember an already won match
+ * without treating that load as a new win.
+ */
+export function acknowledgeCelebrated(
+  log: MatchLog,
+  storage: Pick<MatchStorage, 'getItem' | 'setItem'>,
+): CelebratedWin | null {
+  const existing = loadCelebrated(storage);
+  if (existing) return existing;
+  const win = currentWin(log);
+  if (!win) return null;
+  saveCelebrated(win, storage);
+  return win;
+}
+
+function parseCelebrated(value: unknown): CelebratedWin | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
   const source = value as Record<string, unknown>;
   const copy: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
   for (const key of Object.keys(source)) copy[key] = source[key];
   const matchId = copy.matchId;
-  const episode = copy.episode;
-  if (!isUuid(matchId)) return null;
-  if (typeof episode !== 'number' || !Number.isInteger(episode) || episode < 1 || episode > MAX_EPISODE) {
-    return null;
-  }
-  return { matchId: matchId.toLowerCase(), episode };
+  const at = copy.at;
+  if (!isUuid(matchId) || !isTimestamp(at)) return null;
+  return { matchId: matchId.toLowerCase(), at };
 }
 
-export function loadCelebrated(storage: Pick<MatchStorage, 'getItem'>): WinEpisode | null {
+export function loadCelebrated(storage: Pick<MatchStorage, 'getItem'>): CelebratedWin | null {
   try {
     const raw = storage.getItem(CELEBRATED_KEY);
     if (raw === null || raw.length === 0 || raw.length > MAX_RAW_LENGTH) return null;
@@ -102,9 +127,9 @@ export function loadCelebrated(storage: Pick<MatchStorage, 'getItem'>): WinEpiso
   }
 }
 
-export function saveCelebrated(win: WinEpisode, storage: Pick<MatchStorage, 'setItem'>): boolean {
+export function saveCelebrated(win: CelebratedWin, storage: Pick<MatchStorage, 'setItem'>): boolean {
   try {
-    const raw = JSON.stringify({ matchId: win.matchId, episode: win.episode });
+    const raw = JSON.stringify({ matchId: win.matchId, at: win.at });
     if (raw.length > MAX_RAW_LENGTH) return false;
     storage.setItem(CELEBRATED_KEY, raw);
     return true;
