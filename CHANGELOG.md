@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.6 – 2026-10-14
+
+- «Add to Home Screen» steht als letzter Punkt ganz unten im Menü. Auf Chromium und Android öffnet der Tipp die Installationsfrage. Auf iOS Safari steht «Share → Add to Home Screen». Läuft die App bereits eigenständig, fehlt der Punkt.
+
 ## 1.2.5 – 2026-10-13
 
 - Der Verlauf zeigt den neuesten Eintrag oben, bei den Ereignissen des laufenden Matches und bei den gespeicherten Matches.
