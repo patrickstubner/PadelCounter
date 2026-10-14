@@ -72,6 +72,8 @@ describe('court header', () => {
     const menu = css.slice(css.indexOf('.match-menu {'), css.indexOf('.match-menu[hidden]'));
     expect(menu).toContain('position: absolute');
     expect(menu).toContain('gap: 0.5rem');
+    expect(menu).toContain('overflow-y: auto');
+    expect(menu).toContain('max-height: calc(100dvh - 4.25rem)');
     const install = css.slice(css.indexOf('.menu-item.is-install {'), css.indexOf('.menu-item.has-detail'));
     expect(install).toContain('margin-top: 0.35rem');
     const brand = css.slice(css.indexOf('.brand {'), css.indexOf('.brand-btn'));

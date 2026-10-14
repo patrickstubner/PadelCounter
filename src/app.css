@@ -156,8 +156,10 @@ button:disabled { cursor: not-allowed; }
   flex-direction: column;
   gap: 0.5rem;
   min-width: 12.5rem;
+  max-height: calc(100dvh - 4.25rem);
   margin: 0;
   padding: 0.5rem;
+  overflow-y: auto;
   background: #0a1a3f;
   border: 2px solid #ffffff;
   border-radius: 0.9rem;
