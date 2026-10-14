@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.7 – 2026-10-14
+
+- Schlägt `prompt()` fehl, bleibt «Add to Home Screen» stehen. Der gespeicherte Schritt wird erst nach einem gelungenen Aufruf verworfen.
+- Auf iOS Safari ist der Eintrag Text mit `aria-disabled`, kein Knopf. Der Hinweis lautet vollständig «Share → Add to Home Screen». Die Zeile bleibt 56px hoch und bricht nicht um.
+
 ## 1.2.6 – 2026-10-14
 
 - «Add to Home Screen» steht als letzter Punkt ganz unten im Menü. Auf Chromium und Android öffnet der Tipp die Installationsfrage. Auf iOS Safari steht «Share → Add to Home Screen». Läuft die App bereits eigenständig, fehlt der Punkt.

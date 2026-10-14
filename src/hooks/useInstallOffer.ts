@@ -6,7 +6,9 @@ import {
   listenForInstallPrompt,
   readInstallClient,
   runInstallPrompt,
+  storedPromptAfter,
   type InstallPromptLike,
+  type InstallPromptOutcome,
 } from '../installOffer';
 
 export type InstallOfferController =
@@ -14,7 +16,7 @@ export type InstallOfferController =
   | { readonly kind: 'ios' }
   | {
       readonly kind: 'prompt';
-      readonly prompt: () => Promise<'accepted' | 'dismissed' | 'unknown'>;
+      readonly prompt: () => Promise<InstallPromptOutcome>;
     };
 
 export function useInstallOffer(): InstallOfferController {
@@ -44,9 +46,10 @@ export function useInstallOffer(): InstallOfferController {
     const current = promptEvent;
     return {
       kind: 'prompt',
-      prompt: () => {
-        setPromptEvent(null);
-        return runInstallPrompt(current);
+      prompt: async () => {
+        const outcome = await runInstallPrompt(current);
+        setPromptEvent(storedPromptAfter(current, outcome));
+        return outcome;
       },
     };
   }

@@ -9,7 +9,9 @@ export interface CourtAction {
   readonly emphasized?: boolean;
   /** Stays in the hamburger menu. The wide landscape bar skips it. */
   readonly menuOnly?: boolean;
-  /** Second line, used for the iOS home-screen instruction. */
+  /** Shown as text, not a menu action. Used for the iOS home-screen hint. */
+  readonly textOnly?: boolean;
+  /** Complete instruction under a text-only row. */
   readonly detail?: string;
   readonly onSelect: () => void;
 }
@@ -50,6 +52,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
   const wide = useWideBar();
   const mode = layout ?? (wide ? 'bar' : 'menu');
   const shown = useMemo(() => menuActions(actions, mode), [actions, mode]);
+  const commands = useMemo(() => shown.filter((action) => !action.textOnly), [shown]);
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -58,7 +61,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
 
   useEffect(() => {
     if (mode !== 'menu' || !open || typeof document === 'undefined') return;
-    const enabled = shown.findIndex((action) => !action.disabled);
+    const enabled = commands.findIndex((action) => !action.disabled);
     itemRefs.current[enabled]?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
@@ -78,7 +81,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('pointerdown', onPointer);
     };
-  }, [shown, mode, open]);
+  }, [commands, mode, open]);
 
   const close = (returnFocus: boolean) => {
     setOpen(false);
@@ -86,7 +89,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
   };
 
   const onItemKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
-    const next = nextMenuIndex(event.key, index, shown.map((action) => !action.disabled));
+    const next = nextMenuIndex(event.key, index, commands.map((action) => !action.disabled));
     if (next === null) return;
     event.preventDefault();
     event.stopPropagation();
@@ -150,33 +153,48 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
             aria-label="Match"
             hidden={!open}
           >
-            {shown.map((action, index) => (
-              <button
-                key={action.id}
-                ref={(node) => {
-                  itemRefs.current[index] = node;
-                }}
-                type="button"
-                role="menuitem"
-                className={[
-                  'menu-item',
-                  action.emphasized ? 'is-emphasis' : '',
-                  action.menuOnly ? 'is-install' : '',
-                  action.detail ? 'has-detail' : '',
-                ].filter(Boolean).join(' ')}
-                data-testid={action.testId}
-                disabled={action.disabled}
-                tabIndex={open ? 0 : -1}
-                onClick={() => {
-                  if (!action.detail) close(action.id === 'undo');
-                  action.onSelect();
-                }}
-                onKeyDown={(event) => onItemKeyDown(event, index)}
-              >
-                {action.label}
-                {action.detail ? <span className="menu-detail">{action.detail}</span> : null}
-              </button>
-            ))}
+            {shown.map((action) => {
+              if (action.textOnly) {
+                const hintId = action.detail ? `${menuId}-install-hint` : undefined;
+                return (
+                  <div key={action.id} className="menu-install">
+                    <p
+                      className="menu-item is-install"
+                      data-testid={action.testId}
+                      aria-disabled="true"
+                      aria-describedby={hintId}
+                    >
+                      {action.label}
+                    </p>
+                    {action.detail ? (
+                      <p id={hintId} className="menu-hint">{action.detail}</p>
+                    ) : null}
+                  </div>
+                );
+              }
+              const index = commands.indexOf(action);
+              return (
+                <button
+                  key={action.id}
+                  ref={(node) => {
+                    itemRefs.current[index] = node;
+                  }}
+                  type="button"
+                  role="menuitem"
+                  className={action.emphasized ? 'menu-item is-emphasis' : 'menu-item'}
+                  data-testid={action.testId}
+                  disabled={action.disabled}
+                  tabIndex={open ? 0 : -1}
+                  onClick={() => {
+                    close(action.id === 'undo');
+                    action.onSelect();
+                  }}
+                  onKeyDown={(event) => onItemKeyDown(event, index)}
+                >
+                  {action.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

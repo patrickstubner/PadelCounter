@@ -142,16 +142,25 @@ export function App() {
       ? { id: 'resume', label: 'Resume', testId: 'resume-match', emphasized: true, onSelect: match.resumeMatch }
       : { id: 'end', label: 'End match', testId: 'end-match', onSelect: () => setConfirming('end') },
     { id: 'reset', label: 'New match', testId: 'new-match', onSelect: () => setConfirming('reset') },
-    ...(install.kind === 'hidden'
-      ? []
-      : [{
+    ...(install.kind === 'prompt'
+      ? [{
           id: 'install',
           label: INSTALL_LABEL,
           testId: 'add-to-home-screen',
           menuOnly: true,
-          detail: install.kind === 'ios' ? IOS_INSTALL_HINT : undefined,
-          onSelect: install.kind === 'prompt' ? () => { void install.prompt(); } : () => undefined,
-        }]),
+          onSelect: () => { void install.prompt(); },
+        }]
+      : install.kind === 'ios'
+        ? [{
+            id: 'install',
+            label: INSTALL_LABEL,
+            testId: 'add-to-home-screen',
+            menuOnly: true,
+            textOnly: true,
+            detail: IOS_INSTALL_HINT,
+            onSelect: () => undefined,
+          }]
+        : []),
   ];
 
   return (
