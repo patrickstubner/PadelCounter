@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { detailHistoryState, matchesHistoryState, screenFromHistory, type ArchiveScreen } from './archiveNav';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { CourtHeader, type CourtAction } from './components/CourtHeader';
@@ -7,8 +7,16 @@ import { TeamPanel } from './components/TeamPanel';
 import { UpdateReady } from './components/UpdateReady';
 import { Victory } from './components/Victory';
 import { listMatches } from './domain/archive';
+import {
+  acknowledgeCelebrated,
+  celebrationKey,
+  currentWin,
+  saveCelebrated,
+  winBeganOnLastEvent,
+  type CelebratedWin,
+} from './domain/celebration';
 import { colonSetScore, currentHistory } from './domain/history';
-import { RULES_SUMMARY, celebrationStamp, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
+import { RULES_SUMMARY, celebrationWinner, matchWinner, serveCourtLabel, servePickPrompt, tiebreakHint } from './domain/rules';
 import { useInstallOffer } from './hooks/useInstallOffer';
 import { useMatch } from './hooks/useMatch';
 import { INSTALL_LABEL, IOS_INSTALL_HINT } from './installOffer';
@@ -82,17 +90,35 @@ export function App() {
   const { state } = match;
   const winner = matchWinner(state.sets);
   const celebrated = celebrationWinner(state);
-  const stamp = celebrationStamp(state);
   const reducedMotion = useReducedMotion();
+  const [remembered, setRemembered] = useState<CelebratedWin | null>(() => {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      return acknowledgeCelebrated(match.log, localStorage);
+    } catch {
+      return null;
+    }
+  });
   const [dismissed, setDismissed] = useState<string | null>(null);
-  const [wave, setWave] = useState(0);
-  const previousStamp = useRef<string | null>(null);
+  const [opened, setOpened] = useState<string | null>(null);
+  const win = useMemo(() => currentWin(match.log), [match.log]);
+  const victoryKey = win ? celebrationKey(win) : null;
+  const rememberedKey = remembered ? celebrationKey(remembered) : null;
+  const fresh =
+    victoryKey !== null &&
+    winBeganOnLastEvent(match.log) &&
+    dismissed !== victoryKey &&
+    rememberedKey !== victoryKey;
+  const showVictory = victoryKey !== null && dismissed !== victoryKey && (opened === victoryKey || fresh);
   useEffect(() => {
-    if (previousStamp.current && !stamp) setWave((value) => value + 1);
-    previousStamp.current = stamp;
-  }, [stamp]);
-  const victoryKey = stamp === null ? null : `${stamp}#${wave}`;
-  const showVictory = victoryKey !== null && dismissed !== victoryKey;
+    if (!fresh || !win || victoryKey === null) return;
+    try {
+      if (saveCelebrated(win, localStorage)) setRemembered(win);
+    } catch {
+      // Storage may be blocked. Dismissal still closes this showing.
+    }
+    setOpened(victoryKey);
+  }, [fresh, victoryKey, win]);
   const active = state.sets[state.activeSet];
   const tiebreak = tiebreakHint(state);
   const pick = servePickPrompt(state);

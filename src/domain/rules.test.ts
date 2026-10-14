@@ -8,7 +8,6 @@ import {
   displayGames,
   isPlausibleSetScore,
   isTiebreak,
-  celebrationStamp,
   celebrationWinner,
   matchWinner,
   gamesPlayed,
@@ -107,7 +106,6 @@ describe('celebrationWinner', () => {
     ]);
     expect(celebrationWinner(twoSets)).toBe('a');
     expect(celebrationWinner({ ...twoSets, ended: true })).toBe('a');
-    expect(celebrationStamp(twoSets)).toBe(celebrationStamp({ ...twoSets, ended: true }));
 
     expect(
       celebrationWinner(
@@ -158,7 +156,6 @@ describe('celebrationWinner', () => {
       ),
     ).toBeNull();
     expect(celebrationWinner(match([{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }], true))).toBeNull();
-    expect(celebrationStamp(match([{ a: 0, b: 0 }, { a: 0, b: 0 }, { a: 0, b: 0 }], true))).toBeNull();
   });
 
   it('drops the celebration when the winning game is undone', () => {

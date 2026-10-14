@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { ARCHIVE_KEY } from './domain/archive';
+import { CELEBRATED_KEY } from './domain/celebration';
 import { STORAGE_KEY } from './domain/persistence';
 
 interface ErrorBoundaryProps {
@@ -28,6 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             try {
               localStorage.removeItem(STORAGE_KEY);
               localStorage.removeItem(ARCHIVE_KEY);
+              localStorage.removeItem(CELEBRATED_KEY);
             } catch {
               // Storage may be blocked; reload anyway.
             }
