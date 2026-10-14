@@ -49,6 +49,7 @@ describe('court header', () => {
       label: 'Add to Home Screen',
       testId: 'add-to-home-screen',
       menuOnly: true,
+      textOnly: true,
       detail: 'Share → Add to Home Screen',
       onSelect: () => undefined,
     };
@@ -57,8 +58,10 @@ describe('court header', () => {
     const mixed: readonly CourtAction[] = [first, install, ...actions.slice(1)];
     const menu = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="menu" />);
     expect(menu.indexOf('data-testid="new-match"')).toBeLessThan(menu.indexOf('data-testid="add-to-home-screen"'));
-    expect(menu.indexOf('>Add to Home Screen<')).toBeLessThan(menu.indexOf('Share → Add to Home Screen'));
-    expect(menu).toContain('class="menu-detail"');
+    expect(menu.indexOf('>Add to Home Screen<')).toBeLessThan(menu.indexOf('>Share → Add to Home Screen<'));
+    expect(menu).toContain('aria-disabled="true"');
+    expect(menu).toContain('class="menu-hint"');
+    expect(menu).not.toContain('<button type="button" role="menuitem" class="menu-item is-install"');
     const bar = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="bar" />);
     expect(bar).not.toContain('add-to-home-screen');
     expect(bar).not.toContain('Add to Home Screen');
@@ -68,14 +71,19 @@ describe('court header', () => {
   it('gives menu rows at least 56px and tightens the title', () => {
     const css = readFileSync(join(root, 'src/app.css'), 'utf8');
     const item = css.slice(css.indexOf('.menu-item {'), css.indexOf('.menu-item.is-emphasis'));
+    expect(item).toContain('height: 56px');
     expect(item).toContain('min-height: 56px');
+    expect(item).toContain('white-space: nowrap');
     const menu = css.slice(css.indexOf('.match-menu {'), css.indexOf('.match-menu[hidden]'));
     expect(menu).toContain('position: absolute');
     expect(menu).toContain('gap: 0.5rem');
     expect(menu).toContain('overflow-y: auto');
     expect(menu).toContain('max-height: calc(100dvh - 4.25rem)');
-    const install = css.slice(css.indexOf('.menu-item.is-install {'), css.indexOf('.menu-item.has-detail'));
+    const install = css.slice(css.indexOf('.menu-install {'), css.indexOf('.menu-hint'));
     expect(install).toContain('margin-top: 0.35rem');
+    const hint = css.slice(css.indexOf('.menu-hint {'), css.indexOf('.menu-item:disabled'));
+    expect(hint).toContain('white-space: nowrap');
+    expect(css).not.toContain('.menu-item.has-detail');
     const brand = css.slice(css.indexOf('.brand {'), css.indexOf('.brand-btn'));
     expect(brand).toContain('letter-spacing: 0.08em');
     expect(brand).not.toContain('letter-spacing: 0.16em');

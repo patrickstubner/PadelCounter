@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import {
   IOS_INSTALL_HINT,
@@ -9,6 +9,7 @@ import {
   listenForInstallPrompt,
   readInstallClient,
   runInstallPrompt,
+  storedPromptAfter,
   type InstallPromptLike,
 } from './installOffer';
 
@@ -23,40 +24,30 @@ const IPHONE_CHROME =
 const ANDROID_CHROME =
   'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.88 Mobile Safari/537.36';
 
-const originalUa = Object.getOwnPropertyDescriptor(navigator, 'userAgent');
-const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform');
-const originalTouch = Object.getOwnPropertyDescriptor(navigator, 'maxTouchPoints');
-const originalMedia = Object.getOwnPropertyDescriptor(globalThis, 'matchMedia');
-
 function rememberStorage() {
   const store = new Map<string, string>();
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        store.set(key, value);
-      },
-      removeItem: (key: string) => {
-        store.delete(key);
-      },
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
     },
   });
 }
 
-function setClient(ua: string, platform: string, touch: number) {
-  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: ua });
-  Object.defineProperty(navigator, 'platform', { configurable: true, value: platform });
-  Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: touch });
+function setClient(ua: string, platform: string, touch: number, standalone = false) {
+  vi.stubGlobal('navigator', {
+    userAgent: ua,
+    platform,
+    maxTouchPoints: touch,
+    standalone,
+  });
 }
 
 afterEach(() => {
-  if (originalUa) Object.defineProperty(navigator, 'userAgent', originalUa);
-  if (originalPlatform) Object.defineProperty(navigator, 'platform', originalPlatform);
-  if (originalTouch) Object.defineProperty(navigator, 'maxTouchPoints', originalTouch);
-  delete (navigator as Navigator & { standalone?: boolean }).standalone;
-  if (originalMedia) Object.defineProperty(globalThis, 'matchMedia', originalMedia);
-  else delete (globalThis as { matchMedia?: unknown }).matchMedia;
+  vi.unstubAllGlobals();
 });
 
 describe('install offer', () => {
@@ -121,6 +112,21 @@ describe('install offer', () => {
     expect(outcome).toBe('dismissed');
     await expect(runInstallPrompt({ prompt: () => Promise.resolve() })).resolves.toBe('unknown');
   });
+
+  it('keeps the stored event when prompt() fails and drops it after success', async () => {
+    const event: InstallPromptLike = {
+      prompt: () => Promise.reject(new Error('blocked')),
+    };
+    await expect(runInstallPrompt(event)).resolves.toBe('failed');
+    expect(storedPromptAfter(event, 'failed')).toBe(event);
+    expect(storedPromptAfter(event, 'accepted')).toBeNull();
+    expect(storedPromptAfter(event, 'dismissed')).toBeNull();
+    expect(storedPromptAfter(event, 'unknown')).toBeNull();
+    await expect(runInstallPrompt({
+      prompt: () => Promise.resolve(),
+      userChoice: Promise.reject(new Error('closed')),
+    })).resolves.toBe('unknown');
+  });
 });
 
 describe('Add to Home Screen in the app', () => {
@@ -129,23 +135,21 @@ describe('Add to Home Screen in the app', () => {
     setClient(IPHONE_SAFARI, 'iPhone', 5);
     const html = renderToStaticMarkup(<App />);
     expect(html).toContain('>Add to Home Screen<');
-    expect(html).toContain(IOS_INSTALL_HINT);
+    expect(html).toContain(`>${IOS_INSTALL_HINT}<`);
+    expect(IOS_INSTALL_HINT).toBe('Share → Add to Home Screen');
+    expect(html).toContain('aria-disabled="true"');
     expect(html.indexOf('data-testid="new-match"')).toBeLessThan(html.indexOf('data-testid="add-to-home-screen"'));
     expect(html).toContain('data-testid="menu-toggle"');
   });
 
   it('hides the item when already running standalone', () => {
     rememberStorage();
-    setClient(IPHONE_SAFARI, 'iPhone', 5);
-    Object.defineProperty(navigator, 'standalone', { configurable: true, value: true });
-    Object.defineProperty(globalThis, 'matchMedia', {
-      configurable: true,
-      value: (query: string) => ({
-        matches: query === '(display-mode: standalone)',
-        addEventListener() {},
-        removeEventListener() {},
-      }),
-    });
+    setClient(IPHONE_SAFARI, 'iPhone', 5, true);
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(display-mode: standalone)',
+      addEventListener() {},
+      removeEventListener() {},
+    }));
     const html = renderToStaticMarkup(<App />);
     expect(readInstallClient().displayModeStandalone).toBe(true);
     expect(html).not.toContain('Add to Home Screen');

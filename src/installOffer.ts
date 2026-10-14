@@ -1,6 +1,7 @@
 /** Home-screen install offer. A 1.2.4-style browser tab stays in the menu; standalone hides it. */
 
 export const INSTALL_LABEL = 'Add to Home Screen';
+/** Complete iOS instruction. It is not shortened. */
 export const IOS_INSTALL_HINT = 'Share → Add to Home Screen';
 
 export interface InstallPromptLike {
@@ -89,11 +90,24 @@ export function listenForInstallPrompt(
   return () => host.removeEventListener('beforeinstallprompt', listener);
 }
 
-export async function runInstallPrompt(
-  event: InstallPromptLike,
-): Promise<'accepted' | 'dismissed' | 'unknown'> {
-  await event.prompt();
-  const choice = await event.userChoice;
-  if (choice?.outcome === 'accepted' || choice?.outcome === 'dismissed') return choice.outcome;
+export type InstallPromptOutcome = 'accepted' | 'dismissed' | 'unknown' | 'failed';
+
+export async function runInstallPrompt(event: InstallPromptLike): Promise<InstallPromptOutcome> {
+  try {
+    await event.prompt();
+  } catch {
+    return 'failed';
+  }
+  try {
+    const choice = await event.userChoice;
+    if (choice?.outcome === 'accepted' || choice?.outcome === 'dismissed') return choice.outcome;
+  } catch {
+    return 'unknown';
+  }
   return 'unknown';
+}
+
+/** A failed `prompt()` leaves the stored event in place so the row can be tried again. */
+export function storedPromptAfter<T>(current: T, outcome: InstallPromptOutcome): T | null {
+  return outcome === 'failed' ? current : null;
 }
