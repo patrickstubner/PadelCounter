@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.10 – 2026-10-15
+
+- Im Hochformat wird die große Zahl des laufenden Satzes dort grösser, wo die Textbeschneidung verfügbar ist. Ohne sie bleibt die Grösse von 1.2.9. Das Querformat bleibt unverändert.
+
 ## 1.2.9 – 2026-10-14
 
 - Die Siegerfeier erscheint nur einmal, beim Übergang von «noch nicht gewonnen» zu «gewonnen». Ein weiteres Game, während das Match gewonnen bleibt, startet sie nicht neu. Nimmt Undo oder Minus den Sieg zurück und das Team gewinnt danach wieder, erscheint sie noch einmal: jeder Sieg hängt am Zeitpunkt des siegenden Schritts. Der gemerkte Stand überlebt ein Neuladen. Ein Match, das beim Update von 1.2.8 schon gewonnen war, bleibt still.

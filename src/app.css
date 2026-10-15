@@ -876,8 +876,23 @@ button:disabled { cursor: not-allowed; }
     letter-spacing: 0;
     line-height: 1;
     padding-inline: 0.06em;
-    /* Two tabular digits, including a tiebreak 10, stay inside the column. */
+    /* Same size as 1.2.9 when the larger trimmed size is unavailable. */
     font-size: clamp(3rem, min(96cqh, calc(100cqw / 1.22)), 18rem);
+  }
+
+  @supports (text-box-trim: trim-both) {
+    .current-set .num {
+      text-box-trim: trim-both;
+      text-box-edge: cap alphabetic;
+      padding-inline: 0;
+      font-size: min(calc(100cqh / 0.8), calc(100cqw / 0.66));
+    }
+    .current-set .flap-current,
+    .current-set .flap-leave,
+    .current-set .flap-enter {
+      text-box-trim: trim-both;
+      text-box-edge: cap alphabetic;
+    }
   }
   .current-set.is-won .num { color: var(--accent); }
 
