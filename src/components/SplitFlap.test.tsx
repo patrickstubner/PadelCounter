@@ -42,10 +42,9 @@ describe('split flap direction', () => {
     const fallback = portrait.slice(portrait.indexOf('.current-set .num {'), portrait.indexOf('@supports (text-box-trim: trim-both)'));
     expect(fallback).toContain('overflow: visible');
     expect(fallback).toContain('letter-spacing: 0');
-    expect(fallback).toContain('100cqh * 0.82');
-    expect(fallback).toContain('100cqw / 0.66');
+    expect(fallback).toContain('clamp(3rem, min(96cqh, calc(100cqw / 1.22)), 18rem)');
     expect(fallback).not.toContain('text-box-trim');
-    expect(fallback).not.toContain('18rem');
+    expect(fallback).not.toContain('100cqh / 0.8');
     const supported = portrait.slice(portrait.indexOf('@supports (text-box-trim: trim-both)'), portrait.indexOf('.current-set.is-won'));
     expect(supported).toContain('text-box-trim: trim-both');
     expect(supported).toContain('100cqh / 0.8');

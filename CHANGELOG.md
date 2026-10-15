@@ -2,7 +2,7 @@
 
 ## 1.2.10 – 2026-10-15
 
-- Im Hochformat füllt die große Zahl des laufenden Satzes die freie Fläche, damit sie aus der Entfernung lesbar ist. Fehlt die Textbeschneidung, bleibt sie etwas kleiner und deckt Name, Ball und Satzstände nicht ab. Das Querformat bleibt unverändert.
+- Im Hochformat wird die große Zahl des laufenden Satzes dort grösser, wo die Textbeschneidung verfügbar ist. Ohne sie bleibt die Grösse von 1.2.9. Das Querformat bleibt unverändert.
 
 ## 1.2.9 – 2026-10-14
 

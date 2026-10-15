@@ -875,15 +875,16 @@ button:disabled { cursor: not-allowed; }
     overflow: visible;
     letter-spacing: 0;
     line-height: 1;
-    padding-inline: 0;
-    /* The line box is the em square. 0.82 of the column stays clear of the name and the set scores. */
-    font-size: min(calc(100cqh * 0.82), calc(100cqw / 0.66));
+    padding-inline: 0.06em;
+    /* Same size as 1.2.9 when the larger trimmed size is unavailable. */
+    font-size: clamp(3rem, min(96cqh, calc(100cqw / 1.22)), 18rem);
   }
 
   @supports (text-box-trim: trim-both) {
     .current-set .num {
       text-box-trim: trim-both;
       text-box-edge: cap alphabetic;
+      padding-inline: 0;
       font-size: min(calc(100cqh / 0.8), calc(100cqw / 0.66));
     }
     .current-set .flap-current,
