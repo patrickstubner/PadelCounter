@@ -1,9 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { SplitFlap, flapMotion } from './SplitFlap';
+import { flapMotion } from './SplitFlap';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../app.css'), 'utf8');
 
@@ -38,20 +37,22 @@ describe('split flap direction', () => {
     expect(css).toContain('.flap.is-down .flap-enter { animation-name: drive-in-down; }');
   });
 
-  it('sizes the portrait digit to the free column and keeps two characters inside it', () => {
-    const rule = css.slice(css.indexOf('.current-set .num {'), css.indexOf('.current-set .flap-current'));
-    expect(rule).toContain('overflow: visible');
-    expect(rule).toContain('letter-spacing: 0');
-    expect(rule).toContain('text-box-trim: trim-both');
-    expect(rule).toContain('100cqh / 0.8');
-    expect(rule).toContain('100cqw / 0.66');
-    expect(rule).not.toContain('18rem');
-    const two = css.slice(css.indexOf('.current-set .num[data-chars="2"]'), css.indexOf('.current-set.is-won'));
-    expect(two).toContain('100cqh / 0.8');
-    expect(two).toContain('100cqw / 1.24');
+  it('sizes the portrait digit to the free column only when text-box-trim exists', () => {
+    const portrait = css.slice(css.indexOf('@media (orientation: portrait)'), css.indexOf('.victory {'));
+    const fallback = portrait.slice(portrait.indexOf('.current-set .num {'), portrait.indexOf('@supports (text-box-trim: trim-both)'));
+    expect(fallback).toContain('overflow: visible');
+    expect(fallback).toContain('letter-spacing: 0');
+    expect(fallback).toContain('100cqh * 0.82');
+    expect(fallback).toContain('100cqw / 0.66');
+    expect(fallback).not.toContain('text-box-trim');
+    expect(fallback).not.toContain('18rem');
+    const supported = portrait.slice(portrait.indexOf('@supports (text-box-trim: trim-both)'), portrait.indexOf('.current-set.is-won'));
+    expect(supported).toContain('text-box-trim: trim-both');
+    expect(supported).toContain('100cqh / 0.8');
+    expect(supported).toContain('100cqw / 0.66');
+    expect(portrait).not.toContain('data-chars');
+    expect(portrait).not.toContain('including 10');
     expect(css).toContain('font-variant-numeric: tabular-nums');
-    expect(renderToStaticMarkup(<SplitFlap value="4" />)).toContain('data-chars="1"');
-    expect(renderToStaticMarkup(<SplitFlap value="10" />)).toContain('data-chars="2"');
   });
 
   it('keeps landscape set digits inside the cell, including 0, 6, and 10', () => {

@@ -41,7 +41,7 @@ export function SplitFlap({ value }: SplitFlapProps) {
     .join(' ');
 
   return (
-    <span className={classes} data-chars={String(value.length)} data-motion={flipping ? motion : undefined} aria-hidden="true">
+    <span className={classes} data-motion={flipping ? motion : undefined} aria-hidden="true">
       <span className="flap-current">{current}</span>
       {outgoing !== null ? (
         <>

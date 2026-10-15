@@ -876,20 +876,22 @@ button:disabled { cursor: not-allowed; }
     letter-spacing: 0;
     line-height: 1;
     padding-inline: 0;
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
-    /* Ink is about 0.75em tall and one tabular digit about 0.58em wide. */
-    font-size: min(calc(100cqh / 0.8), calc(100cqw / 0.66));
+    /* The line box is the em square. 0.82 of the column stays clear of the name and the set scores. */
+    font-size: min(calc(100cqh * 0.82), calc(100cqw / 0.66));
   }
-  .current-set .flap-current,
-  .current-set .flap-leave,
-  .current-set .flap-enter {
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
-  }
-  /* Two digits, including 10, stay inside the same column. */
-  .current-set .num[data-chars="2"] {
-    font-size: min(calc(100cqh / 0.8), calc(100cqw / 1.24));
+
+  @supports (text-box-trim: trim-both) {
+    .current-set .num {
+      text-box-trim: trim-both;
+      text-box-edge: cap alphabetic;
+      font-size: min(calc(100cqh / 0.8), calc(100cqw / 0.66));
+    }
+    .current-set .flap-current,
+    .current-set .flap-leave,
+    .current-set .flap-enter {
+      text-box-trim: trim-both;
+      text-box-edge: cap alphabetic;
+    }
   }
   .current-set.is-won .num { color: var(--accent); }
 

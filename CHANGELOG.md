@@ -2,7 +2,7 @@
 
 ## 1.2.10 – 2026-10-15
 
-- Im Hochformat füllt die große Zahl des laufenden Satzes die freie Fläche, damit sie aus der Entfernung lesbar ist. Eine zweistellige Zahl bleibt in der Spalte. Das Querformat bleibt unverändert.
+- Im Hochformat füllt die große Zahl des laufenden Satzes die freie Fläche, damit sie aus der Entfernung lesbar ist. Fehlt die Textbeschneidung, bleibt sie etwas kleiner und deckt Name, Ball und Satzstände nicht ab. Das Querformat bleibt unverändert.
 
 ## 1.2.9 – 2026-10-14
 
