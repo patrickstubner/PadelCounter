@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.11 – 2026-10-18
+
+- Plus und Minus sind breiter. Das Plus- und das Minuszeichen sind größer und fetter, im Hochformat und im Querformat. Die große Satzzahl im Hochformat bleibt in der Grösse von 1.2.10.
+
 ## 1.2.10 – 2026-10-15
 
 - Im Hochformat wird die große Zahl des laufenden Satzes dort grösser, wo die Textbeschneidung verfügbar ist. Ohne sie bleibt die Grösse von 1.2.9. Das Querformat bleibt unverändert.
