@@ -46,6 +46,63 @@ export function undoLog(log: MatchLog): MatchLog {
   return { schemaVersion: SCHEMA_VERSION, base: log.base, events: log.events.slice(0, -1) };
 }
 
+interface MatchSegment {
+  readonly matchId: string;
+  readonly from: number;
+  readonly to: number;
+}
+
+function matchSegments(log: MatchLog): MatchSegment[] {
+  const segments: MatchSegment[] = [];
+  let matchId = log.base.matchId;
+  let from = 0;
+  let state = log.base;
+  for (let index = 0; index < log.events.length; index += 1) {
+    const event = log.events[index];
+    if (!event) continue;
+    const next = matchReducer(state, event);
+    if (next.matchId !== state.matchId) {
+      segments.push({ matchId, from, to: index });
+      matchId = next.matchId;
+      from = index;
+    }
+    state = next;
+  }
+  segments.push({ matchId, from, to: log.events.length });
+  return segments;
+}
+
+/**
+ * Removes one finished match from the undo log.
+ * The live match is left untouched. Undo cannot step back into the removed match,
+ * and its names and id are no longer in the saved log.
+ */
+export function omitMatch(log: MatchLog, matchId: string): MatchLog {
+  const id = matchId.toLowerCase();
+  if (replay(log).matchId.toLowerCase() === id) return log;
+  const segments = matchSegments(log);
+  const targetIndex = segments.findIndex((segment) => segment.matchId.toLowerCase() === id);
+  const target = segments[targetIndex];
+  if (!target || targetIndex < 0) return log;
+
+  if (targetIndex === 0) {
+    const successor = segments[1];
+    if (!successor) return log;
+    let base = log.base;
+    for (let index = 0; index <= successor.from; index += 1) {
+      const event = log.events[index];
+      if (event) base = matchReducer(base, event);
+    }
+    return { schemaVersion: SCHEMA_VERSION, base, events: log.events.slice(successor.from + 1) };
+  }
+
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    base: log.base,
+    events: [...log.events.slice(0, target.from), ...log.events.slice(target.to)],
+  };
+}
+
 export type LogAction = { readonly type: 'undo' } | { readonly type: 'record'; readonly event: MatchEvent };
 
 export function logReducer(log: MatchLog, action: LogAction): MatchLog {

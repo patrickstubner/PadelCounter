@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.11 – 2026-10-18
+
+- Im Hochformat sind Plus und Minus etwas breiter und bleiben über die volle Höhe. Das Plus- und das Minuszeichen sind dort größer, fetter und kontrastreicher. Die große Satzzahl bleibt in der Grösse von 1.2.10. Das Querformat bleibt unverändert.
+- Im Hochformat sind die Teamnamen etwas größer. Ein langer Name wird mit Auslassung abgeschnitten. Die große Satzzahl bleibt gleich gross.
+- In History kann ein gespeichertes Match gelöscht werden. Die Frage lautet «Delete this match?», die Wahl ist Cancel oder Delete. Das laufende Match bleibt. Ein gemerkter Sieg dieses Matches wird mit entfernt. Undo und ein späteres «New match» holen das gelöschte Match nicht zurück; sein Name verschwindet aus dem gespeicherten Spielstand.
+- Im Hochformat haben Plus und Minus 3px Abstand zum Rand, plus den seitlichen Safe-Area-Abstand. Die große Satzzahl bleibt gleich breit.
+
 ## 1.2.10 – 2026-10-15
 
 - Im Hochformat wird die große Zahl des laufenden Satzes dort grösser, wo die Textbeschneidung verfügbar ist. Ohne sie bleibt die Grösse von 1.2.9. Das Querformat bleibt unverändert.

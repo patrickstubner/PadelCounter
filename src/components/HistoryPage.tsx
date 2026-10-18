@@ -20,6 +20,7 @@ interface HistoryPageProps {
   selected: ListedMatch | null;
   onOpen: (id: string) => void;
   onBack: () => void;
+  onAskDelete: (id: string) => void;
 }
 
 function EventList({ rows, testId }: { rows: readonly HistoryRow[]; testId: string }) {
@@ -52,7 +53,7 @@ function EventList({ rows, testId }: { rows: readonly HistoryRow[]; testId: stri
   );
 }
 
-export function HistoryPage({ mode, live, rows, played, selected, onOpen, onBack }: HistoryPageProps) {
+export function HistoryPage({ mode, live, rows, played, selected, onOpen, onBack, onAskDelete }: HistoryPageProps) {
   const backRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     backRef.current?.focus();
@@ -91,13 +92,25 @@ export function HistoryPage({ mode, live, rows, played, selected, onOpen, onBack
               {played.map((match) => {
                 const winner = winnerTeam(match.statusKind);
                 return (
-                  <li key={match.id}>
+                  <li key={match.id} className="history-played-item">
                     <button type="button" className="history-match" data-testid="match-row" onClick={() => onOpen(match.id)}>
                       <time dateTime={new Date(match.at).toISOString()}>{formatMatchStamp(match.at)}</time>
                       <span className="history-match-names">{`${match.nameA} · ${match.nameB}`}</span>
                       <span className="history-match-score">{match.score}</span>
                       <span className={winner ? `history-match-status is-${winner}` : 'history-match-status'}>{match.status}</span>
                     </button>
+                    {match.live ? null : (
+                      <button
+                        type="button"
+                        className="history-delete"
+                        data-testid="delete-match"
+                        data-match-id={match.id}
+                        aria-label={`Delete match ${match.nameA} versus ${match.nameB}`}
+                        onClick={() => onAskDelete(match.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </li>
                 );
               })}

@@ -127,6 +127,20 @@ export function loadCelebrated(storage: Pick<MatchStorage, 'getItem'>): Celebrat
   }
 }
 
+/** Drop a remembered win when that match is deleted. The live match is left alone. */
+export function forgetCelebratedMatch(
+  matchId: string,
+  storage: Pick<MatchStorage, 'getItem'> & { removeItem(key: string): void },
+): void {
+  const saved = loadCelebrated(storage);
+  if (saved?.matchId !== matchId) return;
+  try {
+    storage.removeItem(CELEBRATED_KEY);
+  } catch {
+    // Storage may be blocked. The match list still updates.
+  }
+}
+
 export function saveCelebrated(win: CelebratedWin, storage: Pick<MatchStorage, 'setItem'>): boolean {
   try {
     const raw = JSON.stringify({ matchId: win.matchId, at: win.at });

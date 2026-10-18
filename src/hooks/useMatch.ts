@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { loadArchive, saveArchive } from '../domain/archive';
+import { forgetCelebratedMatch } from '../domain/celebration';
 import { createMatchId } from '../domain/id';
 import { createLog, replay } from '../domain/log';
 import { loadLog, saveLog } from '../domain/persistence';
@@ -53,5 +54,15 @@ export function useMatch() {
       });
     },
     undo: () => dispatch({ type: 'undo' }),
+    deleteMatch: (id: string) => {
+      if (state.matchId === id) return;
+      if (!session.archive.some((match) => match.id === id)) return;
+      try {
+        forgetCelebratedMatch(id, localStorage);
+      } catch {
+        // Storage may be blocked. The list still drops the match.
+      }
+      dispatch({ type: 'delete-match', id });
+    },
   };
 }

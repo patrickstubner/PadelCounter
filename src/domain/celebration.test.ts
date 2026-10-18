@@ -4,12 +4,14 @@ import {
   acknowledgeCelebrated,
   celebrationKey,
   currentWin,
+  forgetCelebratedMatch,
   loadCelebrated,
   saveCelebrated,
   shouldCelebrate,
   winBeganOnLastEvent,
 } from './celebration';
-import { MAX_EVENTS, appendEvent, createLog, undoLog, type MatchLog } from './log';
+import { sessionReducer } from './session';
+import { MAX_EVENTS, appendEvent, createLog, replay, undoLog, type MatchLog } from './log';
 import type { MatchStorage } from './persistence';
 import { createMatch, matchReducer } from './reducer';
 import type { SetIndex, TeamId } from './types';
@@ -194,5 +196,67 @@ describe('celebration keys', () => {
     expect(loadCelebrated(storage)).toBeNull();
     storage.setItem(CELEBRATED_KEY, 'x'.repeat(201));
     expect(loadCelebrated(storage)).toBeNull();
+  });
+
+  it('forgets a celebrated win only when that match is deleted', () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+    };
+    saveCelebrated({ matchId: ID, at: T0 + 1 }, storage);
+    forgetCelebratedMatch(NEXT, storage);
+    expect(loadCelebrated(storage)).toEqual({ matchId: ID, at: T0 + 1 });
+    forgetCelebratedMatch(ID, storage);
+    expect(store.has(CELEBRATED_KEY)).toBe(false);
+    expect(loadCelebrated(storage)).toBeNull();
+
+    const blocked = {
+      getItem: () => JSON.stringify({ matchId: ID, at: T0 + 1 }),
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(() => forgetCelebratedMatch(ID, blocked)).not.toThrow();
+  });
+
+  it('does not need a celebrated key back, because undo cannot restore the deleted match', () => {
+    const won = wonLog();
+    const win = currentWin(won);
+    expect(win).not.toBeNull();
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+    };
+    saveCelebrated(win ?? { matchId: ID, at: T0 }, storage);
+    const archived = sessionReducer(
+      { log: won, archive: [] },
+      { type: 'record', event: { type: 'match/new', matchId: NEXT, at: T0 + 40 } },
+    );
+    const deleted = sessionReducer(archived, { type: 'delete-match', id: ID });
+    forgetCelebratedMatch(ID, storage);
+    expect(loadCelebrated(storage)).toBeNull();
+
+    let undone = deleted;
+    for (let step = 0; step < 30; step += 1) {
+      const next = sessionReducer(undone, { type: 'undo' });
+      expect(replay(next.log).matchId).not.toBe(ID);
+      if (next.log === undone.log) break;
+      undone = next;
+    }
+    expect(replay(undone.log).matchId).toBe(NEXT);
+    expect(loadCelebrated(storage)).toBeNull();
+    expect(shouldCelebrate(undone.log, null)).toBe(false);
   });
 });

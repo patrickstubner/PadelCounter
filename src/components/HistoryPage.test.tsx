@@ -77,6 +77,7 @@ describe('history page', () => {
         selected={null}
         onOpen={() => undefined}
         onBack={() => undefined}
+        onAskDelete={() => undefined}
       />,
     );
     expect(page).toContain('data-testid="history-back"');
@@ -88,6 +89,11 @@ describe('history page', () => {
     expect(page).toContain('<span>1</span>:<mark class="history-changed">1</mark>');
     expect(page).toContain('Played matches');
     expect(page).toContain('ended early');
+    expect(page).toContain('data-testid="delete-match"');
+    expect(page).toContain('>Delete</button>');
+    expect(page).toContain('aria-label="Delete match Lobos versus Team B"');
+    const currentBlock = page.slice(page.indexOf('data-testid="history-current"'), page.indexOf('Played matches'));
+    expect(currentBlock).not.toContain('delete-match');
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../app.css'), 'utf8');
     const rule = css.slice(css.indexOf('.history-page {'), css.indexOf('.history-bar'));
     expect(rule).not.toContain('position: fixed');
@@ -118,6 +124,7 @@ describe('history page', () => {
         selected={past}
         onOpen={() => undefined}
         onBack={() => undefined}
+        onAskDelete={() => undefined}
       />,
     );
     expect(detail).toContain('data-testid="match-detail"');
@@ -126,6 +133,7 @@ describe('history page', () => {
     expect(detail).toContain('<mark class="history-changed">1</mark>');
     expect(detail).toContain('>0<');
     expect(detail).not.toContain('Resume');
+    expect(detail).not.toContain('delete-match');
     expect(detail.indexOf('data-testid="history-back"')).toBeLessThan(detail.indexOf('Lobos won the game'));
   });
 
@@ -139,6 +147,7 @@ describe('history page', () => {
         selected={null}
         onOpen={() => undefined}
         onBack={() => undefined}
+        onAskDelete={() => undefined}
       />,
     );
     expect(html).toContain('Match not found.');

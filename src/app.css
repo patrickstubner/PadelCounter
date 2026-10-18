@@ -299,6 +299,8 @@ button:disabled { cursor: not-allowed; }
   max-height: 4.25rem;
 }
 
+.glyph-bold { display: none; }
+
 .team-body {
   min-width: 0;
   min-height: 0;
@@ -763,13 +765,33 @@ button:disabled { cursor: not-allowed; }
   color: #f4f4f4;
 }
 
+.history-played-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: stretch;
+  margin-top: 0.45rem;
+}
+
+.history-delete {
+  align-self: center;
+  min-height: 3rem;
+  min-width: 4.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 2px solid #ffffff;
+  border-radius: 0.8rem;
+  background: transparent;
+  color: #ffffff;
+  font-weight: 800;
+}
+
 .history-match {
   width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.15rem 0.75rem;
   align-items: baseline;
-  margin-top: 0.45rem;
+  margin-top: 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid #ffffff;
   border-radius: 0.9rem;
@@ -853,7 +875,34 @@ button:disabled { cursor: not-allowed; }
 .btn-solid { background: #ffffff; color: #000000; border: 2px solid #ffffff; }
 
 @media (orientation: portrait) {
-  .team { grid-template-columns: 4rem minmax(0, 1fr) 4rem; }
+  .team {
+    /* The extra 0.7rem is the old side padding plus the column gap, so the number column stays put.
+       The 3px edge and the side safe area come out of the button columns. */
+    grid-template-columns:
+      max(0px, calc(4rem + 0.7rem - env(safe-area-inset-left, 0px) - 3px))
+      minmax(0, 1fr)
+      max(0px, calc(4rem + 0.7rem - env(safe-area-inset-right, 0px) - 3px));
+    column-gap: 0;
+    padding-left: calc(env(safe-area-inset-left, 0px) + 3px);
+    padding-right: calc(env(safe-area-inset-right, 0px) + 3px);
+  }
+
+  .step {
+    min-width: 0;
+    padding: 0;
+    container-type: size;
+  }
+
+  .icon {
+    width: min(88cqw, 78cqh);
+    height: auto;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: 1;
+  }
+
+  .icon .glyph { display: none; }
+  .icon .glyph-bold { display: inline; }
 
   .team-a .team-head { order: 1; }
   .team-a .current-set { order: 2; }
@@ -914,6 +963,14 @@ button:disabled { cursor: not-allowed; }
   .current-set .num,
   .current-set .flap { pointer-events: none; }
   .current-set .flap { overflow: visible; }
+
+  .team-head { height: 2.75rem; }
+
+  .team-name,
+  .team-name-input {
+    font-size: clamp(1.2rem, 3vh, 1.75rem);
+    line-height: 1;
+  }
 }
 
 .victory {
