@@ -2,7 +2,7 @@
 
 ## 1.2.11 – 2026-10-18
 
-- Plus und Minus sind breiter. Das Plus- und das Minuszeichen sind größer und fetter, im Hochformat und im Querformat. Die große Satzzahl im Hochformat bleibt in der Grösse von 1.2.10.
+- Im Hochformat sind Plus und Minus etwas breiter und bleiben über die volle Höhe. Das Plus- und das Minuszeichen sind dort größer, fetter und kontrastreicher. Die große Satzzahl bleibt in der Grösse von 1.2.10. Das Querformat bleibt unverändert.
 
 ## 1.2.10 – 2026-10-15
 

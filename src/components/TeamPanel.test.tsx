@@ -48,30 +48,33 @@ describe('serve marker', () => {
 });
 
 describe('plus and minus controls', () => {
-  it('keeps the signs bold and the buttons wider than in 1.2.10', () => {
+  it('widens only the portrait buttons and keeps a bold high-contrast sign there', () => {
     const plus = renderToStaticMarkup(<PlusIcon />);
     const minus = renderToStaticMarkup(<MinusIcon />);
+    expect(plus).toContain('class="glyph"');
+    expect(plus).toContain('d="M10.2 3h3.6v7.2H21v3.6h-7.2V21h-3.6v-7.2H3v-3.6h7.2V3z"');
+    expect(plus).toContain('class="glyph-bold"');
     expect(plus).toContain('d="M8 2h8v6h6v8h-6v6H8v-6H2V8h6V2z"');
+    expect(minus).toContain('d="M3 10.2h18v3.6H3z"');
     expect(minus).toContain('d="M2 8h20v8H2z"');
-    expect(plus).not.toContain('h3.6');
-    expect(minus).not.toContain('v3.6');
 
-    const step = css.slice(css.indexOf('.step {'), css.indexOf('.step-plus,'));
-    expect(step).toContain('padding: 0');
-    expect(step).toContain('min-width: 0');
-
-    const icon = css.slice(css.indexOf('.icon {'), css.indexOf('.team-body'));
-    expect(icon).toContain('width: min(88cqw, 78cqh)');
-    expect(icon).toContain('aspect-ratio: 1');
-    expect(icon).not.toContain('42%');
-    expect(icon).not.toContain('4.25rem');
+    const icon = css.slice(css.indexOf('.icon {'), css.indexOf('.glyph-bold { display: none; }'));
+    expect(icon).toContain('width: 42%');
+    expect(icon).toContain('height: 42%');
+    expect(icon).toContain('max-width: 4.25rem');
+    expect(icon).toContain('max-height: 4.25rem');
 
     const landscape = css.slice(css.indexOf('.team {'), css.indexOf('.team-a'));
-    expect(landscape).toContain('grid-template-columns: 7.25rem minmax(0, 1fr) 7.25rem');
-    expect(landscape).not.toContain('5.6rem');
+    expect(landscape).toContain('grid-template-columns: 5.6rem minmax(0, 1fr) 5.6rem');
+    expect(landscape).not.toContain('7.25rem');
 
-    const portrait = css.slice(css.indexOf('@media (orientation: portrait)'), css.indexOf('.victory {'));
-    expect(portrait).toContain('grid-template-columns: 5.5rem minmax(0, 1fr) 5.5rem');
+    const portrait = css.slice(css.indexOf('@media (orientation: portrait)'), css.indexOf('.team-a .team-head'));
+    expect(portrait).toContain('grid-template-columns: calc(4rem + 0.7rem) minmax(0, 1fr) calc(4rem + 0.7rem)');
+    expect(portrait).toContain('column-gap: 0');
+    expect(portrait).toContain('padding-inline: 0');
+    expect(portrait).toContain('width: min(88cqw, 78cqh)');
+    expect(portrait).toContain('.icon .glyph { display: none; }');
+    expect(portrait).toContain('.icon .glyph-bold { display: inline; }');
     expect(portrait).not.toContain('4rem minmax(0, 1fr) 4rem');
   });
 });
