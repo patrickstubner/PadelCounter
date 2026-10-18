@@ -4,6 +4,7 @@ import {
   acknowledgeCelebrated,
   celebrationKey,
   currentWin,
+  forgetCelebratedMatch,
   loadCelebrated,
   saveCelebrated,
   shouldCelebrate,
@@ -194,5 +195,32 @@ describe('celebration keys', () => {
     expect(loadCelebrated(storage)).toBeNull();
     storage.setItem(CELEBRATED_KEY, 'x'.repeat(201));
     expect(loadCelebrated(storage)).toBeNull();
+  });
+
+  it('forgets a celebrated win only when that match is deleted', () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      removeItem: (key: string) => {
+        store.delete(key);
+      },
+    };
+    saveCelebrated({ matchId: ID, at: T0 + 1 }, storage);
+    forgetCelebratedMatch(NEXT, storage);
+    expect(loadCelebrated(storage)).toEqual({ matchId: ID, at: T0 + 1 });
+    forgetCelebratedMatch(ID, storage);
+    expect(store.has(CELEBRATED_KEY)).toBe(false);
+    expect(loadCelebrated(storage)).toBeNull();
+
+    const blocked = {
+      getItem: () => JSON.stringify({ matchId: ID, at: T0 + 1 }),
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(() => forgetCelebratedMatch(ID, blocked)).not.toThrow();
   });
 });

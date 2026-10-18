@@ -138,6 +138,36 @@ describe('match archive', () => {
     expect(newest).toBeLessThan(two);
   });
 
+  it('deletes one saved match and refuses the live match', () => {
+    let current = session(played(ID, 2, T0));
+    current = sessionReducer(current, { type: 'record', event: { type: 'match/new', matchId: NEXT, at: T0 + 10 } });
+    expect(current.archive[0]?.id).toBe(ID);
+    expect(replay(current.log).matchId).toBe(NEXT);
+
+    const deleted = sessionReducer(current, { type: 'delete-match', id: ID });
+    expect(deleted.archive).toEqual([]);
+    expect(deleted.log).toBe(current.log);
+    expect(replay(deleted.log).matchId).toBe(NEXT);
+
+    expect(sessionReducer(deleted, { type: 'delete-match', id: NEXT })).toBe(deleted);
+    expect(sessionReducer(current, { type: 'delete-match', id: THIRD })).toBe(current);
+
+    const withLive = { log: current.log, archive: [...current.archive, archived(NEXT, T0 + 20)] };
+    expect(sessionReducer(withLive, { type: 'delete-match', id: NEXT })).toBe(withLive);
+
+    const saved = new Map<string, string>();
+    const memory: MatchStorage = {
+      getItem: (key) => saved.get(key) ?? null,
+      setItem: (key, value) => {
+        saved.set(key, value);
+      },
+    };
+    expect(saveArchive(current.archive, memory)).toBe(true);
+    expect(loadArchive(memory)[0]?.id).toBe(ID);
+    expect(saveArchive(deleted.archive, memory)).toBe(true);
+    expect(loadArchive(memory)).toEqual([]);
+  });
+
   it('rejects a broken archive and round-trips a valid one', () => {
     expect(parseArchive({ schemaVersion: 1, matches: [{ id: 'nope' }] })).toEqual([]);
     expect(parseArchive({ schemaVersion: 2, matches: [] })).toEqual([]);

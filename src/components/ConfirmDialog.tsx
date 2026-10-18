@@ -5,6 +5,7 @@ interface ConfirmDialogProps {
   body: string;
   confirmLabel: string;
   confirmTestId: string;
+  cancelTestId?: string;
   titleId: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -15,6 +16,7 @@ export function ConfirmDialog({
   body,
   confirmLabel,
   confirmTestId,
+  cancelTestId,
   titleId,
   onConfirm,
   onCancel,
@@ -47,7 +49,7 @@ export function ConfirmDialog({
       <h2 id={titleId}>{title}</h2>
       <p>{body}</p>
       <div className="dialog-actions">
-        <button type="button" className="btn btn-ghost" autoFocus onClick={onCancel}>
+        <button type="button" className="btn btn-ghost" data-testid={cancelTestId} autoFocus onClick={onCancel}>
           Cancel
         </button>
         <button type="button" className="btn btn-solid" data-testid={confirmTestId} onClick={onConfirm}>

@@ -53,6 +53,7 @@ export function App() {
   const updateReady = useUpdateReady();
   const updateButton = updateReady ? <UpdateReady onReload={() => window.location.reload()} /> : null;
   const [confirming, setConfirming] = useState<'reset' | 'end' | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [screen, setScreen] = useState<ArchiveScreen>(() =>
     typeof history === 'undefined' ? { view: 'court' } : screenFromHistory(history.state),
   );
@@ -81,11 +82,28 @@ export function App() {
     setScreen({ view: 'detail', id });
   };
   const closeArchive = () => {
+    setDeletingId(null);
     if (typeof history === 'undefined') {
       setScreen((current) => (current.view === 'detail' ? { view: 'matches' } : { view: 'court' }));
       return;
     }
     history.back();
+  };
+  const askDelete = (id: string) => {
+    if (id === match.state.matchId) return;
+    setDeletingId(id);
+  };
+  const confirmDelete = () => {
+    if (!deletingId || deletingId === match.state.matchId) {
+      setDeletingId(null);
+      return;
+    }
+    match.deleteMatch(deletingId);
+    if (screen.view === 'detail' && screen.id === deletingId) {
+      setScreen({ view: 'matches' });
+      if (typeof history !== 'undefined') history.replaceState(matchesHistoryState(), '');
+    }
+    setDeletingId(null);
   };
   const { state } = match;
   const winner = matchWinner(state.sets);
@@ -154,7 +172,20 @@ export function App() {
           selected={selected}
           onOpen={openDetail}
           onBack={closeArchive}
+          onAskDelete={askDelete}
         />
+        {deletingId ? (
+          <ConfirmDialog
+            titleId="delete-match-title"
+            title="Delete this match?"
+            body="The match is removed from History on this device."
+            confirmLabel="Delete"
+            confirmTestId="confirm-delete"
+            cancelTestId="cancel-delete"
+            onCancel={() => setDeletingId(null)}
+            onConfirm={confirmDelete}
+          />
+        ) : null}
         <p className="app-version" data-testid="app-version">{`v${import.meta.env.APP_VERSION}`}</p>
         {updateButton}
       </div>

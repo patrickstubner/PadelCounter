@@ -765,13 +765,33 @@ button:disabled { cursor: not-allowed; }
   color: #f4f4f4;
 }
 
+.history-played-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: stretch;
+  margin-top: 0.45rem;
+}
+
+.history-delete {
+  align-self: center;
+  min-height: 3rem;
+  min-width: 4.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 2px solid #ffffff;
+  border-radius: 0.8rem;
+  background: transparent;
+  color: #ffffff;
+  font-weight: 800;
+}
+
 .history-match {
   width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.15rem 0.75rem;
   align-items: baseline;
-  margin-top: 0.45rem;
+  margin-top: 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid #ffffff;
   border-radius: 0.9rem;
