@@ -938,6 +938,14 @@ button:disabled { cursor: not-allowed; }
   .current-set .num,
   .current-set .flap { pointer-events: none; }
   .current-set .flap { overflow: visible; }
+
+  .team-head { height: 2.75rem; }
+
+  .team-name,
+  .team-name-input {
+    font-size: clamp(1.2rem, 3vh, 1.75rem);
+    line-height: 1;
+  }
 }
 
 .victory {

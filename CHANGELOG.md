@@ -3,6 +3,7 @@
 ## 1.2.11 – 2026-10-18
 
 - Im Hochformat sind Plus und Minus etwas breiter und bleiben über die volle Höhe. Das Plus- und das Minuszeichen sind dort größer, fetter und kontrastreicher. Die große Satzzahl bleibt in der Grösse von 1.2.10. Das Querformat bleibt unverändert.
+- Im Hochformat sind die Teamnamen etwas größer. Ein langer Name wird mit Auslassung abgeschnitten. Die große Satzzahl bleibt gleich gross.
 
 ## 1.2.10 – 2026-10-15
 

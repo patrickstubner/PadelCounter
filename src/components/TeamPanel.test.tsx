@@ -77,4 +77,18 @@ describe('plus and minus controls', () => {
     expect(portrait).toContain('.icon .glyph-bold { display: inline; }');
     expect(portrait).not.toContain('4rem minmax(0, 1fr) 4rem');
   });
+
+  it('makes portrait team names a little larger without letting them wrap', () => {
+    const beforePortrait = css.slice(0, css.indexOf('@media (orientation: portrait)'));
+    expect(beforePortrait).toContain('font-size: clamp(1rem, 2.5vh, 1.45rem)');
+    const nameStart = css.indexOf('\n.team-name {');
+    const name = css.slice(nameStart, css.indexOf('\n.team-name-input {', nameStart));
+    expect(name).toContain('overflow: hidden');
+    expect(name).toContain('text-overflow: ellipsis');
+    expect(name).toContain('white-space: nowrap');
+    const portrait = css.slice(css.indexOf('@media (orientation: portrait)'), css.indexOf('.victory {'));
+    expect(portrait).toContain('font-size: clamp(1.2rem, 3vh, 1.75rem)');
+    expect(portrait).toContain('.team-head { height: 2.75rem; }');
+    expect(portrait).not.toContain('2.5vh');
+  });
 });
