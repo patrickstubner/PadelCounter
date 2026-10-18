@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appendEvent, createLog, replay } from './log';
+import { loadLog, saveLog, serializeLog } from './persistence';
 import {
   ARCHIVE_KEY,
   MAX_ARCHIVED_MATCHES,
@@ -146,8 +147,8 @@ describe('match archive', () => {
 
     const deleted = sessionReducer(current, { type: 'delete-match', id: ID });
     expect(deleted.archive).toEqual([]);
-    expect(deleted.log).toBe(current.log);
     expect(replay(deleted.log).matchId).toBe(NEXT);
+    expect(serializeLog(deleted.log)).not.toContain(ID);
 
     expect(sessionReducer(deleted, { type: 'delete-match', id: NEXT })).toBe(deleted);
     expect(sessionReducer(current, { type: 'delete-match', id: THIRD })).toBe(current);
@@ -166,6 +167,96 @@ describe('match archive', () => {
     expect(loadArchive(memory)[0]?.id).toBe(ID);
     expect(saveArchive(deleted.archive, memory)).toBe(true);
     expect(loadArchive(memory)).toEqual([]);
+  });
+
+  it('forgets a deleted match in the undo log, including after a new match and a reload', () => {
+    let log = createLog(T0, ID, { a: 'Lobos', b: 'Team B' });
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    let current = sessionReducer({ log, archive: [] }, {
+      type: 'record',
+      event: { type: 'match/new', matchId: NEXT, at: T0 + 10 },
+    });
+    current = sessionReducer(current, { type: 'record', event: { type: 'game/increment', team: 'b', at: T0 + 11 } });
+
+    const deleted = sessionReducer(current, { type: 'delete-match', id: ID });
+    expect(replay(deleted.log).matchId).toBe(NEXT);
+    expect(replay(deleted.log).teams.a.name).toBe('Team A');
+    expect(replay(deleted.log).sets[0]).toEqual({ a: 0, b: 1 });
+    expect(serializeLog(deleted.log)).not.toContain(ID);
+    expect(serializeLog(deleted.log)).not.toContain('Lobos');
+
+    let undone = deleted;
+    for (let step = 0; step < 10; step += 1) {
+      const next = sessionReducer(undone, { type: 'undo' });
+      expect(replay(next.log).matchId).not.toBe(ID);
+      expect(serializeLog(next.log)).not.toContain('Lobos');
+      if (next.log === undone.log) break;
+      undone = next;
+    }
+    expect(replay(undone.log).matchId).toBe(NEXT);
+    expect(replay(undone.log).sets[0]).toEqual({ a: 0, b: 0 });
+
+    const started = sessionReducer(undone, {
+      type: 'record',
+      event: { type: 'match/new', matchId: THIRD, at: T0 + 20 },
+    });
+    expect(started.archive.some((match) => match.id === ID)).toBe(false);
+    expect(JSON.stringify(started.archive)).not.toContain('Lobos');
+    expect(serializeLog(started.log)).not.toContain(ID);
+
+    const saved = new Map<string, string>();
+    const memory: MatchStorage = {
+      getItem: (key) => saved.get(key) ?? null,
+      setItem: (key, value) => {
+        saved.set(key, value);
+      },
+    };
+    expect(saveLog(started.log, memory)).toBe(true);
+    expect(saveArchive(started.archive, memory)).toBe(true);
+    const loaded = loadLog(memory);
+    expect(loaded).not.toBeNull();
+    expect(serializeLog(loaded!)).not.toContain(ID);
+    expect(serializeLog(loaded!)).not.toContain('Lobos');
+    expect(loadArchive(memory).some((match) => match.id === ID)).toBe(false);
+    expect(replay(loaded!).matchId).toBe(THIRD);
+  });
+
+  it('drops a match that sits between two others and still undoes into the one that remains', () => {
+    let log = createLog(T0, ID, { a: 'Lobos', b: 'Team B' });
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    let current = sessionReducer({ log, archive: [] }, {
+      type: 'record',
+      event: { type: 'match/new', matchId: NEXT, at: T0 + 10 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'team/rename', team: 'a', name: 'Wolves', at: T0 + 11 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'match/new', matchId: THIRD, at: T0 + 12 },
+    });
+    const deleted = sessionReducer(current, { type: 'delete-match', id: NEXT });
+    expect(replay(deleted.log).matchId).toBe(THIRD);
+    expect(serializeLog(deleted.log)).not.toContain(NEXT);
+    expect(serializeLog(deleted.log)).not.toContain('Wolves');
+    expect(serializeLog(deleted.log)).toContain('Lobos');
+
+    let undone = deleted;
+    for (let step = 0; step < 10; step += 1) {
+      const next = sessionReducer(undone, { type: 'undo' });
+      expect(replay(next.log).matchId).not.toBe(NEXT);
+      if (next.log === undone.log) break;
+      undone = next;
+    }
+    expect(replay(undone.log).matchId).toBe(ID);
+    expect(replay(undone.log).teams.a.name).toBe('Lobos');
+    const started = sessionReducer(undone, {
+      type: 'record',
+      event: { type: 'match/new', matchId: '00000000-0000-4000-8000-0000000000dd', at: T0 + 30 },
+    });
+    expect(started.archive.some((match) => match.id === NEXT)).toBe(false);
+    expect(JSON.stringify(started.archive)).not.toContain('Wolves');
   });
 
   it('rejects a broken archive and round-trips a valid one', () => {

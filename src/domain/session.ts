@@ -1,5 +1,5 @@
 import { rememberMatch, snapshotMatch, type ArchivedMatch } from './archive';
-import { appendEvent, replay, undoLog, type LogAction, type MatchLog } from './log';
+import { appendEvent, omitMatch, replay, undoLog, type LogAction, type MatchLog } from './log';
 import { isNewMatchEvent } from './types';
 
 export interface Session {
@@ -13,7 +13,10 @@ export function sessionReducer(session: Session, action: SessionAction): Session
   if (action.type === 'delete-match') {
     if (replay(session.log).matchId === action.id) return session;
     if (!session.archive.some((match) => match.id === action.id)) return session;
-    return { log: session.log, archive: session.archive.filter((match) => match.id !== action.id) };
+    return {
+      log: omitMatch(session.log, action.id),
+      archive: session.archive.filter((match) => match.id !== action.id),
+    };
   }
 
   if (action.type === 'undo') {

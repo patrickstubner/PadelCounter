@@ -108,6 +108,8 @@ describe('delete a match from History', () => {
     expect(localStorage.getItem(ARCHIVE_KEY)).not.toContain(PAST);
     expect(localStorage.getItem(CELEBRATED_KEY)).toBeNull();
     expect(localStorage.getItem(STORAGE_KEY)).toContain(LIVE);
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain(PAST);
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain('Lobos');
 
     for (const view of mounted.splice(0)) await unmount(view.root, view.container);
     history.replaceState(null, '');
@@ -119,6 +121,47 @@ describe('delete a match from History', () => {
     await press('history-back');
     expect(document.querySelector('[data-testid="current-a"]')?.textContent).toContain('0');
     expect(document.querySelector('[data-testid="current-b"]')?.textContent).toContain('0');
+  });
+
+  it('does not bring a deleted match back with undo or a later new match', async () => {
+    seed(PAST);
+    const view = await mount();
+    mounted.push(view);
+    await press('increment-a');
+    await press('open-matches');
+    await press('delete-match');
+    await press('confirm-delete');
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain(PAST);
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain('Lobos');
+    expect(localStorage.getItem(CELEBRATED_KEY)).toBeNull();
+
+    await press('history-back');
+    await press('undo');
+    expect(document.querySelector('[data-testid="current-a"]')?.textContent).toContain('0');
+    expect(document.body.textContent).not.toContain('Lobos');
+    expect(document.querySelector('[data-testid="undo"]')).toHaveProperty('disabled', true);
+
+    for (const open of mounted.splice(0)) await unmount(open.root, open.container);
+    history.replaceState(null, '');
+    const reloaded = await mount();
+    mounted.push(reloaded);
+    expect(document.body.textContent).not.toContain('Lobos');
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain(PAST);
+
+    await press('new-match');
+    await press('confirm-reset');
+    await press('open-matches');
+    expect(document.body.textContent).not.toContain('Lobos');
+    expect(deleteButton()).toBeNull();
+    expect(localStorage.getItem(ARCHIVE_KEY)).not.toContain(PAST);
+
+    for (const open of mounted.splice(0)) await unmount(open.root, open.container);
+    history.replaceState(null, '');
+    await openHistory();
+    expect(document.body.textContent).not.toContain('Lobos');
+    expect(deleteButton()).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEY)).not.toContain(PAST);
+    expect(localStorage.getItem(ARCHIVE_KEY)).not.toContain(PAST);
   });
 
   it('leaves the live celebration key alone when another match is deleted', async () => {

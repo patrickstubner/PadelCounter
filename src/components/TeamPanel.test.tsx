@@ -67,11 +67,16 @@ describe('plus and minus controls', () => {
     const landscape = css.slice(css.indexOf('.team {'), css.indexOf('.team-a'));
     expect(landscape).toContain('grid-template-columns: 5.6rem minmax(0, 1fr) 5.6rem');
     expect(landscape).not.toContain('7.25rem');
+    expect(landscape).not.toContain('safe-area-inset-left');
 
     const portrait = css.slice(css.indexOf('@media (orientation: portrait)'), css.indexOf('.team-a .team-head'));
-    expect(portrait).toContain('grid-template-columns: calc(4rem + 0.7rem) minmax(0, 1fr) calc(4rem + 0.7rem)');
+    expect(portrait).toContain('calc(4rem + 0.7rem - env(safe-area-inset-left, 0px) - 3px)');
+    expect(portrait).toContain('calc(4rem + 0.7rem - env(safe-area-inset-right, 0px) - 3px)');
+    expect(portrait).toContain('minmax(0, 1fr)');
+    expect(portrait).toContain('padding-left: calc(env(safe-area-inset-left, 0px) + 3px)');
+    expect(portrait).toContain('padding-right: calc(env(safe-area-inset-right, 0px) + 3px)');
     expect(portrait).toContain('column-gap: 0');
-    expect(portrait).toContain('padding-inline: 0');
+    expect(portrait).not.toContain('padding-inline: 0');
     expect(portrait).toContain('width: min(88cqw, 78cqh)');
     expect(portrait).toContain('.icon .glyph { display: none; }');
     expect(portrait).toContain('.icon .glyph-bold { display: inline; }');

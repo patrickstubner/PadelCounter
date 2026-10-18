@@ -876,10 +876,15 @@ button:disabled { cursor: not-allowed; }
 
 @media (orientation: portrait) {
   .team {
-    /* The extra 0.7rem is the old side padding plus the column gap, so the number column stays put. */
-    grid-template-columns: calc(4rem + 0.7rem) minmax(0, 1fr) calc(4rem + 0.7rem);
+    /* The extra 0.7rem is the old side padding plus the column gap, so the number column stays put.
+       The 3px edge and the side safe area come out of the button columns. */
+    grid-template-columns:
+      max(0px, calc(4rem + 0.7rem - env(safe-area-inset-left, 0px) - 3px))
+      minmax(0, 1fr)
+      max(0px, calc(4rem + 0.7rem - env(safe-area-inset-right, 0px) - 3px));
     column-gap: 0;
-    padding-inline: 0;
+    padding-left: calc(env(safe-area-inset-left, 0px) + 3px);
+    padding-right: calc(env(safe-area-inset-right, 0px) + 3px);
   }
 
   .step {
