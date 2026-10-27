@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.13 – 2026-10-27
+
+- Im Menü steht ganz unten klein «Version …», aus dem Build. Die Satzzahl bleibt unverändert.
+
 ## 1.2.12 – 2026-10-27
 
 - Löscht man ein Match, das in 1.2.4 per `match/reset` weiterging, behält der Nachfolger seine eigenen Namen. Er übernimmt nicht die Namen eines früheren Matches.

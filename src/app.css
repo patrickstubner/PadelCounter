@@ -218,6 +218,17 @@ button:disabled { cursor: not-allowed; }
   white-space: nowrap;
 }
 
+.menu-version {
+  margin: 0.35rem 0 0;
+  padding: 0 0.35rem;
+  color: #8b93a7;
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
 .menu-item:disabled {
   background: #141414;
   color: #6b6b6b;
