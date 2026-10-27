@@ -85,9 +85,13 @@ export function omitMatch(log: MatchLog, matchId: string): MatchLog {
   const target = segments[targetIndex];
   if (!target || targetIndex < 0) return log;
 
-  if (targetIndex === 0) {
-    const successor = segments[1];
-    if (!successor) return log;
+  const successor = segments[targetIndex + 1];
+  if (!successor) return log;
+  const opening = log.events[successor.from];
+  // match/reset copies names from the match it leaves. Replaying that step from an
+  // earlier match would rename the successor, including the live one. Fold through
+  // the reset instead, the same way the oldest match is already removed.
+  if (targetIndex === 0 || opening?.type === 'match/reset') {
     let base = log.base;
     for (let index = 0; index <= successor.from; index += 1) {
       const event = log.events[index];

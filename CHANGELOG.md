@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.12 – 2026-10-27
+
+- Löscht man ein Match, das in 1.2.4 per `match/reset` weiterging, behält der Nachfolger seine eigenen Namen. Er übernimmt nicht die Namen eines früheren Matches.
+- Im Hochformat sind Plus und Minus 72px breit, das Zeichen 64px.
+- `happy-dom` steht auf 21.0.4. Die App spricht weiter keinen Server an.
+
 ## 1.2.11 – 2026-10-18
 
 - Im Hochformat sind Plus und Minus etwas breiter und bleiben über die volle Höhe. Das Plus- und das Minuszeichen sind dort größer, fetter und kontrastreicher. Die große Satzzahl bleibt in der Grösse von 1.2.10. Das Querformat bleibt unverändert.
