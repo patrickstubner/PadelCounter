@@ -259,6 +259,65 @@ describe('match archive', () => {
     expect(JSON.stringify(started.archive)).not.toContain('Wolves');
   });
 
+  it('keeps successor names when the deleted match was left by match/reset', () => {
+    let log = createLog(T0, ID, { a: 'Alpha', b: 'Team B' });
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    let current = sessionReducer({ log, archive: [] }, {
+      type: 'record',
+      event: { type: 'match/new', matchId: NEXT, at: T0 + 2 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'team/rename', team: 'a', name: 'Lobos', at: T0 + 3 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'match/reset', matchId: THIRD, at: T0 + 4 },
+    });
+    current = sessionReducer(current, {
+      type: 'record',
+      event: { type: 'game/increment', team: 'b', at: T0 + 5 },
+    });
+    expect(replay(current.log).teams.a.name).toBe('Lobos');
+
+    const deleted = sessionReducer(current, { type: 'delete-match', id: NEXT });
+    const live = replay(deleted.log);
+    expect(live.matchId).toBe(THIRD);
+    expect(live.teams.a.name).toBe('Lobos');
+    expect(live.teams.a.name).not.toBe('Alpha');
+    expect(live.sets[0]).toEqual({ a: 0, b: 1 });
+    const raw = serializeLog(deleted.log);
+    expect(raw).not.toContain(NEXT);
+    expect(raw).not.toContain(ID);
+    expect(raw).not.toContain('Alpha');
+    expect(deleted.archive.some((match) => match.id === ID)).toBe(true);
+    expect(deleted.archive.some((match) => match.id === NEXT)).toBe(false);
+
+    const undone = sessionReducer(deleted, { type: 'undo' });
+    expect(replay(undone.log).matchId).toBe(THIRD);
+    expect(replay(undone.log).teams.a.name).toBe('Lobos');
+    expect(replay(undone.log).sets[0]).toEqual({ a: 0, b: 0 });
+    expect(serializeLog(undone.log)).not.toContain(NEXT);
+  });
+
+  it('keeps names copied by an old match/reset when that earlier match is deleted', () => {
+    let log = createLog(T0, ID, { a: 'Lobos', b: 'Hafen' });
+    log = appendEvent(log, { type: 'game/increment', team: 'a', at: T0 + 1 });
+    const current = sessionReducer({ log, archive: [] }, {
+      type: 'record',
+      event: { type: 'match/reset', matchId: NEXT, at: T0 + 2 },
+    });
+    expect(replay(current.log).teams.a.name).toBe('Lobos');
+
+    const deleted = sessionReducer(current, { type: 'delete-match', id: ID });
+    expect(replay(deleted.log).matchId).toBe(NEXT);
+    expect(replay(deleted.log).teams).toEqual({ a: { name: 'Lobos' }, b: { name: 'Hafen' } });
+    expect(serializeLog(deleted.log)).not.toContain(ID);
+    const undone = sessionReducer(deleted, { type: 'undo' });
+    expect(undone.log).toBe(deleted.log);
+    expect(replay(undone.log).matchId).toBe(NEXT);
+  });
+
   it('rejects a broken archive and round-trips a valid one', () => {
     expect(parseArchive({ schemaVersion: 1, matches: [{ id: 'nope' }] })).toEqual([]);
     expect(parseArchive({ schemaVersion: 2, matches: [] })).toEqual([]);
