@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@rsbuild/core": "2.2.13",
+    "@rsbuild/core": "2.2.14",
     "@rsbuild/plugin-react": "2.1.1",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
