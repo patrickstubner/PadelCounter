@@ -28,6 +28,8 @@ interface CourtHeaderProps {
   readonly setLabel: string;
   readonly onBrand: () => void;
   readonly actions: readonly CourtAction[];
+  /** Build version, shown at the bottom of the hamburger menu. */
+  readonly version: string;
   /** Tests pin the header. Otherwise a wide landscape shows the buttons. */
   readonly layout?: 'menu' | 'bar';
 }
@@ -48,7 +50,7 @@ function useWideBar(): boolean {
   return wide;
 }
 
-export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderProps) {
+export function CourtHeader({ setLabel, onBrand, actions, version, layout }: CourtHeaderProps) {
   const wide = useWideBar();
   const mode = layout ?? (wide ? 'bar' : 'menu');
   const shown = useMemo(() => menuActions(actions, mode), [actions, mode]);
@@ -175,6 +177,7 @@ export function CourtHeader({ setLabel, onBrand, actions, layout }: CourtHeaderP
                 {action.detail ? <span className="menu-hint">{action.detail}</span> : null}
               </p>
             ))}
+            <p className="menu-version" data-testid="menu-version">{`Version ${version}`}</p>
           </div>
         </div>
       )}

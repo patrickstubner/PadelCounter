@@ -17,7 +17,7 @@ const actions: readonly CourtAction[] = [
 
 describe('court header', () => {
   it('puts the set name in the header and keeps the menu closed', () => {
-    const html = renderToStaticMarkup(<CourtHeader setLabel="Set 2" onBrand={() => undefined} actions={actions} layout="menu" />);
+    const html = renderToStaticMarkup(<CourtHeader setLabel="Set 2" onBrand={() => undefined} actions={actions} version="1.2.13" layout="menu" />);
     expect(html).toContain('>Padel Counter<');
     expect(html).toContain('data-testid="active-set"');
     expect(html).toContain('>Set 2<');
@@ -36,7 +36,7 @@ describe('court header', () => {
   });
 
   it('uses one row of buttons when the landscape bar fits', () => {
-    const html = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={actions} layout="bar" />);
+    const html = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={actions} version="1.2.13" layout="bar" />);
     expect(html).not.toContain('data-testid="menu-toggle"');
     expect(html).toContain('data-testid="undo"');
     expect(html).toContain('data-testid="end-match"');
@@ -56,17 +56,21 @@ describe('court header', () => {
     const first = actions[0];
     if (!first) throw new Error('missing action');
     const mixed: readonly CourtAction[] = [first, install, ...actions.slice(1)];
-    const menu = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="menu" />);
+    const menu = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} version="1.2.13" layout="menu" />);
     expect(menu.indexOf('data-testid="new-match"')).toBeLessThan(menu.indexOf('data-testid="add-to-home-screen"'));
     expect(menu.indexOf('>Add to Home Screen<')).toBeLessThan(menu.indexOf('Share → Add to Home Screen'));
+    expect(menu.indexOf('Share → Add to Home Screen')).toBeLessThan(menu.indexOf('>Version 1.2.13<'));
+    expect(menu).toContain('data-testid="menu-version"');
     expect(menu).toContain('class="menu-note" role="note"');
     expect(menu).not.toContain('aria-disabled');
     const menuRole = menu.slice(menu.indexOf('role="menu"'), menu.indexOf('role="note"'));
     expect(menuRole).toContain('data-testid="new-match"');
     expect(menuRole).not.toContain('add-to-home-screen');
-    const bar = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} layout="bar" />);
+    expect(menuRole).not.toContain('menu-version');
+    const bar = renderToStaticMarkup(<CourtHeader setLabel="Set 1" onBrand={() => undefined} actions={mixed} version="1.2.13" layout="bar" />);
     expect(bar).not.toContain('add-to-home-screen');
     expect(bar).not.toContain('Add to Home Screen');
+    expect(bar).not.toContain('menu-version');
     expect(bar).toContain('data-testid="new-match"');
   });
 
