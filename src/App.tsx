@@ -222,7 +222,12 @@ export function App() {
 
   return (
     <div className="app">
-      <CourtHeader setLabel={`Set ${state.activeSet + 1}`} onBrand={openMatches} actions={actions} />
+      <CourtHeader
+        setLabel={`Set ${state.activeSet + 1}`}
+        onBrand={openMatches}
+        actions={actions}
+        version={import.meta.env.APP_VERSION}
+      />
       {showVictory && screen.view === 'court' && celebrated ? (
         <Victory
           name={state.teams[celebrated].name}
