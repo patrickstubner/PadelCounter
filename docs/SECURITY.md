@@ -114,6 +114,15 @@ npm run verify-build
 - Render-Fehler: „Padel Counter could not show the score.“ Der Knopf löscht `padel-counter.v1` und `padel-counter.matches` und lädt neu. Der Hinweis sagt, dass der lokale Spielstand und die gespeicherten Matches dabei gelöscht werden.
 - Wake Lock und Service-Worker-Registrierung: stiller Fallback, die Anzeige bleibt bedienbar.
 
+
+## Nachtrag 16.11.2026: Cloud-Agent-Setup
+
+Nur Agent-Konfiguration (`.cursor/environment.json`, `.cursor/install-dev-tools.sh`, `.cursorignore`, Abschnitt in AGENTS.md, `.gitignore`-Ausnahme für die Setup-Dateien). Kein Anwendungscode, kein Versionsbump (1.2.13 bleibt), keine neuen Laufzeitpakete, keine Secrets. Der Projektinhaber hat diese Einrichtung ausdrücklich verlangt.
+
+Das Install-Skript lädt ripgrep 14.1.1, ast-grep 0.51.2 und codebase-memory-mcp 0.12.1 von offiziellen GitHub-Releases, prüft SHA-256, setzt kein `curl|bash` und kein `sudo` ein, installiert nur nach `~/.local/bin` und ruft nicht `codebase-memory-mcp install` oder `update` auf. `npm ci` läuft mit `--ignore-scripts`. `.codebase-memory/` steht in `.gitignore` und `.cursorignore`.
+
+Keine kritischen, hohen oder mittleren Befunde in diesen Dateien. Lieferkettenrisiko der Dritt-Binaries bleibt trotz Hash-Prüfung (niedrig). `npm audit --audit-level=moderate` ist auf `main` vorbestehend rot; nicht in diesem PR behoben (geplant ab 27.11.2026).
+
 ## Restrisiko
 
 Jemand mit Zugriff auf das GitHub-Repository oder auf den Rechner des Spielers kann die App beziehungsweise den lokalen Speicher ändern. Das ist die Grenze einer statischen, lokalen PWA. Ein kompromittierter Deploy würde vom Service Worker gecacht, bis der nächste Deploy `skipWaiting` auslöst; deshalb deployed nur `main` nach grüner Prüfung.

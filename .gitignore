@@ -5,12 +5,16 @@ coverage/
 .DS_Store
 .eslintcache
 *.tsbuildinfo
-.cursor/
+# Lokale Cursor-Dateien; Cloud-Agent-Setup bleibt versioniert
+.cursor/*
+!.cursor/environment.json
+!.cursor/install-dev-tools.sh
 
 # Lokale Code-Index-Ordner (Agent-Tools), nie committen
 .codegraph/
 graphify-out/
 .serena/
+.codebase-memory/
 
 # Umgebungsdateien
 .env
