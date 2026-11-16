@@ -6,3 +6,13 @@ coverage/
 .eslintcache
 *.tsbuildinfo
 .cursor/
+
+# Lokale Code-Index-Ordner (Agent-Tools), nie committen
+.codegraph/
+graphify-out/
+.serena/
+
+# Umgebungsdateien
+.env
+.env.*
+!.env.example
