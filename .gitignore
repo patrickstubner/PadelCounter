@@ -11,3 +11,8 @@ coverage/
 .codegraph/
 graphify-out/
 .serena/
+
+# Umgebungsdateien
+.env
+.env.*
+!.env.example
