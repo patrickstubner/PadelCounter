@@ -123,6 +123,12 @@ Das Install-Skript lädt ripgrep 14.1.1, ast-grep 0.51.2 und codebase-memory-mcp
 
 Keine kritischen, hohen oder mittleren Befunde in diesen Dateien. Lieferkettenrisiko der Dritt-Binaries bleibt trotz Hash-Prüfung (niedrig). `npm audit --audit-level=moderate` ist auf `main` vorbestehend rot; nicht in diesem PR behoben (geplant ab 27.11.2026).
 
+## Nachtrag 20.11.2026: MCP-Allowlist
+
+Geprüft auf Basis main 23de4a9. Nur Konfiguration: `.cursor/environment.json` (neu `mcpServerAllowlist`), Abschnitt in AGENTS.md, STATUS.md. Kein Anwendungscode, keine neuen Abhängigkeiten, keine Secrets, keine Personendaten, keine lokalen Rechnerpfade. Schema-Prüfung der JSON-Datei gegen https://cursor.com/schemas/environment.schema.json bestanden (Negativprobe mit unbekanntem Feld wird abgelehnt).
+
+Wirkung: Agents dieser Umgebung laden nur den gehosteten Graphify-MCP; alle anderen User- und Team-MCP-Server sind gesperrt (weniger Tool-Beschreibungen pro Anfrage, kleinere Angriffsfläche durch fremde MCP-Tools). Keine kritischen, hohen oder mittleren Befunde. (M1, Info) Die Datei wirkt nur, wenn die Umgebung auf cursor.com sie verwendet; sonst gilt die Dashboard-Einstellung. (M2, Info) Passt das URL-Muster nicht, ist Graphify gesperrt und der Agent nutzt `codebase-memory-mcp` (steht in AGENTS.md). Nicht in der Cloud getestet.
+
 ## Restrisiko
 
 Jemand mit Zugriff auf das GitHub-Repository oder auf den Rechner des Spielers kann die App beziehungsweise den lokalen Speicher ändern. Das ist die Grenze einer statischen, lokalen PWA. Ein kompromittierter Deploy würde vom Service Worker gecacht, bis der nächste Deploy `skipWaiting` auslöst; deshalb deployed nur `main` nach grüner Prüfung.
