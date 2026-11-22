@@ -46,14 +46,14 @@ CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pa
 
 ### Sicherheit (Dauerregel)
 - Nach jeder Code-Erstellung oder -Änderung eine detaillierte Sicherheitsprüfung: Eingabevalidierung, Injection, Geheimnisse und Zugangsdaten, Berechtigungen, Abhängigkeiten inklusive indirekter, CDN und GitHub Actions auf bekannte Schwachstellen, Fehlermeldungen mit sensiblen Daten, Angriffsflächen. Ergebnis mit Schweregrad und Fix-Vorschlag im PR.
-- Verwundbare Libraries auf die nächste sichere Version heben. Bei einem grossen oder brechenden Sprung (Major) vorher Patrick fragen.
+- Verwundbare Libraries auf die nächste sichere Version heben. Bei einem grossen oder brechenden Sprung (Major) vorher den Projektinhaber fragen.
 - Updates und offene Risiken in docs/SECURITY.md nachführen.
 - Keine Geheimnisse und keine personenbezogenen Daten ins Repo (das Repo ist öffentlich).
 
 ### Prüfung und Merge
-- Jede Code-Änderung, jeder Merge und jedes Update (auch grüne Dependabot-PRs) wird von Stabschef unabhängig geprüft (Entscheid Patrick, 16.11.2026).
-- Vor jedem Merge oder Push auf `main` den Head-SHA an Stabschef geben und auf das Ok warten. Merge nur mit ausdrücklichem Ok von Patrick.
-- Keine bezahlten Dienste und kein On-Demand ohne Patricks Ja.
+- Jede Code-Änderung, jeder Merge und jedes Update (auch grüne Dependabot-PRs) wird von Stabschef unabhängig geprüft (Entscheid Projektinhaber, 16.11.2026).
+- Vor jedem Merge oder Push auf `main` den Head-SHA an Stabschef geben und auf das Ok warten. Merge nur mit ausdrücklichem Ok des Projektinhabers.
+- Keine bezahlten Dienste und kein On-Demand ohne Ja des Projektinhabers.
 - Merge immer als Squash-Merge mit `--match-head-commit <SHA>`. Autor und Committer nur mit der GitHub-noreply-Adresse des Repo-Kontos.
 
 ## Zusammenarbeit mehrerer Agents (Cursor, Google Antigravity, weitere)
@@ -62,7 +62,7 @@ Gilt für alle Agents und Menschen, die an diesem Repo arbeiten. Google Antigrav
 
 ### Branches und PRs
 - **Ein Branch pro Aufgabe und Agent.** Zwei Agents arbeiten nie auf demselben Branch. Branch-Name nach Muster `<typ>/<kurzer-name>` (z. B. `feat/…`, `fix/…`, `docs/…`), Basis immer aktuelles `main`.
-- **Änderungen nur per Pull Request.** Kein direkter Push auf `main`, kein Force-Push auf fremde Branches. Merge nur mit ausdrücklichem Ok des Projektinhabers. Die unabhängige Prüfung durch den Bot Stabschef läuft über den Projektinhaber; Agents ohne Zugang (z. B. Antigravity) nennen nur den Head-SHA im PR (Details: «Prüfung und Merge»).
+- **Änderungen nur per Pull Request.** Kein direkter Push auf `main`, kein Force-Push auf fremde Branches. Vor dem Merge geht der Head-SHA an Stabschef; auf dessen Ok warten. Gemergt wird erst nach dem ausdrücklichen Ja des Projektinhabers. Agents ohne direkten Zugang zu Stabschef (z. B. Antigravity) nennen den Head-SHA im PR und mergen nicht (Details: «Prüfung und Merge»).
 - Im PR den Head-SHA nennen. Kleine PRs mit einem Thema; fremde Branches und PRs nicht anfassen.
 
 ### Sicherheitsprüfung nach jeder Codeänderung
