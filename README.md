@@ -50,3 +50,9 @@ Der Spielstand liegt unter dem Schlüssel `padel-counter.v1` in `localStorage`. 
 ## Build
 
 Rsbuild erzeugt die statische App. Vitest führt die Tests aus und ist nicht der Bundler der App. Der Service Worker wird beim Produktionsbuild mit Workbox lokal erzeugt, ohne CDN.
+
+## Mit Agents arbeiten (Cursor, Google Antigravity)
+
+1. `AGENTS.md`, `ARCHITECTURE.md` und `STATUS.md` lesen. Antigravity lädt `AGENTS.md` automatisch.
+2. Ein Branch pro Aufgabe und Agent, Änderungen nur per Pull Request, nach jeder Änderung Sicherheitsprüfung, am Ende `STATUS.md` mit Commit nachführen.
+3. Keine Secrets ins Repo, keine kostenpflichtigen Dienste ohne Ja des Projektinhabers.
