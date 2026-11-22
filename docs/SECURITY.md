@@ -102,10 +102,11 @@ Direkt, exakt, Stand 2026-10-13:
 `npm audit` (vollständig, inklusive Dev-Dependencies): **0 Schwachstellen**. Wiederholen mit:
 
 ```bash
-npm ci
-npm audit --audit-level=moderate
-npm run build
-npm run verify-build
+corepack enable
+pnpm install --frozen-lockfile
+pnpm audit --audit-level=moderate
+pnpm run build
+pnpm run verify-build
 ```
 
 ## Fehlermeldungen
@@ -134,3 +135,21 @@ Wirkung: Agents dieser Umgebung laden nur den gehosteten Graphify-MCP; alle ande
 Jemand mit Zugriff auf das GitHub-Repository oder auf den Rechner des Spielers kann die App beziehungsweise den lokalen Speicher ändern. Das ist die Grenze einer statischen, lokalen PWA. Ein kompromittierter Deploy würde vom Service Worker gecacht, bis der nächste Deploy `skipWaiting` auslöst; deshalb deployed nur `main` nach grüner Prüfung.
 
 Die Prüfung ersetzt kein unabhängiges Pentest-Gutachten. Sie ist die Review des Stands 1.1.0 vom 2026-10-13 gegen den Quelltext und `npm audit` dieses Commits. Gegenüber 1.0.0 ist `lottie-web` 5.13.0 dazugekommen; eingebunden wird der Light-Build ohne `eval`. Die Pokal-Datei steht unter der Lottie Simple License, Text und Quelle in `NOTICE`.
+
+## Nachtrag 22.11.2026: Audit-Fix und Umstellung auf pnpm
+
+Geprüft am Branch `chore/pnpm-audit-fix`, Basis `main` b985b4f. Quelle: `pnpm audit` gegen `pnpm-lock.yaml` (Registry-Daten vom 22.11.2026). Kein Anwendungscode geändert, kein Versionsbump (1.2.13 bleibt), kein neues Laufzeitpaket (lottie-web, react, react-dom unverändert).
+
+Vorher (`npm audit`): 11 Funde, alle moderat. Nachher (`pnpm audit`): 0 Funde.
+
+| Paket | alt | neu | Art | Advisory |
+|---|---|---|---|---|
+| eslint (nur Dev) | 10.13.0 | 10.15.0 | Minor | GHSA-g3hv-75wg-m249 (minimatch, moderat) |
+| typescript-eslint (nur Dev) | 8.71.2 | 8.73.0 | Minor | moderat |
+| glob (Override, über workbox-build, nur Build) | 11.1.0 | 14.0.2 | Override | GHSA-3g3m-2fjr-6pw4 (moderat). Entfernt zugleich F-11 (glob@11.1.0 als veraltet markiert) |
+
+Umstellung: `package-lock.json` entfällt, `pnpm-lock.yaml` aus `pnpm import` (Versionen bleiben). `packageManager` pinnt pnpm 10.34.9, `.npmrc` hält `ignore-scripts=true` (CA-3), die CI installiert mit `--frozen-lockfile --ignore-scripts`. `pnpm/action-setup` ist auf den Commit von v6.1.1 gepinnt (73e46992e05b19abd31f2f3c20e0e7370d762115). Keine Phantom-Abhängigkeiten: Lint, Typecheck, 147 Tests, Build und `verify-build` laufen mit dem strikten pnpm-`node_modules` ohne `shamefully-hoist`. Pages-Jobs (`upload`, `deploy`) unverändert ausser der Installation. Der Override gilt nur für das Build-Werkzeug workbox-build, nicht für den ausgelieferten Code.
+
+Mindestalter neuer Paketversionen (Auftrag vom 22.11.2026): `pnpm-workspace.yaml` setzt `minimumReleaseAge: 5760` (4 Tage, Schutz vor kompromittierten Releases). Geprüft: pnpm 10.34.9 lehnt eine jüngere Version beim Auflösen ab (Test mit einem am selben Tag veröffentlichten Paket) und nimmt sie nur über `minimumReleaseAgeExclude`. Alle Pakete im `pnpm-lock.yaml` sind älter als 4 Tage (jüngstes: minimatch 11.0.9, 5,7 Tage), keine Ausnahme war nötig. Ausnahmen künftig nur für nicht anders behebbare Sicherheitslücken, mit Kommentar (CVE/GHSA, Datum) und Rückbau nach 4 Tagen. Dependabot: `cooldown` mindestens 4 Tage (Sicherheits-Updates sind davon nicht betroffen).
+
+Keine kritischen, hohen oder mittleren offenen Befunde. Offen: pnpm 11 und 12 sind erschienen (Major), nicht übernommen. Dependabot-PRs #28, #34–#36 beziehen sich auf das npm-Lockfile und müssen nach dem Merge neu gebaut werden.
