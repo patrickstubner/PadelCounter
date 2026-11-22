@@ -1,4 +1,15 @@
-# STATUS.md – Stand 16.11.2026, Basis main 214a865 (1.2.13), Branch `chore/cloud-agent-setup`
+# STATUS.md – Stand 22.11.2026, beruht auf Commit a70276f (Branch `docs/antigravity-setup`, Basis main 2f43ae4)
+
+## Nachtrag 22.11.2026 (Abend): Korrekturen nach Stabschef-Prüfung
+Commit `a70276f`. Nur Doku, kein App-Code, kein Cloud Agent.
+- Abschnitt «Zusammenarbeit mehrerer Agents»: vor dem Merge geht der Head-SHA an Stabschef, auf dessen Ok warten, Merge erst nach dem Ja des Projektinhabers.
+- Vornamen in `AGENTS.md` durch «Projektinhaber» ersetzt.
+
+## Nachtrag 22.11.2026: Vorbereitung für lokale Arbeit mit Google Antigravity
+Branch `docs/antigravity-setup` (PR offen, nicht mergen bis Stabschef-Ok und Ja des Projektinhabers). Nur Doku und `.gitignore`, kein App-Code, kein Cloud Agent. `.cursor/` und `.cursorignore` unverändert.
+- `AGENTS.md`: neuer Abschnitt «Zusammenarbeit mehrerer Agents» (ein Branch pro Aufgabe und Agent, nur PRs, Sicherheitsprüfung nach jeder Änderung, STATUS.md mit Commit, keine Secrets, keine Kosten ohne Ja, empfohlene lokale MCP-Server) und Projektregel «Version 1 bleibt eigenständig neben v2». Antigravity liest `AGENTS.md` automatisch; keine zweite Regel-Datei.
+- `README.md`: Abschnitt «Mit Agents arbeiten» (der lokale Start stand schon dort). `.gitignore`: `.agents/mcp_config.json`.
+- Stand `npm audit` (22.11.2026, `package-lock.json`): 11 Funde, alle moderat. Offene Dependabot-PRs (#28, #34–#36 u. a.) warten; nicht Teil dieses PRs.
 
 ## Nachtrag 20.11.2026: MCP-Allowlist für Cloud-Agent-Umgebung
 Branch `chore/mcp-allowlist` (Draft-PR, Basis main 23de4a9, nicht mergen bis Stabschef-Ok und Ja des Projektinhabers). Kein Versionsbump.

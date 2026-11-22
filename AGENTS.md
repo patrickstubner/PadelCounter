@@ -24,6 +24,7 @@ CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pa
 - Gespeicherte Daten (`padel-counter.v1`, `padel-counter.matches`, `padel-counter.celebrated`) nie stillschweigend verwerfen oder umdeuten. Schemawechsel nur mit Migration und Test.
 - Texte nur als React-Text, kein `innerHTML` (ESLint und `src/security.test.ts`).
 - `icon-1024.png` nicht precachen (`verify-build` prüft das).
+- **Version 1 bleibt als eigenständige Offline-App bestehen** und läuft parallel zu PadelCounterV2 weiter (Entscheid 23.10.2026). Ihre Daten werden nicht nach v2 übernommen. Neue Funktionen kommen in v2, nicht hier, ausser der Projektinhaber verlangt es ausdrücklich.
 
 ## Arbeitsregeln für Agents
 
@@ -45,15 +46,53 @@ CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pa
 
 ### Sicherheit (Dauerregel)
 - Nach jeder Code-Erstellung oder -Änderung eine detaillierte Sicherheitsprüfung: Eingabevalidierung, Injection, Geheimnisse und Zugangsdaten, Berechtigungen, Abhängigkeiten inklusive indirekter, CDN und GitHub Actions auf bekannte Schwachstellen, Fehlermeldungen mit sensiblen Daten, Angriffsflächen. Ergebnis mit Schweregrad und Fix-Vorschlag im PR.
-- Verwundbare Libraries auf die nächste sichere Version heben. Bei einem grossen oder brechenden Sprung (Major) vorher Patrick fragen.
+- Verwundbare Libraries auf die nächste sichere Version heben. Bei einem grossen oder brechenden Sprung (Major) vorher den Projektinhaber fragen.
 - Updates und offene Risiken in docs/SECURITY.md nachführen.
 - Keine Geheimnisse und keine personenbezogenen Daten ins Repo (das Repo ist öffentlich).
 
 ### Prüfung und Merge
-- Jede Code-Änderung, jeder Merge und jedes Update (auch grüne Dependabot-PRs) wird von Stabschef unabhängig geprüft (Entscheid Patrick, 16.11.2026).
-- Vor jedem Merge oder Push auf `main` den Head-SHA an Stabschef geben und auf das Ok warten. Merge nur mit ausdrücklichem Ok von Patrick.
-- Keine bezahlten Dienste und kein On-Demand ohne Patricks Ja.
+- Jede Code-Änderung, jeder Merge und jedes Update (auch grüne Dependabot-PRs) wird von Stabschef unabhängig geprüft (Entscheid Projektinhaber, 16.11.2026).
+- Vor jedem Merge oder Push auf `main` den Head-SHA an Stabschef geben und auf das Ok warten. Merge nur mit ausdrücklichem Ok des Projektinhabers.
+- Keine bezahlten Dienste und kein On-Demand ohne Ja des Projektinhabers.
 - Merge immer als Squash-Merge mit `--match-head-commit <SHA>`. Autor und Committer nur mit der GitHub-noreply-Adresse des Repo-Kontos.
+
+## Zusammenarbeit mehrerer Agents (Cursor, Google Antigravity, weitere)
+
+Gilt für alle Agents und Menschen, die an diesem Repo arbeiten. Google Antigravity liest diese `AGENTS.md` im Repo-Stamm automatisch (Rules-Doku: https://antigravity.google/docs/rules); eine zweite Regel-Datei gibt es bewusst nicht, damit nichts doppelt gepflegt wird.
+
+### Branches und PRs
+- **Ein Branch pro Aufgabe und Agent.** Zwei Agents arbeiten nie auf demselben Branch. Branch-Name nach Muster `<typ>/<kurzer-name>` (z. B. `feat/…`, `fix/…`, `docs/…`), Basis immer aktuelles `main`.
+- **Änderungen nur per Pull Request.** Kein direkter Push auf `main`, kein Force-Push auf fremde Branches. Vor dem Merge geht der Head-SHA an Stabschef; auf dessen Ok warten. Gemergt wird erst nach dem ausdrücklichen Ja des Projektinhabers. Agents ohne direkten Zugang zu Stabschef (z. B. Antigravity) nennen den Head-SHA im PR und mergen nicht (Details: «Prüfung und Merge»).
+- Im PR den Head-SHA nennen. Kleine PRs mit einem Thema; fremde Branches und PRs nicht anfassen.
+
+### Sicherheitsprüfung nach jeder Codeänderung
+Nach jeder Code-Erstellung oder -Änderung, **bevor weitergebaut wird**, kurz prüfen und im PR (Abschnitt «Sicherheit») bzw. in der `SECURITY`-Notiz des Repos festhalten:
+- Eingabevalidierung und Injection (XSS, SQL/Command, Pfade, Prototype Pollution, Deserialisierung)
+- Geheimnisse und Zugangsdaten (Code, Konfiguration, Git-Historie, Logs)
+- Berechtigungen und Zugriffskontrolle
+- Abhängigkeiten und Versionen (direkt und indirekt, CDN, GitHub Actions): `npm audit` bzw. `pnpm audit`, verwundbare Libraries auf die nächste sichere Version heben; bei Major-Sprung vorher den Projektinhaber fragen
+- Fehlermeldungen und Logs mit sensiblen Daten
+- Neue Angriffsflächen (Endpunkte, Schnittstellen, Dateizugriff, Weiterleitungen, CSP/Header)
+
+Schwachstellen mit **Schweregrad** (kritisch / hoch / mittel / niedrig) und Fix-Vorschlag melden, bevor weitergebaut wird. Nichts als «sicher» bezeichnen, was nicht geprüft wurde.
+
+### Übergabe: STATUS.md
+- Am Ende **jeder Aufgabe** `STATUS.md` nachführen: was getan wurde, was offen ist, **Commit-Hash**, auf dem der Stand beruht, und welche lokalen Tools genutzt wurden. So kann der nächste Agent einsteigen, ohne alles neu zu lesen.
+- `ARCHITECTURE.md` nachführen, wenn sich Struktur oder Entscheide ändern. Keine Werte erfinden: Unbelegtes steht als «offen» da.
+- Ergebnisse lokaler Analysen (Hotspots, Aufrufer, Abhängigkeiten) kurz in `STATUS.md`; rohe Index-Ordner (`.codegraph/`, `graphify-out/`, `.serena/`, `.codebase-memory/`) bleiben lokal und stehen in `.gitignore`.
+
+### Verbote
+- **Keine Secrets, API-Keys, Tokens oder `.env`-Dateien ins Repo.** Auch nicht in MCP-Konfigurationen: `.agents/mcp_config.json` und `~/.gemini/…` liegen nur lokal (`.agents/mcp_config.json` steht in `.gitignore`).
+- **Keine kostenpflichtigen Dienste, Abos, Deploys oder Käufe** ohne ausdrückliches Ja des Projektinhabers. Im Zweifel stoppen und fragen.
+- Keine personenbezogenen Daten ins Repo, wenn es öffentlich ist.
+
+### Lokale MCP-Server (Empfehlung für Antigravity und andere lokale Agents)
+- **Sinnvoll:** GitHub (Repos, PRs, Issues), Graphify (Struktur-Graph) und `codebase-memory-mcp` (Aufrufer, Impact, Architektur; spart Tokens).
+- **Nicht nötig:** Sentry, Notion, PostHog, Vercel, Netlify. Jeder geladene MCP-Server kostet bei jeder Anfrage Tokens; nur aufnehmen, was beim Coden direkt hilft.
+- Antigravity: Konfiguration global in `~/.gemini/config/mcp_config.json` oder pro Workspace in `.agents/mcp_config.json` (nicht committen). Anleitung: https://antigravity.google/docs/mcp
+
+### Lokaler Start
+Installation, Start und Tests stehen in `README.md` und im Abschnitt «Befehle» oben. Vor dem ersten Commit `npm test` bzw. die dort genannten Prüfungen ausführen.
 
 ## Cursor Cloud specific instructions
 
