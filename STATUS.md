@@ -1,4 +1,9 @@
-# STATUS.md – Stand 22.11.2026, beruht auf Commit 674043f (Branch `docs/antigravity-setup`, Basis main 2f43ae4)
+# STATUS.md – Stand 22.11.2026, beruht auf Commit a70276f (Branch `docs/antigravity-setup`, Basis main 2f43ae4)
+
+## Nachtrag 22.11.2026 (Abend): Korrekturen nach Stabschef-Prüfung
+Commit `a70276f`. Nur Doku, kein App-Code, kein Cloud Agent.
+- Abschnitt «Zusammenarbeit mehrerer Agents»: vor dem Merge geht der Head-SHA an Stabschef, auf dessen Ok warten, Merge erst nach dem Ja des Projektinhabers.
+- Vornamen in `AGENTS.md` durch «Projektinhaber» ersetzt.
 
 ## Nachtrag 22.11.2026: Vorbereitung für lokale Arbeit mit Google Antigravity
 Branch `docs/antigravity-setup` (PR offen, nicht mergen bis Stabschef-Ok und Ja des Projektinhabers). Nur Doku und `.gitignore`, kein App-Code, kein Cloud Agent. `.cursor/` und `.cursorignore` unverändert.
