@@ -25,6 +25,7 @@ CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pa
 - Texte nur als React-Text, kein `innerHTML` (ESLint und `src/security.test.ts`).
 - `icon-1024.png` nicht precachen (`verify-build` prüft das).
 - **Paketmanager: nur pnpm** (Version in `packageManager`, über `corepack enable`). Kein `npm`, kein `yarn`, kein `package-lock.json`. Fehlt ein Paket, wird es sauber in `package.json` eingetragen, kein `shamefully-hoist`. `.npmrc` setzt `ignore-scripts=true` (Sicherheitshaltung CA-3).
+- **Mindestalter neuer Paketversionen: 4 Tage.** `pnpm-workspace.yaml` setzt `minimumReleaseAge: 5760` (Minuten): pnpm installiert keine Version, die jünger ist (Schutz vor kompromittierten Releases). Die Zeile nie senken oder entfernen. Ausnahme nur, wenn eine Sicherheitslücke sich anders nicht beheben lässt: das Paket gezielt unter `minimumReleaseAgeExclude` eintragen, mit Kommentar (CVE/GHSA, Datum), im PR melden und nach 4 Tagen wieder entfernen. Dependabot hat `cooldown` von mindestens 4 Tagen. Das gilt für alle Agents (Cursor, Antigravity, weitere).
 - **Version 1 bleibt als eigenständige Offline-App bestehen** und läuft parallel zu PadelCounterV2 weiter (Entscheid 23.10.2026). Ihre Daten werden nicht nach v2 übernommen. Neue Funktionen kommen in v2, nicht hier, ausser der Projektinhaber verlangt es ausdrücklich.
 
 ## Arbeitsregeln für Agents

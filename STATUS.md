@@ -5,6 +5,7 @@ Branch `chore/pnpm-audit-fix` (Draft-PR, Basis main b985b4f, nicht mergen bis St
 - Umstellung auf pnpm 10.34.9 (`packageManager`, `pnpm-lock.yaml`, `.npmrc` ignore-scripts), CI mit pnpm. `package-lock.json` entfällt.
 - Audit: 11 moderate Funde auf 0 (eslint 10.15.0, typescript-eslint 8.73.0, Override glob 14.0.2). Damit wird die CI auf `main` und allen PRs wieder grün.
 - AGENTS.md: Regel «nur pnpm». Offene Dependabot-PRs müssen danach neu gebaut werden.
+- Mindestalter neuer Paketversionen 4 Tage: `pnpm-workspace.yaml` mit `minimumReleaseAge: 5760`, Regel in `AGENTS.md` und Sicherheitsnotiz, Dependabot-`cooldown` (mindestens 4 Tage). Lockfile geprüft: alle Pakete älter als 4 Tage (jüngstes: minimatch 11.0.9, 5,7 Tage). **Übergangsausnahmen in `minimumReleaseAgeExclude` (Kommentar «Übergang Einführung 4-Tage-Regel, entfernen ab 26.11.2026»): keine, weil kein bestehendes Paket jünger als 4 Tage ist.** Sicherheits-Ausnahmen: keine nötig.
 
 ## Nachtrag 22.11.2026 (Abend): Korrekturen nach Stabschef-Prüfung
 Commit `a70276f`. Nur Doku, kein App-Code, kein Cloud Agent.
