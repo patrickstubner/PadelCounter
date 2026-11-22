@@ -1,4 +1,10 @@
-# STATUS.md – Stand 22.11.2026, beruht auf Commit a70276f (Branch `docs/antigravity-setup`, Basis main 2f43ae4)
+# STATUS.md – Stand 22.11.2026, Branch `chore/pnpm-audit-fix`, Basis main b985b4f
+
+## Nachtrag 22.11.2026 (Nachmittag): Audit-Fix und pnpm
+Branch `chore/pnpm-audit-fix` (Draft-PR, Basis main b985b4f, nicht mergen bis Stabschef-Ok und Ja des Projektinhabers). Kein App-Code, kein Versionsbump.
+- Umstellung auf pnpm 10.34.9 (`packageManager`, `pnpm-lock.yaml`, `.npmrc` ignore-scripts), CI mit pnpm. `package-lock.json` entfällt.
+- Audit: 11 moderate Funde auf 0 (eslint 10.15.0, typescript-eslint 8.73.0, Override glob 14.0.2). Damit wird die CI auf `main` und allen PRs wieder grün.
+- AGENTS.md: Regel «nur pnpm». Offene Dependabot-PRs müssen danach neu gebaut werden.
 
 ## Nachtrag 22.11.2026 (Abend): Korrekturen nach Stabschef-Prüfung
 Commit `a70276f`. Nur Doku, kein App-Code, kein Cloud Agent.
@@ -37,7 +43,7 @@ Pflege: Audit auf `main` grün machen, Abhängigkeiten aktuell halten.
   - P2-05 keine Guillemets in der englischen UI: `«` `»` kommen in `src/` nur noch in `src/security.test.ts` als verbotene Zeichen vor
 
 ## Plan ab 27.11.2026
-1. Audit-Fix auf `main`: `npm audit` zeigt am 16.11.2026 13 Funde (11 moderat, 2 niedrig). Deshalb ist die CI auf `main` und auf allen PRs rot (Schritt `npm audit --audit-level=moderate`).
+1. Audit-Fix auf `main`: erledigt im PR `chore/pnpm-audit-fix` (22.11.2026): 11 moderate Funde auf 0, zugleich pnpm. Bis zum Merge ist die CI auf `main` und auf allen PRs rot (Schritt `pnpm audit --audit-level=moderate`).
 2. Danach Dependabot-PRs und Majors, je Paket ein PR.
 
 ## Offen / Entscheide nötig (wer?)
@@ -48,12 +54,12 @@ Pflege: Audit auf `main` grün machen, Abhängigkeiten aktuell halten.
 - dieser Draft-PR: Cloud-Agent-Setup (`chore/cloud-agent-setup`)
 
 ## Bekannte Probleme / Risiken
-- CI rot wegen `npm audit` auf `main` (nicht durch Docs-PRs verursacht).
+- CI rot wegen `npm audit` auf `main` (nicht durch Docs-PRs verursacht); behoben im PR `chore/pnpm-audit-fix`.
 - Kein Ruleset auf `main` (keine Pflicht-Checks).
 
 ## Genutzte lokale Tools & vermiedene Cloud-Agent-Nutzung
 - codebase-memory-mcp: Aufrufer von `useMatch`, `replay`, `matchReducer`.
 - rg: Speicher-Schlüssel, P2-Punkte im Code nachgeprüft.
-- `npm audit` lokal gegen `package-lock.json`.
+- `pnpm audit` lokal gegen `pnpm-lock.yaml` (bis 22.11.2026 `npm audit`).
 - Geschätzt 1 kurzer Cloud-Agent-Lauf vermieden (Doku-Paket).
 - 16.11. (Cloud-Agent-Setup): nur Agent-Konfiguration, lokal geprüft, kein Cloud Agent.

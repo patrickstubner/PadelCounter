@@ -10,13 +10,13 @@
 ## Befehle (aus package.json und .github/workflows/ci.yml)
 | Zweck | Befehl |
 |---|---|
-| Installieren | `npm ci` |
-| Entwickeln | `npm run dev` (http://localhost:4173/PadelCounter/) |
-| Lint | `npm run lint` |
-| Typen | `npm run typecheck` |
-| Tests | `npm test` |
-| Build | `npm run build`, danach `npm run verify-build` |
-| Audit | `npm run audit` bzw. `npm audit --audit-level=moderate` |
+| Installieren | `corepack enable`, dann `pnpm install --frozen-lockfile` (`.npmrc`: ignore-scripts) |
+| Entwickeln | `pnpm run dev` (http://localhost:4173/PadelCounter/) |
+| Lint | `pnpm run lint` |
+| Typen | `pnpm run typecheck` |
+| Tests | `pnpm test` |
+| Build | `pnpm run build`, danach `pnpm run verify-build` |
+| Audit | `pnpm run audit` bzw. `pnpm audit --audit-level=moderate` |
 
 CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pages nur von `main`.
 
@@ -24,6 +24,7 @@ CI (`ci.yml`) läuft bei jedem Pull Request und auf `main`. Deploy auf GitHub Pa
 - Gespeicherte Daten (`padel-counter.v1`, `padel-counter.matches`, `padel-counter.celebrated`) nie stillschweigend verwerfen oder umdeuten. Schemawechsel nur mit Migration und Test.
 - Texte nur als React-Text, kein `innerHTML` (ESLint und `src/security.test.ts`).
 - `icon-1024.png` nicht precachen (`verify-build` prüft das).
+- **Paketmanager: nur pnpm** (Version in `packageManager`, über `corepack enable`). Kein `npm`, kein `yarn`, kein `package-lock.json`. Fehlt ein Paket, wird es sauber in `package.json` eingetragen, kein `shamefully-hoist`. `.npmrc` setzt `ignore-scripts=true` (Sicherheitshaltung CA-3).
 - **Version 1 bleibt als eigenständige Offline-App bestehen** und läuft parallel zu PadelCounterV2 weiter (Entscheid 23.10.2026). Ihre Daten werden nicht nach v2 übernommen. Neue Funktionen kommen in v2, nicht hier, ausser der Projektinhaber verlangt es ausdrücklich.
 
 ## Arbeitsregeln für Agents
@@ -70,7 +71,7 @@ Nach jeder Code-Erstellung oder -Änderung, **bevor weitergebaut wird**, kurz pr
 - Eingabevalidierung und Injection (XSS, SQL/Command, Pfade, Prototype Pollution, Deserialisierung)
 - Geheimnisse und Zugangsdaten (Code, Konfiguration, Git-Historie, Logs)
 - Berechtigungen und Zugriffskontrolle
-- Abhängigkeiten und Versionen (direkt und indirekt, CDN, GitHub Actions): `npm audit` bzw. `pnpm audit`, verwundbare Libraries auf die nächste sichere Version heben; bei Major-Sprung vorher den Projektinhaber fragen
+- Abhängigkeiten und Versionen (direkt und indirekt, CDN, GitHub Actions): `pnpm audit`, verwundbare Libraries auf die nächste sichere Version heben; bei Major-Sprung vorher den Projektinhaber fragen
 - Fehlermeldungen und Logs mit sensiblen Daten
 - Neue Angriffsflächen (Endpunkte, Schnittstellen, Dateizugriff, Weiterleitungen, CSP/Header)
 
@@ -92,7 +93,7 @@ Schwachstellen mit **Schweregrad** (kritisch / hoch / mittel / niedrig) und Fix-
 - Antigravity: Konfiguration global in `~/.gemini/config/mcp_config.json` oder pro Workspace in `.agents/mcp_config.json` (nicht committen). Anleitung: https://antigravity.google/docs/mcp
 
 ### Lokaler Start
-Installation, Start und Tests stehen in `README.md` und im Abschnitt «Befehle» oben. Vor dem ersten Commit `npm test` bzw. die dort genannten Prüfungen ausführen.
+Installation, Start und Tests stehen in `README.md` und im Abschnitt «Befehle» oben. Vor dem ersten Commit `pnpm test` bzw. die dort genannten Prüfungen ausführen.
 
 ## Cursor Cloud specific instructions
 
@@ -112,7 +113,7 @@ Die Binaries liegen nur unter `~/.local/bin` (kein Kopieren nach `/usr/local/bin
 
 Weitere Tools können später im selben Skript ergänzt werden (Version und SHA-256 pinnen, kein `curl|bash`).
 
-Abhängigkeiten: das Skript erkennt `package-lock.json` (`npm ci --ignore-scripts`) oder `pnpm-lock.yaml` (`pnpm install --frozen-lockfile`, pnpm über corepack mit der in `packageManager` gepinnten Version). Node muss die `engines` in `package.json` erfüllen (typisch >= 22); das Skript installiert Node nicht.
+Abhängigkeiten: das Skript erkennt `pnpm-lock.yaml` (`pnpm install --frozen-lockfile --ignore-scripts`, pnpm über corepack mit der in `packageManager` gepinnten Version) oder `package-lock.json` (`npm ci --ignore-scripts`, nur für andere Repos). In diesem Repo gilt pnpm. Node muss die `engines` in `package.json` erfüllen (typisch >= 22); das Skript installiert Node nicht.
 
 ### Reihenfolge bei Struktur-Fragen
 1. STATUS.md und ARCHITECTURE.md.

@@ -29,18 +29,19 @@ Der Bildschirm bleibt nach Möglichkeit an (Screen Wake Lock). Fehlt die API ode
 Voraussetzung ist Node.js 22.
 
 ```bash
-npm ci
-npm run dev
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run dev
 ```
 
 Die Entwicklungsserver-Adresse ist `http://localhost:4173/PadelCounter/`.
 
 ```bash
-npm test
-npm run lint
-npm run typecheck
-npm run build
-npm run preview
+pnpm test
+pnpm run lint
+pnpm run typecheck
+pnpm run build
+pnpm run preview
 ```
 
 ## Daten
