@@ -40,7 +40,7 @@
     "happy-dom": "21.0.4",
     "typescript": "6.0.3",
     "typescript-eslint": "8.73.0",
-    "vitest": "5.0.4",
+    "vitest": "5.1.1",
     "workbox-build": "7.4.1"
   },
   "packageManager": "pnpm@10.34.9",
