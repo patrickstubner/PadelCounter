@@ -1,4 +1,11 @@
-# STATUS.md – Stand 22.11.2026, Branch `chore/pnpm-audit-fix`, Basis main b985b4f
+# STATUS.md – Stand 27.11.2026, Branch `chore/node-26`, Basis main 1903b20ab1df212601dc1be36784648510ee98b2
+
+## Nachtrag 27.11.2026: Umstellung auf Node 26
+Branch `chore/node-26` (PR, Basis main 1903b20ab1df212601dc1be36784648510ee98b2, nicht mergen bis Stabschef-Ok). Kein App-Code, kein Versionsbump (1.2.13 bleibt).
+- Node in CI und `engines` von 22 auf 26 gehoben. `@types/node` 22.20.5 → 26.6.6 (nimmt Dependabot-PR #28 auf; neuere 26.6.7–26.6.11 sind jünger als 4 Tage und bleiben deshalb aussen vor).
+- Quelle der LTS-Prüfung: [nodejs/Release `schedule.json`](https://github.com/nodejs/Release) (v26 Active LTS «Lithium» seit 2026-10-28, Maintenance 2027-10-20, EOL 2029-04-30) und [nodejs.org/dist/index.json](https://nodejs.org/dist/index.json) (neueste 26.x: 26.13.1, LTS, Security-Release vom 2026-11-10).
+- Lokal mit Node 26.13.1 und pnpm 10.34.9: Lint, Typecheck, 147 Tests, Build, `verify-build` und `pnpm audit --audit-level=moderate` sind grün (0 Schwachstellen).
+- Der in älteren STATUS-Abschnitten beschriebene rote CI-Stand vor #39 ist erledigt: Audit ist seit dem Merge von #39 (22.11.2026) auf `main` grün.
 
 ## Nachtrag 22.11.2026 (Nachmittag): Audit-Fix und pnpm
 Branch `chore/pnpm-audit-fix` (Draft-PR, Basis main b985b4f, nicht mergen bis Stabschef-Ok und Ja des Projektinhabers). Kein App-Code, kein Versionsbump.
@@ -33,10 +40,11 @@ Branch `chore/cloud-agent-setup` (Draft-PR, nicht mergen bis Stabschef und Proje
 - Abschnitt «Cursor Cloud specific instructions» in AGENTS.md ergänzt.
 
 ## Aktuelles Ziel
-Pflege: Audit auf `main` grün machen, Abhängigkeiten aktuell halten.
+Pflege: Abhängigkeiten aktuell halten. Node-26-Umstellung liegt in `chore/node-26` (ersetzt #28) und wartet auf Stabschef-Ok.
 
 ## Erledigt
 - 1.2.13 live (Changelog 27.10.2026).
+- Audit auf `main` seit #39 (22.11.2026) grün (`pnpm audit`: 0 Funde). Der frühere rote CI-Stand vor #39 ist erledigt.
 - AGENTS.md, ARCHITECTURE.md, STATUS.md (PR #32 gemergt, live seit 16.11.2026).
 - P2-03, P2-04, P2-05 erledigt (auf `main` umgesetzt, in `docs/SECURITY.md` als behoben geführt):
   - P2-03 icon-1024 nicht precachen: `rsbuild.config.ts` (`globIgnores`), `scripts/verify-build.mjs` verlangt die Datei in `dist/` und verbietet sie in `sw.js`
@@ -44,21 +52,23 @@ Pflege: Audit auf `main` grün machen, Abhängigkeiten aktuell halten.
   - P2-05 keine Guillemets in der englischen UI: `«` `»` kommen in `src/` nur noch in `src/security.test.ts` als verbotene Zeichen vor
 
 ## Plan ab 27.11.2026
-1. Audit-Fix auf `main`: erledigt im PR `chore/pnpm-audit-fix` (22.11.2026): 11 moderate Funde auf 0, zugleich pnpm. Bis zum Merge ist die CI auf `main` und auf allen PRs rot (Schritt `pnpm audit --audit-level=moderate`).
-2. Danach Dependabot-PRs und Majors, je Paket ein PR.
+1. Audit-Fix: erledigt und auf `main` seit #39 (22.11.2026); `pnpm audit` ist grün (0 Funde). Der frühere rote CI-Stand vor #39 ist damit erledigt.
+2. Node 26: dieser PR (`chore/node-26`, ersetzt #28). Merge erst nach Stabschef-Ok; #28 erst danach schliessen.
+3. Weitere Dependabot-Majors je Paket ein PR.
 
 ## Offen / Entscheide nötig (wer?)
 - keine
 
-## Offene PRs (16.11.2026)
-- #28 @types/node 22 → 26 (Dependabot, Major) – wartet bis 27.11.
-- dieser Draft-PR: Cloud-Agent-Setup (`chore/cloud-agent-setup`)
+## Offene PRs (27.11.2026)
+- dieser PR: `chore/node-26` (Node 26 in CI/`engines`, `@types/node` 26.6.6; ersetzt #28, #28 bleibt offen bis nach dem Merge).
+- #28 @types/node 22 → 26 (Dependabot) – wird durch `chore/node-26` ersetzt, noch nicht schliessen.
 
 ## Bekannte Probleme / Risiken
-- CI rot wegen `npm audit` auf `main` (nicht durch Docs-PRs verursacht); behoben im PR `chore/pnpm-audit-fix`.
 - Kein Ruleset auf `main` (keine Pflicht-Checks).
+- `@types/node` 26.6.7–26.6.11 sind jünger als 4 Tage (`minimumReleaseAge`); deshalb bleibt 26.6.6. Nach Ablauf der Wartezeit kann Dependabot nachziehen.
 
 ## Genutzte lokale Tools & vermiedene Cloud-Agent-Nutzung
+- 27.11. (Node 26): lokal Node 26.13.1, pnpm 10.34.9, `rg`, gitleaks; kein Cloud Agent.
 - codebase-memory-mcp: Aufrufer von `useMatch`, `replay`, `matchReducer`.
 - rg: Speicher-Schlüssel, P2-Punkte im Code nachgeprüft.
 - `pnpm audit` lokal gegen `pnpm-lock.yaml` (bis 22.11.2026 `npm audit`).
