@@ -153,3 +153,18 @@ Umstellung: `package-lock.json` entfällt, `pnpm-lock.yaml` aus `pnpm import` (V
 Mindestalter neuer Paketversionen (Auftrag vom 22.11.2026): `pnpm-workspace.yaml` setzt `minimumReleaseAge: 5760` (4 Tage, Schutz vor kompromittierten Releases). Geprüft: pnpm 10.34.9 lehnt eine jüngere Version beim Auflösen ab (Test mit einem am selben Tag veröffentlichten Paket) und nimmt sie nur über `minimumReleaseAgeExclude`. Alle Pakete im `pnpm-lock.yaml` sind älter als 4 Tage (jüngstes: minimatch 11.0.9, 5,7 Tage), keine Ausnahme war nötig. Ausnahmen künftig nur für nicht anders behebbare Sicherheitslücken, mit Kommentar (CVE/GHSA, Datum) und Rückbau nach 4 Tagen. Dependabot: `cooldown` mindestens 4 Tage (Sicherheits-Updates sind davon nicht betroffen).
 
 Keine kritischen, hohen oder mittleren offenen Befunde. Offen: pnpm 11 und 12 sind erschienen (Major), nicht übernommen. Dependabot-PRs #28, #34–#36 beziehen sich auf das npm-Lockfile und müssen nach dem Merge neu gebaut werden.
+
+## Nachtrag 27.11.2026: Umstellung auf Node 26
+
+Geprüft am Branch `chore/node-26`, Basis `main` 1903b20ab1df212601dc1be36784648510ee98b2. Quelle: `pnpm audit --audit-level=moderate` gegen `pnpm-lock.yaml` (Registry-Daten vom 27.11.2026), plus Prüfung der geänderten Workflow- und Versionspins. Kein Anwendungscode geändert, kein Versionsbump (1.2.13 bleibt), keine neuen Laufzeitpakete, keine Secrets.
+
+LTS-Beleg: Node 26 («Lithium») ist Active LTS laut [nodejs/Release `schedule.json`](https://github.com/nodejs/Release) (LTS seit 2026-10-28, Maintenance ab 2027-10-20, EOL 2029-04-30). Neueste 26.x laut [nodejs.org/dist/index.json](https://nodejs.org/dist/index.json): 26.13.1 (LTS, Security-Release vom 2026-11-10).
+
+Änderungen:
+- CI (Jobs `verify` und `upload`): `node-version` 22 → 26. Actions bleiben unverändert per Commit-SHA gepinnt (`actions/checkout` 3d3c42e5 / v7.0.1, `actions/setup-node` 949feb24 / v7.1.0, `pnpm/action-setup` 73e46992 / v6.1.1, Pages-Actions unverändert). Job-Berechtigungen unverändert (`contents: read` global, `pages`/`id-token` nur im Deploy-Job auf `main`).
+- `package.json` `engines.node`: `>=22` → `>=26`. `@types/node` 22.20.5 → 26.6.6 (nur Dev, Typen). Transitiv `undici-types` 6.21.0 → 8.9.0 (ebenfalls nur Typen). Neuere `@types/node` 26.6.7–26.6.11 sind jünger als 4 Tage und wurden wegen `minimumReleaseAge` nicht übernommen.
+- Fallback in `.cursor/install-dev-tools.sh` und Hinweise in `AGENTS.md` auf Node 26 angeglichen.
+
+Lokal mit Node 26.13.1: Lint, Typecheck, 147 Tests, Build, `verify-build` und Audit sind grün. `pnpm audit --audit-level=moderate`: 0 Schwachstellen (kritisch/hoch/mittel/niedrig). Die App bleibt eine statische PWA; Node läuft nur in CI und beim lokalen Build, nicht bei den Nutzern.
+
+Keine kritischen, hohen oder mittleren offenen Befunde. Restrisiko (niedrig, Info): typische Tooling-Unterschiede zwischen Node 22 und 26 können in einer fremden Umgebung auftreten; die CI auf diesem Branch muss das bestätigen. Nach Ablauf der 4-Tage-Frist kann `@types/node` auf 26.6.11 nachgezogen werden.

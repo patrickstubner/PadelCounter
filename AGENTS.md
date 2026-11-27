@@ -4,7 +4,7 @@
 - Zweck: Games-Zähler für Padel als installierbare Offline-PWA. Läuft vollständig im Browser, ohne Konto und ohne Server. Oberfläche Englisch.
 - Nachfolger: PadelCounterV2 (eigenes Repo). Ob hier noch Funktionen dazukommen, ist offen.
 - Stack: React 19, TypeScript, Rsbuild, Workbox (`workbox-build`), lottie-web (Siegerfeier). Tests: Vitest (happy-dom), fast-check. ESLint.
-- Node 22 (`engines: >=22`, CI mit Node 22).
+- Node 26 (`engines: >=26`, CI mit Node 26).
 - Architektur: ARCHITECTURE.md. Stand: STATUS.md. Sicherheit: docs/SECURITY.md.
 
 ## Befehle (aus package.json und .github/workflows/ci.yml)
@@ -114,7 +114,7 @@ Die Binaries liegen nur unter `~/.local/bin` (kein Kopieren nach `/usr/local/bin
 
 Weitere Tools können später im selben Skript ergänzt werden (Version und SHA-256 pinnen, kein `curl|bash`).
 
-Abhängigkeiten: das Skript erkennt `pnpm-lock.yaml` (`pnpm install --frozen-lockfile --ignore-scripts`, pnpm über corepack mit der in `packageManager` gepinnten Version) oder `package-lock.json` (`npm ci --ignore-scripts`, nur für andere Repos). In diesem Repo gilt pnpm. Node muss die `engines` in `package.json` erfüllen (typisch >= 22); das Skript installiert Node nicht.
+Abhängigkeiten: das Skript erkennt `pnpm-lock.yaml` (`pnpm install --frozen-lockfile --ignore-scripts`, pnpm über corepack mit der in `packageManager` gepinnten Version) oder `package-lock.json` (`npm ci --ignore-scripts`, nur für andere Repos). In diesem Repo gilt pnpm. Node muss die `engines` in `package.json` erfüllen (typisch >= 26); das Skript installiert Node nicht.
 
 ### Reihenfolge bei Struktur-Fragen
 1. STATUS.md und ARCHITECTURE.md.

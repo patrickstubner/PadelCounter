@@ -5,7 +5,7 @@
 # Weitere Tools: unten im Block «Weitere Tools (Erweiterung)» Version, URL und SHA-256 ergänzen.
 #
 # Paketmanager: npm (package-lock.json), pnpm (pnpm-lock.yaml, Version aus packageManager)
-# oder kein Install, wenn kein Lockfile da ist. Node: engines in package.json, sonst >= 22.
+# oder kein Install, wenn kein Lockfile da ist. Node: engines in package.json, sonst >= 26.
 set -euo pipefail
 
 ROOT="$(pwd)"
@@ -90,7 +90,7 @@ require_node() {
     if ! node -e '
 const fs = require("fs");
 const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-const eng = (pkg.engines && pkg.engines.node) || ">=22";
+const eng = (pkg.engines && pkg.engines.node) || ">=26";
 const [maj, min, pat] = process.versions.node.split(".").map((n) => parseInt(n, 10));
 const m = /^(>=|>|=)?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(String(eng));
 if (!m) process.exit(0);
